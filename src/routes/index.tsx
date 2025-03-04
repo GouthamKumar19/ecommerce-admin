@@ -5,16 +5,22 @@ import MainLayout from "../layouts/MainLayout";
 import AuthLayout from "../layouts/AuthLayout";
 
 // Pages
-import LoginPage from "../pages/auth/LoginPage";
-import DashboardPage from "../pages/dashboard/DashboardPage";
-import UsersPage from "../pages/users/UsersPage";
-import UserDetailsPage from "../pages/users/UserDetailsPage";
-import NotFoundPage from "../pages/NotFoundPage";
+import LoginPage from "../pages/auth/login";
+import DashboardPage from "../pages/dashboard/dashboard";
+import UsersPage from "../pages/users/users";
+import UserDetailsPage from "../pages/users/user-details";
+import NotFoundPage from "../pages/not-found";
+import Version from "../pages/version";
+
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/dashboard" replace />,
+  },
+  {
+    path: "/version",
+    element: <Version />,
   },
   {
     path: "/auth",
