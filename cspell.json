@@ -1,0 +1,42 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "ecommerce",
+    "tailwindcss",
+    "autofixer",
+    "postcss",
+    "vite",
+    "nuxt",
+    "antd",
+    "nextjs",
+    "signin",
+    "signout",
+    "datetime",
+    "ecom",
+    "pageview",
+    "streetname",
+    "zipcode"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    ".git/**",
+    "*.lock",
+    "package-lock.json",
+    "tsconfig*.json",
+    "public/**",
+    "build/**",
+    "coverage/**",
+    ".husky/**"
+  ],
+  "ignoreRegExpList": [
+    "\\(.*\\)",
+    "/\\*[\\s\\S]*?\\*/",
+    "import\\s.+\\sfrom\\s['\"].*['\"]",
+    "\\bimport\\(['\"].*['\"]\\)"
+  ],
+  "allowCompoundWords": true,
+  "minWordLength": 3,
+  "useGitignore": true
+}
