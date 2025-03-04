@@ -12,7 +12,6 @@ import UserDetailsPage from "../pages/users/user-details";
 import NotFoundPage from "../pages/not-found";
 import Version from "../pages/version";
 
-
 const router = createBrowserRouter([
   {
     path: "/",
