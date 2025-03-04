@@ -8,9 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "spellcheck": "cspell \"**/*.js\" \"**/*.ts\" \"**/*.tsx\""
   },
   "dependencies": {
+    "cspell": "^8.17.5",
     "prettier": "^3.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
