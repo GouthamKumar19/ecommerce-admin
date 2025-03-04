@@ -1,20 +1,12 @@
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = "dist"
 
-# For Next.js 12+ default setup
+# Environment variables can be added here
 [build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NODE_VERSION = "18"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-# Required for image optimization and other Next.js features
-[[redirects]]
-  from = "/_next/static/*"
-  to = "/static/:splat"
-  status = 200
-
+# Handle SPA routing in React Router
 [[redirects]]
   from = "/*"
   to = "/index.html"
