@@ -62,7 +62,7 @@ const DataTable: React.FC = () => {
         }`}
       >
         1
-      </button>
+      </button>,
     );
 
     // Logic for middle pages with ellipses
@@ -80,7 +80,7 @@ const DataTable: React.FC = () => {
               }`}
             >
               {i}
-            </button>
+            </button>,
           );
         }
         pageButtons.push(
@@ -89,7 +89,7 @@ const DataTable: React.FC = () => {
             className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
           >
             ...
-          </span>
+          </span>,
         );
       }
       // Case: current page is among last 3 pages
@@ -100,7 +100,7 @@ const DataTable: React.FC = () => {
             className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
           >
             ...
-          </span>
+          </span>,
         );
         for (let i = totalPages - 2; i <= totalPages - 1; i++) {
           pageButtons.push(
@@ -113,7 +113,7 @@ const DataTable: React.FC = () => {
               }`}
             >
               {i}
-            </button>
+            </button>,
           );
         }
       }
@@ -125,7 +125,7 @@ const DataTable: React.FC = () => {
             className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
           >
             ...
-          </span>
+          </span>,
         );
         pageButtons.push(
           <button
@@ -135,7 +135,7 @@ const DataTable: React.FC = () => {
             className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black hover:bg-gray-50"
           >
             {currentPage}
-          </button>
+          </button>,
         );
         pageButtons.push(
           <span
@@ -143,7 +143,7 @@ const DataTable: React.FC = () => {
             className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
           >
             ...
-          </span>
+          </span>,
         );
       }
     } else {
@@ -159,7 +159,7 @@ const DataTable: React.FC = () => {
             }`}
           >
             {i}
-          </button>
+          </button>,
         );
       }
     }
@@ -176,7 +176,7 @@ const DataTable: React.FC = () => {
           }`}
         >
           {totalPages}
-        </button>
+        </button>,
       );
     }
 
