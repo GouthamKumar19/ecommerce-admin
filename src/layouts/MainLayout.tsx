@@ -11,7 +11,7 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="overflow-y-hidden flex h-screen bg-gray-100 w-screen">
+    <div className="overflow-y-hidden flex bg-gray-100 w-screen">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} />
 

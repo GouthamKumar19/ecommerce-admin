@@ -8,7 +8,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import LoginPage from "../pages/auth/login";
 import DashboardPage from "../pages/dashboard/dashboard";
 import UsersPage from "../pages/users/users";
-import UserDetailsPage from "../pages/users/user-details";
+import { UserDetailsPage } from "../pages/users/user-details";
 import NotFoundPage from "../pages/not-found";
 import Version from "../pages/version";
 
@@ -48,9 +48,14 @@ const router = createBrowserRouter([
         element: <UsersPage />,
       },
       {
-        path: "users/:id",
-        element: <UserDetailsPage />,
+        path: "users/new",
+        element: <UserDetailsPage />, // Reuse UserDetailsPage for creating new user
       },
+      {
+        path:"/user/id",
+        element:<UserDetailsPage/>
+      }
+      
     ],
   },
   {
