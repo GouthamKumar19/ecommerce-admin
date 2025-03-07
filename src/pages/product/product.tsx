@@ -102,8 +102,6 @@ const ProductPage: React.FC = () => {
     },
   ];
 
-  
-
   const handleDeleteProduct = (productId: string | number) => {
     // Implement delete logic here
     // For example, show a confirmation dialog before deleting

@@ -166,7 +166,7 @@ const DataTable = <T extends BaseRecord>({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </th>
                 ))}
@@ -191,7 +191,7 @@ const DataTable = <T extends BaseRecord>({
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </td>
                   ))}
@@ -229,7 +229,7 @@ const DataTable = <T extends BaseRecord>({
                 {Math.min(
                   (table.getState().pagination.pageIndex + 1) *
                     table.getState().pagination.pageSize,
-                  items.length
+                  items.length,
                 )}
               </span>{" "}
               of <span className="font-medium">{items.length}</span> results
