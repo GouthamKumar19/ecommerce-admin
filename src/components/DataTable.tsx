@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Edit,
   ToggleOn,
   ToggleOff,
   Star,
   StarBorder,
+  Visibility,
+  Delete,
 } from "@mui/icons-material";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  ColumnDef,
+  getPaginationRowModel,
+  PaginationState,
+} from "@tanstack/react-table";
 
 // Define a base interface for data objects
 interface BaseRecord {
@@ -25,7 +35,7 @@ interface DataTableProps<T extends BaseRecord> {
   columns: TableColumn<T>[];
   idKey: string;
   itemsPerPage?: number;
-  tableType?: "user" | "testimonial";
+  tableType?: "user" | "testimonial" | "product";
 }
 
 // Star Rating Component for testimonials
@@ -53,36 +63,11 @@ const DataTable = <T extends BaseRecord>({
   itemsPerPage = 15,
   tableType = "user",
 }: DataTableProps<T>) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [displayItems, setDisplayItems] = useState<T[]>([]);
   const [disabledRows, setDisabledRows] = useState<string[]>([]);
-
-  // Calculate pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const totalPages = Math.ceil(items.length / itemsPerPage);
-
-  // Update displayed items when page changes
-  useEffect(() => {
-    setDisplayItems(items.slice(indexOfFirstItem, indexOfLastItem));
-  }, [currentPage, indexOfFirstItem, indexOfLastItem, items]);
-
-  // Page change handlers
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePageClick = (page: number) => {
-    setCurrentPage(page);
-  };
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: itemsPerPage,
+  });
 
   const handleToggleRow = (id: string) => {
     setDisabledRows((prev) => {
@@ -94,237 +79,200 @@ const DataTable = <T extends BaseRecord>({
     });
   };
 
-  // Generate pagination buttons with ellipses
-  const renderPaginationButtons = () => {
-    const pageButtons = [];
+  // Convert TableColumn array to Tanstack ColumnDef array
+  const tableColumns: ColumnDef<T>[] = columns.map((column) => ({
+    id: column.key,
+    accessorKey: column.key,
+    header: () => (
+      <div className="text-center font-medium uppercase tracking-wider text-gray-700">
+        {column.header}
+      </div>
+    ),
+    cell: ({ row }) => {
+      const item = row.original;
+      const isDisabled = disabledRows.includes(String(item[idKey]));
 
-    // Always show first page
-    pageButtons.push(
-      <button
-        key={1}
-        onClick={() => handlePageClick(1)}
-        style={{ background: "#ffffff", color: "black" }}
-        className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50 ${
-          currentPage === 1 ? "text-black" : "text-black"
-        }`}
-      >
-        1
-      </button>,
-    );
-
-    // Logic for middle pages with ellipses
-    if (totalPages > 5) {
-      // Case: current page is among first 3 pages
-      if (currentPage < 4) {
-        for (let i = 2; i <= 3; i++) {
-          pageButtons.push(
-            <button
-              key={i}
-              onClick={() => handlePageClick(i)}
-              style={{ background: "#ffffff", color: "black" }}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50 ${
-                currentPage === i ? "text-black" : "text-black"
-              }`}
-            >
-              {i}
-            </button>,
+      if (column.key === "actions") {
+        if (tableType === "product") {
+          return (
+            <div className="flex justify-center items-center gap-4">
+              <Visibility sx={{ fontSize: 26, color: "#000000" }} />
+              <Edit sx={{ fontSize: 26, color: "#000000" }} />
+              <Delete sx={{ fontSize: 26, color: "#000000" }} />
+            </div>
+          );
+        } else if (tableType === "user") {
+          return (
+            <div className="flex justify-center items-center gap-4">
+              <Edit sx={{ fontSize: 26, color: "#000000" }} />
+              <span onClick={() => handleToggleRow(String(item[idKey]))}>
+                {isDisabled ? (
+                  <ToggleOff sx={{ fontSize: 26, color: "#000000" }} />
+                ) : (
+                  <ToggleOn sx={{ fontSize: 26, color: "#000000" }} />
+                )}
+              </span>
+            </div>
+          );
+        } else {
+          // Default action for testimonial or other types
+          return (
+            <div className="flex justify-center items-center gap-4">
+              <Edit sx={{ fontSize: 26, color: "#000000" }} />
+            </div>
           );
         }
-        pageButtons.push(
-          <span
-            key="ellipsis1"
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black"
-          >
-            ...
-          </span>,
+      } else if (column.render) {
+        return column.render(item);
+      } else {
+        return (
+          <div className={isDisabled ? "text-gray-400" : "text-gray-900"}>
+            {String(item[column.key] ?? "N/A")}
+          </div>
         );
       }
-      // Case: current page is among last 3 pages
-      else if (currentPage > totalPages - 3) {
-        pageButtons.push(
-          <span
-            key="ellipsis1"
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black"
-          >
-            ...
-          </span>,
-        );
-        for (let i = totalPages - 2; i <= totalPages - 1; i++) {
-          pageButtons.push(
-            <button
-              key={i}
-              onClick={() => handlePageClick(i)}
-              style={{ background: "#ffffff", color: "black" }}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50 ${
-                currentPage === i ? "text-black" : "text-black"
-              }`}
-            >
-              {i}
-            </button>,
-          );
-        }
-      }
-      // Case: current page is in the middle
-      else {
-        pageButtons.push(
-          <span
-            key="ellipsis1"
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black"
-          >
-            ...
-          </span>,
-        );
-        pageButtons.push(
-          <button
-            key={currentPage}
-            onClick={() => handlePageClick(currentPage)}
-            style={{ background: "#ffffff", color: "black" }}
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black hover:bg-gray-50"
-          >
-            {currentPage}
-          </button>,
-        );
-        pageButtons.push(
-          <span
-            key="ellipsis2"
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black"
-          >
-            ...
-          </span>,
-        );
-      }
-    } else {
-      // If less than 5 pages, show all pages
-      for (let i = 2; i < totalPages; i++) {
-        pageButtons.push(
-          <button
-            key={i}
-            onClick={() => handlePageClick(i)}
-            style={{ background: "#ffffff", color: "black" }}
-            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50 ${
-              currentPage === i ? "text-black" : "text-black"
-            }`}
-          >
-            {i}
-          </button>,
-        );
-      }
-    }
+    },
+  }));
 
-    // Always show last page if there's more than one page
-    if (totalPages > 1) {
-      pageButtons.push(
-        <button
-          key={totalPages}
-          onClick={() => handlePageClick(totalPages)}
-          style={{ background: "#ffffff", color: "black" }}
-          className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50 ${
-            currentPage === totalPages ? "text-black" : "text-black"
-          }`}
-        >
-          {totalPages}
-        </button>,
-      );
-    }
+  // Initialize Tanstack Table with pagination
+  const table = useReactTable({
+    data: items,
+    columns: tableColumns,
+    state: {
+      pagination,
+    },
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: false,
+    pageCount: Math.ceil(items.length / pagination.pageSize),
+  });
 
-    return pageButtons;
-  };
+  const currentPage = pagination.pageIndex + 1;
 
   return (
-    <div>
-      <div className="overflow-x-auto overflow-y-auto max-h-115">
-        <table className="min-w-full table-auto divide-y divide-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+        <table className="min-w-full divide-y divide-gray-200">
           <thead className="sticky top-0 text-header">
-            <tr>
-              {columns.map((column, index) => (
-                <th
-                  key={index}
-                  className="px-8 py-4 text-center text-header font-medium uppercase tracking-wider"
-                >
-                  {column.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {displayItems.map((item) => (
-              <tr key={String(item[idKey])}>
-                {columns.map((column, index) => (
-                  <td key={index} className="px-10 py-4 whitespace-nowrap">
-                    {column.key === "actions" ? (
-                      <div className="flex justify-center items-center gap-6">
-                        {/* Edit Button */}
-                        <Edit sx={{ fontSize: 25 }} />
-
-                        {/* Toggle Button - only display for user table */}
-                        {tableType === "user" && (
-                          <div
-                            onClick={() => handleToggleRow(String(item[idKey]))}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {disabledRows.includes(String(item[idKey])) ? (
-                              <ToggleOff sx={{ fontSize: 25 }} />
-                            ) : (
-                              <ToggleOn sx={{ fontSize: 25 }} />
-                            )}
-                          </div>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="px-6 py-3 text-center text-header font-medium uppercase tracking-wider"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
                         )}
-                      </div>
-                    ) : column.render ? (
-                      column.render(item)
-                    ) : (
-                      String(item[column.key] ?? "N/A")
-                    )}
-                  </td>
+                  </th>
                 ))}
               </tr>
             ))}
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className={`hover:bg-gray-50 transition-colors ${
+                    disabledRows.includes(String(row.original[idKey]))
+                      ? "bg-gray-50"
+                      : ""
+                  }`}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500"
+                >
+                  No data available
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-        <div className="hidden sm:flex-1 sm:flex sm:items-center3 sm:justify-between">
+      {/* Pagination with only page number */}
+      <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-gray-50">
+        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-black">
+            <p className="text-sm text-gray-700">
               Showing{" "}
-              <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
               <span className="font-medium">
-                {Math.min(indexOfLastItem, items.length)}
+                {items.length > 0
+                  ? table.getState().pagination.pageIndex *
+                      table.getState().pagination.pageSize +
+                    1
+                  : 0}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(
+                  (table.getState().pagination.pageIndex + 1) *
+                    table.getState().pagination.pageSize,
+                  items.length
+                )}
               </span>{" "}
               of <span className="font-medium">{items.length}</span> results
             </p>
           </div>
-          <div className="gap-2 ">
+
+          <div>
             <nav
-              className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+              className="relative z-0 inline-flex items-center space-x-2"
               aria-label="Pagination"
             >
-              {/* Previous button - hidden when on first page */}
-              {currentPage > 1 && (
-                <button
-                  onClick={handlePrevious}
-                  style={{ background: "#ffffff", color: "black" }}
-                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border text-sm font-medium text-black"
-                >
-                  {"<"}
-                </button>
-              )}
+              {/* Previous Button */}
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium ${
+                  table.getCanPreviousPage()
+                    ? "text-gray-700 hover:bg-gray-100 border border-gray-300"
+                    : "text-gray-300 cursor-not-allowed border border-gray-200"
+                }`}
+                aria-label="Previous page"
+              >
+                {"<"}
+              </button>
 
-              {/* Page buttons with ellipses */}
-              {renderPaginationButtons()}
+              {/* Current Page */}
+              <div className="inline-flex items-center justify-center w-8 h-8 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">
+                {currentPage}
+              </div>
 
-              {/* Next button - hidden when on last page */}
-              {currentPage < totalPages && (
-                <button
-                  onClick={handleNext}
-                  style={{ background: "#ffffff", color: "black" }}
-                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-black hover:bg-gray-50"
-                >
-                  {">"}
-                </button>
-              )}
+              {/* Next Button */}
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium ${
+                  table.getCanNextPage()
+                    ? "text-gray-700 hover:bg-gray-100 border border-gray-300"
+                    : "text-gray-300 cursor-not-allowed border border-gray-200"
+                }`}
+                aria-label="Next page"
+              >
+                {">"}
+              </button>
             </nav>
           </div>
         </div>

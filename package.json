@@ -13,7 +13,12 @@
     "spellcheck": "cspell --config=cspell.json \"**/*.js\" \"**/*.ts\" \"**/*.tsx\""
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.7",
     "@tailwindcss/vite": "^4.0.9",
+    "@tanstack/react-table": "^8.21.2",
+    "@types/react-table": "^7.7.20",
     "cspell": "^8.17.5",
     "prettier": "^3.5.3",
     "react": "^19.0.0",

@@ -13,6 +13,7 @@ import NotFoundPage from "../pages/not-found";
 import Version from "../pages/version";
 import TestimonialsPage from "../pages/testimonials/Testimonials";
 import TestimonialsDetails from "../pages/testimonials/Testimonials-details";
+import ProductPage from "../pages/product/product";
 
 const router = createBrowserRouter([
   {
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
       {
         path: "testimonials/new",
         element: <TestimonialsDetails />,
+      },
+      {
+        path: "product",
+        element: <ProductPage />,
       },
     ],
   },
