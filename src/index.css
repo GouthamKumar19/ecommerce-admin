@@ -20,7 +20,6 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
 }
 
 a {
@@ -35,7 +34,7 @@ a:hover {
 
 body {
   margin: 0;
-  display:contents;
+  display: contents;
   place-items: center;
   background-color: var(--primary-color);
   min-width: 100vw;

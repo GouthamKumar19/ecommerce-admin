@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 
 interface HeaderProps {
@@ -7,10 +7,33 @@ interface HeaderProps {
 
 const Header = ({ onToggleSidebar }: HeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoutVisible, setLogoutVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Function to get the current page title based on the path
+  const getPageTitle = () => {
+    const path = location.pathname;
+
+    // Define mapping of paths to titles
+    const pathTitles: { [key: string]: string } = {
+      "/": "Dashboard",
+      "/dashboard": "Dashboard",
+      "/users": "Users",
+      "/products": "Products",
+      "/orders": "Orders",
+      "/testimonials": "Testimonials",
+      "/category": "Category",
+      "/collections": "Collections",
+      "/enquiry": "Enquiry",
+      "/settings": "Settings",
+      "/profile": "Profile",
+    };
+
+    return pathTitles[path] || "Dashboard"; // Default to Dashboard if path not found
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -82,7 +105,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
         <div className="hidden lg:block w-6"></div>
 
         <h1 className="text-white text-2xl font-semibold tracking-wide">
-          Dashboard
+          {getPageTitle()}
         </h1>
 
         <div className="relative" ref={dropdownRef}>
@@ -200,7 +223,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
               </button>
               <button
                 onClick={cancelLogout}
-                className="px-6 py-2 bg-gray-200 text-white rounded-lg hover:bg-gray-300 transition-all"
+                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-all"
               >
                 No
               </button>

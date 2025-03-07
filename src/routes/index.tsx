@@ -11,6 +11,8 @@ import UsersPage from "../pages/users/users";
 import UserDetailsPage from "../pages/users/user-details";
 import NotFoundPage from "../pages/not-found";
 import Version from "../pages/version";
+import Profile from "../pages/profile/Profile";
+import OrderDetails from "../pages/orders/order-details";
 
 const router = createBrowserRouter([
   {
@@ -50,6 +52,14 @@ const router = createBrowserRouter([
       {
         path: "users/:id",
         element: <UserDetailsPage />,
+      },
+      {
+        path: "/profile",
+        element: <Profile />,
+      },
+      {
+        path: "/orders",
+        element: <OrderDetails />,
       },
     ],
   },

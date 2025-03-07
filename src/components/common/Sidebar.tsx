@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import LogoImage from "/src/assets/logo/logo.jpeg"; // Update this path to your actual logo file
 
 interface SidebarProps {
   isOpen: boolean;
@@ -34,7 +35,8 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       } lg:block transition-all duration-300`}
     >
       <div className="p-4 flex items-center justify-center">
-        <h2 className="text-2xl font-bold tracking-wide">Admin Portal</h2>
+        {/* Use imported logo image */}
+        <img src={LogoImage} alt="Company Logo" className="h-12 w-auto" />
       </div>
       <nav className="mt-6">
         <ul>
