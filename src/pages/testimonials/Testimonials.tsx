@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import DataTable from "../../components/DataTable";
-import { StarRating } from "../../components/DataTable";
+import DataTable from "../../components/common/DataTable";
+import { StarRating } from "../../components/common/DataTable";
 import { testimonials } from "../../config/mock/testimonialsTable";
 import type { Testimonial } from "../../types/testimonials.types";
 import { useNavigate } from "react-router-dom";

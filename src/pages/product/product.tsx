@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import DataTable from "../../components/DataTable";
+import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,11 @@ import { Visibility, Edit, Delete } from "@mui/icons-material";
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const navigate = useNavigate();
+
+  const handleAddNewProduct = () => {
+    // Navigate to the user details page for creating a new user
+    navigate("/product/:id");
+  };
 
   // Define columns for product table
   const columns = [
@@ -97,10 +102,7 @@ const ProductPage: React.FC = () => {
     },
   ];
 
-  const handleAddNewProduct = () => {
-    // Navigate to the product details page for creating a new product
-    navigate("/products/new");
-  };
+  
 
   const handleDeleteProduct = (productId: string | number) => {
     // Implement delete logic here
