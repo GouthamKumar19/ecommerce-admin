@@ -7,6 +7,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import AddressPopup from "./AddressPopup";
 import { Edit, Delete } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 interface AddressData {
   addressLine1: string;
@@ -23,10 +24,15 @@ const UserDetailsForm: React.FC = () => {
     phoneNumber: "",
     addresses: [] as AddressData[],
   });
+  const navigate = useNavigate();
 
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   navigate("/user");
+  // };
   const [showAddress, setShowAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressData | null>(
-    null
+    null,
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
@@ -73,6 +79,9 @@ const UserDetailsForm: React.FC = () => {
       addresses: prev.addresses.filter((_, i) => i !== index),
     }));
   };
+  const handleBack = () => {
+    navigate("/users");
+  };
 
   return (
     <div className="relative w-3/4 mx-auto overflow-hidden example">
@@ -81,7 +90,6 @@ const UserDetailsForm: React.FC = () => {
           showAddress ? "filter pointer-events-none" : ""
         }`}
       >
-        
         <div className="flex space-x-4">
           <input
             type="text"
@@ -214,10 +222,16 @@ const UserDetailsForm: React.FC = () => {
 
         <div className="flex justify-end mt-8">
           <div className="space-x-4">
-            <button className="text-white py-2 px-4 rounded-md w-24">
+            <button
+              className="text-white py-2 px-4 rounded-md w-24"
+              onClick={handleBack}
+            >
               Cancel
             </button>
-            <button className="bg-primary text-white py-2 px-4 rounded-md w-24">
+            <button
+              className="bg-primary text-white py-2 px-4 rounded-md w-24"
+              onClick={handleBack}
+            >
               Add
             </button>
           </div>
@@ -248,9 +262,10 @@ const UserDetailsForm: React.FC = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowAddress(false)} color="primary">
-            Close
-          </Button>
+          <Button
+            onClick={() => setShowAddress(false)}
+            color="primary"
+          ></Button>
         </DialogActions>
       </Dialog>
     </div>

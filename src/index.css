@@ -57,6 +57,7 @@ button {
   background-color: var(--secondary-color);
   cursor: pointer;
   transition: border-color 0.25s;
+  color: #ffffff;
 }
 
 button:hover {
@@ -71,7 +72,7 @@ button:focus-visible {
   background-color: var(--background-color);
   font-weight: bold;
 }
-.input-box{
+.input-box {
   border-color: #d1d5db80;
   background-color: #f3f4f6ed;
 }
@@ -89,24 +90,24 @@ button:focus-visible {
   button {
     background-color: var(--secondary-color);
   }
-    .example::-webkit-scrollbar {
-      display: none;
-    }
-  
-    /* Hide scrollbar for IE, Edge and Firefox */
-    .example {
-      -ms-overflow-style: none;
-      /* IE and Edge */
-      scrollbar-width: none;
-      /* Firefox */
-    }
-  
-    /* Ensure the container can scroll */
-    .example {
-      overflow-y: scroll;
-      max-height: 80vh;
-      /* Adjust this as needed */
-      padding-right: 10px;
-      /* Ensure content is not hidden behind the hidden scrollbar */
-    }
+  .example::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .example {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  /* Ensure the container can scroll */
+  .example {
+    overflow-y: scroll;
+    max-height: 80vh;
+    /* Adjust this as needed */
+    padding-right: 10px;
+    /* Ensure content is not hidden behind the hidden scrollbar */
+  }
 }

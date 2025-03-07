@@ -38,7 +38,7 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
   }, [initialData]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setAddressData((prev) => ({
@@ -59,7 +59,6 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
           <input
             type="text"
             name="addressLine1"
-            
             value={addressData.addressLine1}
             onChange={handleInputChange}
             className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
@@ -73,7 +72,6 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
           <input
             type="text"
             name="addressLine2"
-            
             value={addressData.addressLine2}
             onChange={handleInputChange}
             className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
@@ -87,7 +85,6 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
         <input
           type="text"
           name="city"
-         
           value={addressData.city}
           onChange={handleInputChange}
           className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
@@ -138,7 +135,7 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
         </button>
         <button
           onClick={handleSave}
-          className="bg-green-600 w-24 text-white py-2 px-4 rounded"
+          className="w-24 text-white py-2 px-4 rounded"
         >
           SAVE
         </button>
