@@ -1,13 +1,18 @@
 :root {
   --primary-color: #f7f7fa;
+  --primary-color: #f7f7fa;
   /* Blue */
+  --secondary-color: #0d7f3f;
   --secondary-color: #0d7f3f;
   /* White */
   --foreground-color: #000000;
   /* Black */
   --background-color: #d3d3d3e1;
   /* grey */
+  --background-color: #d3d3d3e1;
+  /* grey */
 
+  font-family: Arial, system-ui, Avenir, Helvetica, sans-serif;
   font-family: Arial, system-ui, Avenir, Helvetica, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -54,18 +59,28 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--secondary-color);
   cursor: pointer;
   transition: border-color 0.25s;
+  color: #ffffff;
 }
 
 button:hover {
   border-color: var(--primary-color);
 }
 
-button:focus,
+/* button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+} */
+.text-header {
+  background-color: var(--background-color);
+  font-weight: bold;
+  color: #000000;
+}
+.input-box {
+  border-color: #d1d5db80;
+  background-color: #f3f4f6ed;
 }
 .text-header {
   background-color: var(--background-color);
@@ -88,4 +103,25 @@ button:focus-visible {
  html,body{
     overflow: hidden;
   }
+  .example::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .example {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  /* Ensure the container can scroll */
+  .example {
+    overflow-y: scroll;
+    max-height: 80vh;
+    /* Adjust this as needed */
+    padding-right: 10px;
+    /* Ensure content is not hidden behind the hidden scrollbar */
+  }
 }
+

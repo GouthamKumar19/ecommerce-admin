@@ -11,16 +11,16 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="overflow-y-hidden flex bg-gray-100 w-screen">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} />
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="overflow-y-hidden flex flex-col flex-1 overflow-hidden">
         <Header onToggleSidebar={toggleSidebar} />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4">
+        <main className="overflow-y-hidden flex-1 overflow-auto p-4">
           <div className="container mx-auto">
             <Outlet />
           </div>
