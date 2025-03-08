@@ -14,7 +14,7 @@ import Version from "../pages/version";
 import TestimonialsPage from "../pages/testimonials/Testimonials";
 import TestimonialsDetails from "../pages/testimonials/Testimonials-details";
 import ProductPage from "../pages/product/product";
-// import ProductDetails from "../pages/product/product-details";
+import { ProductDetails } from "../pages/product/product-details";
 import Profile from "../pages/profile/Profile";
 import OrderDetails from "../pages/orders/order-details";
 
@@ -70,13 +70,13 @@ const router = createBrowserRouter([
         element: <TestimonialsDetails />,
       },
       {
-        path: "product",
+        path: "/products",
         element: <ProductPage />,
       },
-      // {
-      //   path: "product/:id",
-      //   element: <ProductDetails />,
-      // },
+      {
+        path: "/product/new",
+        element: <ProductDetails />,
+      },
       {
         path: "/profile",
         element: <Profile />,

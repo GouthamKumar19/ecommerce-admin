@@ -11,7 +11,7 @@ const ProductPage: React.FC = () => {
 
   const handleAddNewProduct = () => {
     // Navigate to the user details page for creating a new user
-    navigate("/product/:id");
+    navigate("/product/new");
   };
 
   // Define columns for product table
@@ -156,7 +156,7 @@ const ProductPage: React.FC = () => {
 
           <div className="flex ml-auto">
             <button
-              className="px-2 py-2 bg-blue-600 text-white rounded-md"
+              className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewProduct}
             >
               Add Product

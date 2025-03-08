@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Rating from "@mui/material/Rating";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
+import { IconButton } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const TestimonialsDetails = () => {
   const [rating, setRating] = useState<number>(4);
@@ -17,67 +19,99 @@ const TestimonialsDetails = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow mb-4 h-screen flex justify-center">
-      <div className="w-full text-left max-w-md mt-8">
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="name" className="block mb-1 font-medium">
-              NAME <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="name"
-              placeholder="Name"
-              className="w-full text-border input-box p-2 border rounded"
-              required
-            />
-          </div>
+    <div className=" text-left bg-white p-4 rounded-lg shadow h-screen">
+      {/* Back Button */}
+      <div className="mb-4 text-left">
+        <IconButton
+          onClick={handleBack}
+          className="text-gray-700"
+          style={{
+            position: "relative",
+            left: "0px",
+          }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+      </div>
 
-          <div>
-            <label htmlFor="ratings" className="block mb-1 font-medium">
-              RATINGS <span className="text-red-500">*</span>
-            </label>
-            <Box className="p-2 border input-box rounded bg-white">
-              <Rating
-                name="ratings"
-                value={rating}
-                onChange={(_, newValue) => {
-                  setRating(newValue || 0); // Handle null case by defaulting to 0
-                }}
-                precision={1}
+      {/* Form */}
+      <div className="pl-1">
+        <form className="w-full max-w-3xl space-y-4" onSubmit={handleSubmit}>
+          {/* Grid container for name and rating */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Name Section */}
+            <div>
+              <label
+                htmlFor="name"
+                className="block mb-1 font-medium text-gray-700"
+              >
+                NAME <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="name"
+                placeholder="Name"
+                className="w-full h-11 text-border input-box px-3 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                required
               />
-            </Box>
+            </div>
+
+            {/* Rating Section */}
+            <div>
+              <label
+                htmlFor="ratings"
+                className="block mb-1 font-medium text-gray-700"
+              >
+                RATINGS <span className="text-red-500">*</span>
+              </label>
+              <Box className="h-11 px-3 border input-box rounded bg-white flex items-center">
+                <Rating
+                  name="ratings"
+                  value={rating}
+                  onChange={(_, newValue) => {
+                    setRating(newValue || 0);
+                  }}
+                  precision={1}
+                  size="medium"
+                />
+              </Box>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="description" className="block mb-1 font-medium">
+          {/* Description Section with Textarea */}
+          <div className="mt-4">
+            <label
+              htmlFor="description"
+              className="block mb-1 font-medium text-gray-700"
+            >
               DESCRIPTION <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <textarea
               id="description"
               placeholder="Description"
-              className="w-full p-2 input-box border rounded"
+              className="w-full px-3 py-2 input-box border rounded min-h-[100px] resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               required
             />
           </div>
-
-          <div className="flex justify-center space-x-4 mt-4">
+        </form>
+        <div className="sticky bottom-0 bg-white py-2">
+          <div className="flex justify-end space-x-4">
             <button
               type="button"
-              className="text-white px-4 py-2 rounded uppercase text-sm"
+              className="bg-gray-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-gray-600 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               onClick={handleBack}
             >
-              Back
+              Cancel
             </button>
             <button
-              onClick={handleBack}
-              className="text-white px-4 py-2 rounded uppercase text-sm"
+              type="submit"
+              className="bg-blue-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-blue-600 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              onClick={handleSubmit}
             >
               Add
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

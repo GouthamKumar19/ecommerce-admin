@@ -1,6 +1,6 @@
 :root {
   --primary-color: #f7f7fa;
-  --primary-color: #f7f7fa;
+
   /* Blue */
   --secondary-color: #0d7f3f;
   --secondary-color: #0d7f3f;
@@ -101,7 +101,7 @@ button:focus-visible {
     background-color: var(--secondary-color);
   }
   .example::-webkit-scrollbar {
-    display: none;
+    overflow: hidden;
   }
 
   /* Hide scrollbar for IE, Edge and Firefox */
@@ -115,10 +115,13 @@ button:focus-visible {
   /* Ensure the container can scroll */
   .example {
     overflow-y: scroll;
-    max-height: 80vh;
+    max-height: 100vh;
+
     /* Adjust this as needed */
     padding-right: 10px;
     /* Ensure content is not hidden behind the hidden scrollbar */
   }
+  html {
+    overflow: hidden;
+  }
 }
-
