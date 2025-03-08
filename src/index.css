@@ -85,4 +85,7 @@ button:focus-visible {
   button {
     background-color: var(--secondary-color);
   }
+ html,body{
+    overflow: hidden;
+  }
 }

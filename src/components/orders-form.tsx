@@ -84,10 +84,7 @@ const OrdersForm = () => {
   }
 
   return (
-    <div
-      className="container mx-auto p-4 max-w-full bg-white rounded-lg font-sans relative"
-      ref={containerRef}
-    >
+    <div ref={containerRef} className="relative"> {/* Add relative positioning */}
       {/* Back button */}
       <div className="mb-3">
         <ArrowLeft size={24} className="text-gray-700 cursor-pointer" />
@@ -245,58 +242,56 @@ const OrdersForm = () => {
           </div>
 
           {/* Order Status Section */}
-          <div className="relative" ref={orderDropdownRef}>
-            <label className="block font-semibold mb-2 text-sm tracking-wide text-gray-800 text-left">
-              ORDER STATUS
-            </label>
-            <button
-              className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${showOrderDropdown ? "focus:outline-none focus:ring-2 focus:ring-green-500" : ""}`}
-              style={{ background: "var(--primary-color)" }}
-              onClick={() => setShowOrderDropdown(!showOrderDropdown)}
-            >
-              <span className="font-normal">
-                {orderStatus || "Order Status"}
-              </span>
-              <span
-                className={`transform transition-transform duration-200 text-green-500 ${showOrderDropdown ? "rotate-180" : ""}`}
+          <div className="relative flex items-center" ref={orderDropdownRef}>
+            <div className="flex-grow mr-2">
+              <label className="block font-semibold mb-2 text-sm tracking-wide text-gray-800 text-left">
+                ORDER STATUS
+              </label>
+              <button
+                className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${showOrderDropdown ? "focus:outline-none focus:ring-2 focus:ring-green-500" : ""}`}
+                style={{ background: "var(--primary-color)" }}
+                onClick={() => setShowOrderDropdown(!showOrderDropdown)}
               >
-                ▼
-              </span>
-            </button>
+                <span className="font-normal">
+                  {orderStatus || "Order Status"}
+                </span>
+                <span
+                  className={`transform transition-transform duration-200 text-green-500 ${showOrderDropdown ? "rotate-180" : ""}`}
+                >
+                  ▼
+                </span>
+              </button>
 
-            {showOrderDropdown && (
-              <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
-                <div className="max-h-40 overflow-y-auto">
-                  {orderStatuses.map((status) => (
-                    <div
-                      key={status}
-                      className="p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 font-normal"
-                      onClick={() => handleOrderStatusChange(status)}
-                    >
-                      {status}
-                    </div>
-                  ))}
+              {showOrderDropdown && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+                  <div className="max-h-40 overflow-y-auto">
+                    {orderStatuses.map((status) => (
+                      <div
+                        key={status}
+                        className="p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 font-normal"
+                        onClick={() => handleOrderStatusChange(status)}
+                      >
+                        {status}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Update Button fixed at the bottom-right */}
+      <button
+        className="bg-green-600 text-white px-8 py-3 rounded-md font-medium hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2 shadow-sm text-base absolute bottom-6 right-6"
+        onClick={handleUpdate}
+      >
+        UPDATE
+      </button>
+      
       {/* Extra padding/space at the bottom to ensure dropdowns fit within container */}
       <div className="h-10"></div>
-
-      {/* Fixed Update Button */}
-      <div className="sticky bottom-0 bg-white py-4">
-        <div className="flex justify-end">
-          <button
-            className="bg-green-600 text-white px-8 py-3 rounded-md font-medium hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2 shadow-sm text-base"
-            onClick={handleUpdate}
-          >
-            UPDATE
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
