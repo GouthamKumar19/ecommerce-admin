@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Edit,
   ToggleOn,
@@ -7,6 +7,7 @@ import {
   StarBorder,
   Visibility,
   Delete,
+  Close,
 } from "@mui/icons-material";
 import {
   useReactTable,
@@ -35,13 +36,13 @@ interface DataTableProps<T extends BaseRecord> {
   columns: TableColumn<T>[];
   idKey: string;
   itemsPerPage?: number;
-  tableType?: "user" | "testimonial" | "product";
+  tableType?: "user" | "testimonial" | "product" | "Enquiry";
 }
 
 // Star Rating Component for testimonials
 export const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   return (
-    <div className="flex">
+    <div className="flex justify-center">
       {[1, 2, 3, 4, 5].map((star) => (
         <span key={star}>
           {star <= rating ? (
@@ -51,6 +52,126 @@ export const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
           )}
         </span>
       ))}
+    </div>
+  );
+};
+
+// Custom Modal Component with enhanced styling and smooth animations
+const CustomModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}> = ({ isOpen, onClose, title, children }) => {
+  const [animateIn, setAnimateIn] = useState(false);
+  
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    
+    if (isOpen) {
+      // Delay before starting the animation
+      timeoutId = setTimeout(() => {
+        setAnimateIn(true);
+      }, 50);
+    } else {
+      setAnimateIn(false);
+    }
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isOpen]);
+  
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-auto transition-opacity duration-300"
+      style={{ 
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(4px)',
+        opacity: animateIn ? 1 : 0 
+      }}
+      onClick={onClose}
+    >
+      <div 
+        className={`bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden transition-all duration-300 ${
+          animateIn ? 'opacity-100 transform scale-100' : 'opacity-0 transform scale-95'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
+      >
+        <div className="px-8 py-6 border-b border-gray-200 flex justify-center items-center" style={{ backgroundColor: '#0d7f3f' }}>
+          <h3 className="text-xl font-semibold text-white">{title}</h3>
+          <div 
+            className="cursor-pointer p-1.5 rounded-full hover:bg-white/20 transition-colors duration-200 flex items-center justify-center absolute right-8" 
+            onClick={onClose}
+          >
+            <Close sx={{ fontSize: 24, color: "#ffffff" }} />
+          </div>
+        </div>
+        <div className="p-8 bg-gradient-to-b from-gray-50 to-white">{children}</div>
+        <div className="px-8 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+          {/* Modal footer content if needed */}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// EnquiryPopup Component with enhanced styling
+const EnquiryPopup: React.FC<{
+  data: {
+    [key: string]: unknown;
+  };
+}> = ({ data }) => {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+        {Object.entries(data).map(([key, value]) => {
+          // Skip rendering the id key or any internal keys that start with underscore
+          if (key === "id" || key.startsWith("_") || key === "actions") {
+            return null;
+          }
+          
+          // Format the key for display
+          const formattedKey = key
+            .replace(/([A-Z])/g, ' $1')
+            .trim()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          // Special handling for message fields to make them full width and centered
+          if (key === "message" || key.includes("Message") || key.includes("Description") || key === "description") {
+            return (
+              <div key={key} className="group text-center col-span-1 md:col-span-2">
+                <span className="font-medium text-gray-500 text-sm uppercase tracking-wider block mb-2 text-center">
+                  {formattedKey}
+                </span>
+                <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm group-hover:border-blue-300 group-hover:shadow transition-all duration-200">
+                  <span className="text-gray-800 block text-center">
+                    {value ? String(value) : "N/A"}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+          
+          return (
+            <div key={key} className="group text-center">
+              <span className="font-medium text-gray-500 text-sm uppercase tracking-wider block mb-2 text-center">
+                {formattedKey}
+              </span>
+              <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm group-hover:border-blue-300 group-hover:shadow transition-all duration-200">
+                <span className="text-gray-800 block text-center">
+                  {value ? String(value) : "N/A"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -68,6 +189,8 @@ const DataTable = <T extends BaseRecord>({
     pageIndex: 0,
     pageSize: itemsPerPage,
   });
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<T | null>(null);
 
   const handleToggleRow = (id: string) => {
     setDisabledRows((prev) => {
@@ -77,6 +200,16 @@ const DataTable = <T extends BaseRecord>({
         return [...prev, id];
       }
     });
+  };
+
+  const handleOpenEnquiryDialog = (item: T) => {
+    setSelectedItem(item);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedItem(null);
   };
 
   // Convert TableColumn array to Tanstack ColumnDef array
@@ -114,6 +247,17 @@ const DataTable = <T extends BaseRecord>({
               </span>
             </div>
           );
+        } else if (tableType === "Enquiry") {
+          return (
+            <div className="flex justify-center items-center gap-4">
+              <span 
+                onClick={() => handleOpenEnquiryDialog(item)}
+                className="cursor-pointer"
+              >
+                <Visibility sx={{ fontSize: 26, color: "#000000" }} />
+              </span>
+            </div>
+          );
         } else {
           // Default action for testimonial or other types
           return (
@@ -123,10 +267,14 @@ const DataTable = <T extends BaseRecord>({
           );
         }
       } else if (column.render) {
-        return column.render(item);
+        return (
+          <div className="flex justify-center items-center">
+            {column.render(item)}
+          </div>
+        );
       } else {
         return (
-          <div className={isDisabled ? "text-gray-400" : "text-gray-900"}>
+          <div className={`text-center ${isDisabled ? "text-gray-400" : "text-gray-900"}`}>
             {String(item[column.key] ?? "N/A")}
           </div>
         );
@@ -211,11 +359,11 @@ const DataTable = <T extends BaseRecord>({
         </table>
       </div>
 
-      {/* Pagination with only page number */}
-      <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-gray-50">
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
+      {/* Pagination Controls - Centered */}
+      <div className="px-6 py-4 flex items-center justify-center border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between w-full">
+          <div className="text-center w-full">
+            <p className="text-sm text-gray-700 text-center">
               Showing{" "}
               <span className="font-medium">
                 {items.length > 0
@@ -236,7 +384,7 @@ const DataTable = <T extends BaseRecord>({
             </p>
           </div>
 
-          <div>
+          <div className="flex justify-center">
             <nav
               className="relative z-0 inline-flex items-center space-x-2"
               aria-label="Pagination"
@@ -277,6 +425,17 @@ const DataTable = <T extends BaseRecord>({
           </div>
         </div>
       </div>
+
+      {/* Enhanced Custom Modal */}
+      {tableType === "Enquiry" && (
+        <CustomModal
+          isOpen={openDialog}
+          onClose={handleCloseDialog}
+          title="Enquiry Details"
+        >
+          {selectedItem && <EnquiryPopup data={selectedItem} />}
+        </CustomModal>
+      )}
     </div>
   );
 };
