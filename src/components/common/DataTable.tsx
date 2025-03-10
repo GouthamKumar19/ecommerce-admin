@@ -36,7 +36,7 @@ interface DataTableProps<T extends BaseRecord> {
   columns: TableColumn<T>[];
   idKey: string;
   itemsPerPage?: number;
-  tableType?: "user" | "testimonial" | "product" | "Enquiry";
+  tableType?: "user" | "testimonial" | "product" | "Enquiry" | "collection";
 }
 
 // Star Rating Component for testimonials
@@ -271,6 +271,13 @@ const DataTable = <T extends BaseRecord>({
               >
                 <Visibility sx={{ fontSize: 26, color: "#000000" }} />
               </span>
+            </div>
+          );
+        }else if(tableType=="collection"){
+          return (
+            <div className="flex justify-center items-center gap-4">
+              <Edit sx={{ fontSize: 26, color: "#000000" }} />
+              <Delete sx={{ fontSize: 26, color: "#000000" }} />
             </div>
           );
         } else {

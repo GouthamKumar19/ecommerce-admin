@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddIcon from "@mui/icons-material/Add";
-import ImageSelection from "./ImageSelection";
+import ImageSelection from "../common/ImageSelection";
 import { VariantComponent, Variant } from "./Variant";
 
 interface ProductImage {
@@ -343,6 +343,9 @@ const ProductForm: React.FC = () => {
           >
             Cancel
           </Button>
+
+
+          
           <Button
             variant="contained"
             onClick={handleSubmit}

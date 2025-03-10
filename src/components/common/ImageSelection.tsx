@@ -5,6 +5,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CropIcon from "@mui/icons-material/Crop";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ImageCropper from "./ImageCrop";
+import ImagePopup from "./ImagePopup";
 
 interface ProductImage {
   id: number;
@@ -31,6 +32,10 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
   const [cropOpen, setCropOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [currentImageId, setCurrentImageId] = useState<number | null>(null);
+
+  // Popup state
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupImage, setPopupImage] = useState<string | null>(null);
 
   // Check if maximum images limit is reached
   const isMaxImagesReached = images.length >= MAX_IMAGES;
@@ -95,8 +100,8 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
     if (currentImageId !== null) {
       setImages((prev) =>
         prev.map((img) =>
-          img.id === currentImageId ? { ...img, url: croppedImageUrl } : img,
-        ),
+          img.id === currentImageId ? { ...img, url: croppedImageUrl } : img
+        )
       );
     } else {
       const newImage: ProductImage = {
@@ -116,8 +121,8 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
   const toggleImageSelection = (id: number) => {
     setImages((prev) =>
       prev.map((img) =>
-        img.id === id ? { ...img, selected: !img.selected } : img,
-      ),
+        img.id === id ? { ...img, selected: !img.selected } : img
+      )
     );
   };
 
@@ -127,9 +132,20 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
     setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
+  // Open image popup
+  const openImagePopup = (imageUrl: string) => {
+    setPopupImage(imageUrl);
+    setPopupOpen(true);
+  };
+
+  // Close image popup
+  const closeImagePopup = () => {
+    setPopupOpen(false);
+    setPopupImage(null);
+  };
+
   // Get selected images
   const selectedImages = images.filter((img) => img.selected);
-  // const selectedImagesCount = selectedImages.length;
 
   // Split images into rows
   const firstRow = selectedImages.slice(0, IMAGES_PER_ROW);
@@ -275,6 +291,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
                 onCrop={openCropDialog}
                 onDelete={deleteImage}
                 onToggle={toggleImageSelection}
+                onImageClick={openImagePopup}
               />
             ))}
           </Box>
@@ -297,6 +314,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
                   onCrop={openCropDialog}
                   onDelete={deleteImage}
                   onToggle={toggleImageSelection}
+                  onImageClick={openImagePopup}
                 />
               ))}
             </Box>
@@ -315,6 +333,13 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
         onCropComplete={handleCropComplete}
         type="product"
       />
+
+      {/* Image Popup */}
+      <ImagePopup
+        open={popupOpen}
+        imageUrl={popupImage}
+        onClose={closeImagePopup}
+      />
     </Box>
   );
 };
@@ -325,6 +350,7 @@ interface ImageBoxProps {
   onCrop: (url: string, id: number) => void;
   onDelete: (id: number, e: React.MouseEvent) => void;
   onToggle: (id: number) => void;
+  onImageClick: (url: string) => void;
 }
 
 const ImageBox: React.FC<ImageBoxProps> = ({
@@ -332,6 +358,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
   onCrop,
   onDelete,
   onToggle,
+  onImageClick,
 }) => (
   <Box
     sx={{
@@ -347,6 +374,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
         boxShadow: "0 6px 12px rgba(0,0,0,0.15)",
       },
     }}
+    onClick={() => onImageClick(image.url)}
   >
     <img
       src={image.url}
@@ -356,7 +384,6 @@ const ImageBox: React.FC<ImageBoxProps> = ({
         height: "100%",
         objectFit: "cover",
       }}
-      onClick={() => onToggle(image.id)}
     />
     <Box
       sx={{

@@ -18,6 +18,7 @@ import { ProductDetails } from "../pages/product/product-details";
 import Profile from "../pages/profile/Profile";
 import OrderDetails from "../pages/orders/order-details";
 import Enquiry from "../pages/enquiry/enquiry-section";
+import CollectionsPage from "../pages/collections/Collections";
 
 const router = createBrowserRouter([
   {
@@ -89,6 +90,10 @@ const router = createBrowserRouter([
       {
         path: "/enquiry",
         element: <Enquiry />,
+      },
+      {
+        path: "//collections",
+        element: <CollectionsPage />,
       },
     ],
   },
