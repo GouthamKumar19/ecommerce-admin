@@ -127,5 +127,47 @@ button:focus-visible {
   }
   html {
     overflow: hidden;
+  }.category-form-container {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
   }
+  
+  .category-form-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .back-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    margin-right: 15px;
+    padding: 5px 10px;
+  }
+  
+  .category-form-content {
+    margin-top: 30px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
 }
