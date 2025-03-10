@@ -1,11 +1,25 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --primary-color: #f7f7fa;
+
+  /* Blue */
+  --secondary-color: #0d7f3f;
+  --secondary-color: #0d7f3f;
+  /* White */
+  --foreground-color: #000000;
+  /* Black */
+  --background-color: #d3d3d3e1;
+  /* grey */
+  --background-color: #d3d3d3e1;
+  /* grey */
+
+  font-family: Arial, system-ui, Avenir, Helvetica, sans-serif;
+  font-family: Arial, system-ui, Avenir, Helvetica, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--foreground-color);
+  background-color: var(--background-color);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,25 +29,28 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--primary-color);
   text-decoration: inherit;
 }
+
 a:hover {
-  color: #535bf2;
+  color: #fefefe;
 }
 
 body {
   margin: 0;
-  display: flex;
+  display: contents;
   place-items: center;
-  min-width: 320px;
+  background-color: var(--primary-color);
+  min-width: 100vw;
   min-height: 100vh;
+  overflow: hidden;
 }
 
-h1 {
+/* h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
+} */
 
 button {
   border-radius: 8px;
@@ -42,27 +59,69 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--secondary-color);
   cursor: pointer;
   transition: border-color 0.25s;
+  color: #ffffff;
 }
+
 button:hover {
-  border-color: #646cff;
+  border-color: var(--primary-color);
 }
-button:focus,
+
+/* button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+} */
+.text-header {
+  background-color: var(--background-color);
+  font-weight: bold;
+  color: #000000;
+}
+.input-box {
+  border-color: #d1d5db80;
+  background-color: #f3f4f6ed;
+}
+.text-header {
+  background-color: var(--background-color);
+  font-weight: bold;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: var(--foreground-color);
+    background-color: var(--secondary-color);
   }
+
   a:hover {
-    color: #747bff;
+    color: #ffffff;
   }
+
   button {
-    background-color: #f9f9f9;
+    background-color: var(--secondary-color);
+  }
+  .example::-webkit-scrollbar {
+    overflow: hidden;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .example {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  /* Ensure the container can scroll */
+  .example {
+    overflow-y: scroll;
+    max-height: 100vh;
+
+    /* Adjust this as needed */
+    padding-right: 10px;
+    /* Ensure content is not hidden behind the hidden scrollbar */
+  }
+  html {
+    overflow: hidden;
   }
 }
