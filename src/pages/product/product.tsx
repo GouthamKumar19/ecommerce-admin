@@ -31,18 +31,24 @@ const ProductPage: React.FC = () => {
       ),
     },
     {
-      header: "Product Name",
-      key: "name",
-      render: (item: Product) => (
-        <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10">
+      header:"",
+      key:"productImage",
+      render:(item:Product)=>(
+        <div className="text-center flex-shrink-0 h-10 w-10">
             <img
               className="h-10 w-10 rounded-full"
               src={item.imageUrl}
               alt={item.name}
             />
           </div>
-          <div className="ml-4">
+      ),   
+    },
+    {
+      header: "Product Name",
+      key: "name",
+      render: (item: Product) => (
+        <div className="flex text-left">
+          <div className="ml-0">
             <div className="text-sm font-medium text-gray-900">{item.name}</div>
           </div>
         </div>
