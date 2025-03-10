@@ -64,10 +64,10 @@ const CustomModal: React.FC<{
   children: React.ReactNode;
 }> = ({ isOpen, onClose, title, children }) => {
   const [animateIn, setAnimateIn] = useState(false);
-  
+
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
-    
+
     if (isOpen) {
       // Delay before starting the animation
       timeoutId = setTimeout(() => {
@@ -76,41 +76,48 @@ const CustomModal: React.FC<{
     } else {
       setAnimateIn(false);
     }
-    
+
     return () => {
       clearTimeout(timeoutId);
     };
   }, [isOpen]);
-  
+
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-auto transition-opacity duration-300"
-      style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(4px)',
-        opacity: animateIn ? 1 : 0 
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        backdropFilter: "blur(4px)",
+        opacity: animateIn ? 1 : 0,
       }}
       onClick={onClose}
     >
-      <div 
+      <div
         className={`bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden transition-all duration-300 ${
-          animateIn ? 'opacity-100 transform scale-100' : 'opacity-0 transform scale-95'
+          animateIn
+            ? "opacity-100 transform scale-100"
+            : "opacity-0 transform scale-95"
         }`}
         onClick={(e) => e.stopPropagation()}
-        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
+        style={{ boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
       >
-        <div className="px-8 py-6 border-b border-gray-200 flex justify-center items-center" style={{ backgroundColor: '#0d7f3f' }}>
+        <div
+          className="px-8 py-6 border-b border-gray-200 flex justify-center items-center"
+          style={{ backgroundColor: "#0d7f3f" }}
+        >
           <h3 className="text-xl font-semibold text-white">{title}</h3>
-          <div 
-            className="cursor-pointer p-1.5 rounded-full hover:bg-white/20 transition-colors duration-200 flex items-center justify-center absolute right-8" 
+          <div
+            className="cursor-pointer p-1.5 rounded-full hover:bg-white/20 transition-colors duration-200 flex items-center justify-center absolute right-8"
             onClick={onClose}
           >
             <Close sx={{ fontSize: 24, color: "#ffffff" }} />
           </div>
         </div>
-        <div className="p-8 bg-gradient-to-b from-gray-50 to-white">{children}</div>
+        <div className="p-8 bg-gradient-to-b from-gray-50 to-white">
+          {children}
+        </div>
         <div className="px-8 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
           {/* Modal footer content if needed */}
         </div>
@@ -133,19 +140,27 @@ const EnquiryPopup: React.FC<{
           if (key === "id" || key.startsWith("_") || key === "actions") {
             return null;
           }
-          
+
           // Format the key for display
           const formattedKey = key
-            .replace(/([A-Z])/g, ' $1')
+            .replace(/([A-Z])/g, " $1")
             .trim()
-            .split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-          
+            .split(" ")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+
           // Special handling for message fields to make them full width and centered
-          if (key === "message" || key.includes("Message") || key.includes("Description") || key === "description") {
+          if (
+            key === "message" ||
+            key.includes("Message") ||
+            key.includes("Description") ||
+            key === "description"
+          ) {
             return (
-              <div key={key} className="group text-center col-span-1 md:col-span-2">
+              <div
+                key={key}
+                className="group text-center col-span-1 md:col-span-2"
+              >
                 <span className="font-medium text-gray-500 text-sm uppercase tracking-wider block mb-2 text-center">
                   {formattedKey}
                 </span>
@@ -157,7 +172,7 @@ const EnquiryPopup: React.FC<{
               </div>
             );
           }
-          
+
           return (
             <div key={key} className="group text-center">
               <span className="font-medium text-gray-500 text-sm uppercase tracking-wider block mb-2 text-center">
@@ -250,7 +265,7 @@ const DataTable = <T extends BaseRecord>({
         } else if (tableType === "Enquiry") {
           return (
             <div className="flex justify-center items-center gap-4">
-              <span 
+              <span
                 onClick={() => handleOpenEnquiryDialog(item)}
                 className="cursor-pointer"
               >
@@ -274,7 +289,9 @@ const DataTable = <T extends BaseRecord>({
         );
       } else {
         return (
-          <div className={`text-center ${isDisabled ? "text-gray-400" : "text-gray-900"}`}>
+          <div
+            className={`text-center ${isDisabled ? "text-gray-400" : "text-gray-900"}`}
+          >
             {String(item[column.key] ?? "N/A")}
           </div>
         );

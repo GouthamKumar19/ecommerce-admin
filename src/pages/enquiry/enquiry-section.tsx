@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const EnquirySection: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  
+
   // Define columns for enquiry table
   const columns = [
     {
@@ -23,7 +23,8 @@ const EnquirySection: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
-      render: (item: any) => (
+      // @ts-expect-error next non fixable
+      render: (item) => (
         <div className="flex justify-center">
           <button
             onClick={() => handleViewEnquiry(item.id)}
@@ -57,17 +58,17 @@ const EnquirySection: React.FC = () => {
   ];
 
   const navigate = useNavigate();
-  
-  const handleAddNewEnquiry = () => {
-    // Navigate to the enquiry details page for creating a new enquiry
-    navigate("/enquiries/new");
-  };
+
+  // const handleAddNewEnquiry = () => {
+  //   // Navigate to the enquiry details page for creating a new enquiry
+  //   navigate("/enquiries/new");
+  // };
 
   const handleViewEnquiry = (id: string) => {
     // Navigate to the enquiry details page
     navigate(`/enquiries/${id}`);
   };
-  
+
   return (
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
@@ -109,13 +110,11 @@ const EnquirySection: React.FC = () => {
               </div>
             </form>
           </div>
-          
-          <div className="flex ml-auto">
-           
-          </div>
+
+          <div className="flex ml-auto"></div>
         </div>
       </div>
-      
+
       {/* Enquiries Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable

@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Box,
-  Typography,
-  Divider,
-  Paper,
-  Chip,
-  Stack
-} from "@mui/material";
+import { Box, Typography, Divider, Paper, Chip, Stack } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 interface EnquiryPopupProps {
@@ -27,7 +20,9 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ data }) => {
   // Function to determine if a value should be displayed as a special element
   const renderValue = (value: unknown) => {
     if (value === null || value === undefined) {
-      return <Chip size="small" label="N/A" color="default" variant="outlined" />;
+      return (
+        <Chip size="small" label="N/A" color="default" variant="outlined" />
+      );
     } else if (typeof value === "boolean") {
       return (
         <Chip
@@ -48,7 +43,10 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ data }) => {
           {value}
         </Typography>
       );
-    } else if (typeof value === "string" && (value.startsWith("http") || value.startsWith("www"))) {
+    } else if (
+      typeof value === "string" &&
+      (value.startsWith("http") || value.startsWith("www"))
+    ) {
       // Special handling for URLs
       return (
         <a href={value.toString()} target="_blank" rel="noopener noreferrer">
@@ -75,7 +73,12 @@ const EnquiryPopup: React.FC<EnquiryPopupProps> = ({ data }) => {
       {/* Simple header with only info icon and title */}
       <Box display="flex" alignItems="center" mb={2}>
         <InfoOutlinedIcon color="primary" sx={{ mr: 1 }} />
-        <Typography variant="h6" component="h2" color="primary.main" fontWeight="bold">
+        <Typography
+          variant="h6"
+          component="h2"
+          color="primary.main"
+          fontWeight="bold"
+        >
           Enquiry Information
         </Typography>
       </Box>

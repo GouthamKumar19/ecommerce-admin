@@ -100,7 +100,8 @@ button:focus-visible {
   button {
     background-color: var(--secondary-color);
   }
- html,body{
+  html,
+  body {
     overflow: hidden;
   }
   .example::-webkit-scrollbar {
