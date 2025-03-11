@@ -22,6 +22,7 @@ import CollectionsPage from "../pages/collections/Collections";
 import CategoryPage from "../pages/category/Category";
 import Order from "../pages/orders/orders";
 import { CategoryDetails } from "../pages/category/CategoryDetails";
+import CollectionDetails from "../pages/collections/collection-details";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -80,6 +81,10 @@ const router = createBrowserRouter([
       {
         path: "/product/new",
         element: <ProductDetails />,
+      },
+      {
+        path: "/collection/collection-details",
+        element: <CollectionDetails />,
       },
       {
         path: "/profile",

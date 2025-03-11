@@ -18,18 +18,20 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
 
     // Define all path patterns and their corresponding titles
     const pathPatterns = {
-      '/products': 'Products',
-      '/product': 'Products', // Handle single product routes
-      '/users': 'Users',
-      '/testimonials': 'Testimonials',
-      '/category': 'Category',
-      '/collections': 'Collections',
-      '/enquiry': 'Enquiry',
-      '/settings': 'Settings',
-      '/profile': 'Profile',
-      '/orders': 'Orders',
-      '/dashboard': 'Dashboard',
-      '/': 'Dashboard'
+      "/products": "Products",
+      "/product": "Products", // Handle single product routes
+      "/users": "Users",
+      "/testimonials": "Testimonials",
+      "/category": "Category",
+      "/collections": "Collections",
+      "/collections/new": "Collection", // Add this line
+      "/collection/collection-details": "Collections", // Add this line
+      "/enquiry": "Enquiry",
+      "/settings": "Settings",
+      "/profile": "Profile",
+      "/orders": "Orders",
+      "/dashboard": "Dashboard",
+      "/": "Dashboard",
     };
 
     // Check each pattern against the current path
@@ -39,7 +41,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       }
     }
 
-    return 'Dashboard'; // Default fallback
+    return "Dashboard"; // Default fallback
   };
 
   useEffect(() => {
@@ -125,7 +127,9 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
               className="flex items-center space-x-2 cursor-pointer"
               onClick={toggleDropdown}
             >
-              <span className="text-white text-sm font-medium">AnmolSShetty</span>
+              <span className="text-white text-sm font-medium">
+                AnmolSShetty
+              </span>
               <img
                 className="h-8 w-8 rounded-full border border-white"
                 src="https://ui-avatars.com/api/?name=AnmolSShetty&background=0D8ABC&color=fff"

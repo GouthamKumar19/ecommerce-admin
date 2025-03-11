@@ -11,7 +11,7 @@ const CollectionsPage: React.FC = () => {
 
   const handleAddNewCollection = () => {
     // Navigate to the collection creation page
-    navigate("/collection/new");
+    navigate("/collection/collection-details");
   };
 
   // Define columns for collections table

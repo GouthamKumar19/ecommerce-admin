@@ -169,19 +169,6 @@ button:focus-visible {
     border-radius: 4px;
     font-size: 16px;
   }
-  .calendar-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.react-calendar {
-  border: none;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  width: 100%;
-  max-width: 500px;
-}
+  
   
 }
