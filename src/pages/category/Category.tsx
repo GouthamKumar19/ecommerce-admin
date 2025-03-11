@@ -4,7 +4,6 @@ import { Category } from '../../types/category.types';
 import { mockCategoryData } from '../../config/mock/categoryTable';
 import { useNavigate } from "react-router-dom";
 import { Box, Chip } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 
 const SubcategoryCell: React.FC<{ category: string }> = ({ category }) => {
@@ -148,8 +147,8 @@ const CategoryPage: React.FC = () => {
               className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
               onClick={handleAdd}
             >
-              <AddIcon sx={{ fontSize: 16 }} />
-              Add Category
+              
+            Add Category
             </button>
           </div>
         </div>
