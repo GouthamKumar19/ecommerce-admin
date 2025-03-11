@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ImageSelection from '../common/ImageSelection';
+import SubcategoryForm from './SubcategoryForm'; // Import the SubCategoryForm
 
 // Define interface matching what ImageSelection expects
 interface ProductForm {
@@ -15,7 +16,7 @@ interface ProductForm {
   selected: boolean;
 }
 
-const CategoryForm:React.FC = () =>{
+const CategoryForm: React.FC = () => {
   const [categoryName, setCategoryName] = useState('');
 
   // Initialize with the correct structure that includes id and selected properties
@@ -55,7 +56,7 @@ const CategoryForm:React.FC = () =>{
           <Grid container spacing={3} justifyContent="flex-start" style={{ flex: 1 }}>
             <Grid item xs={12} style={{ height: '100%' }}>
               <Typography variant="subtitle1" gutterBottom align="left">
-                Product Images
+                Category Images
               </Typography>
               <Box
                 sx={{
@@ -70,6 +71,12 @@ const CategoryForm:React.FC = () =>{
               </Box>
             </Grid>
           </Grid>
+          
+          {/* Divider between Category and Subcategory sections */}
+          <div className="divider" style={{ borderTop: '1px solid #eee', margin: '24px 0' }}></div>
+          
+          {/* Include the SubCategoryForm component */}
+          <SubcategoryForm />
         </div>
       </div>
     </div>

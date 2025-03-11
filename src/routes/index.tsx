@@ -19,6 +19,7 @@ import Profile from "../pages/profile/Profile";
 import OrderDetails from "../pages/orders/order-details";
 import Enquiry from "../pages/enquiry/enquiry-section";
 import CategoryPage from "../pages/category/Category";
+import Order from "../pages/orders/orders";
 import { CategoryDetails } from "../pages/category/CategoryDetails";
 const router = createBrowserRouter([
   {
@@ -85,6 +86,10 @@ const router = createBrowserRouter([
       },
       {
         path: "/orders",
+        element: <Order />,
+      },
+      {
+        path: "/orders/:id",
         element: <OrderDetails />,
       },
       {
