@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import {
   Edit,
-  ToggleOn,
-  ToggleOff,
-  Star,
-  StarBorder,
   Visibility,
   Delete,
   Close,
+  Star,
+  StarBorder,
 } from "@mui/icons-material";
+import Switch from "@mui/material/Switch";
 import {
   useReactTable,
   getCoreRowModel,
@@ -37,7 +36,13 @@ interface DataTableProps<T extends BaseRecord> {
   columns: TableColumn<T>[];
   idKey: string;
   itemsPerPage?: number;
-  tableType?: "user" | "testimonial" | "product" | "Enquiry" | "collection"|"order";
+  tableType?:
+    | "user"
+    | "testimonial"
+    | "product"
+    | "Enquiry"
+    | "collection"
+    | "order";
 }
 
 // Star Rating Component for testimonials
@@ -207,7 +212,8 @@ const DataTable = <T extends BaseRecord>({
   });
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
   const handleToggleRow = (id: string) => {
     setDisabledRows((prev) => {
       if (prev.includes(id)) {
@@ -224,9 +230,9 @@ const navigate = useNavigate();
   };
 
   const handlePushToOrder = (item: T) => {
-    // Push to order details page 
+    // Push to order details page
     navigate(`/ordersData/${item.orderId}`);
-  }
+  };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -250,36 +256,41 @@ const navigate = useNavigate();
         if (tableType === "product") {
           return (
             <div className="flex justify-center items-center gap-4">
-              <Visibility sx={{ fontSize: 26, color: "#000000" }} />
-              <Edit sx={{ fontSize: 26, color: "#000000" }} />
-              <Delete sx={{ fontSize: 26, color: "#000000" }} />
+              <Visibility sx={{ fontSize: 26, color: "#0d7f3f" }} />
+              <Edit sx={{ fontSize: 26, color: "#0d7f3f" }} />
+              <Delete sx={{ fontSize: 26, color: "#0d7f3f" }} />
             </div>
           );
         } else if (tableType === "user") {
           return (
             <div className="flex justify-center items-center gap-4">
-              <Edit sx={{ fontSize: 26, color: "#000000" }} />
-              <span onClick={() => handleToggleRow(String(item[idKey]))}>
-                {isDisabled ? (
-                  <ToggleOff sx={{ fontSize: 26, color: "#000000" }} />
-                ) : (
-                  <ToggleOn sx={{ fontSize: 26, color: "#000000" }} />
-                )}
-              </span>
+              <Edit sx={{ fontSize: 26, color: "#0d7f3f" }} />
+              <Switch
+                checked={!isDisabled}
+                onChange={() => handleToggleRow(String(item[idKey]))}
+                inputProps={{ "aria-label": "Toggle user status" }}
+                sx={{
+                  "& .MuiSwitch-switchBase.Mui-checked": {
+                    color: "#0d7f3f",
+                  },
+                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                    backgroundColor: "#0d7f3f",
+                  },
+                }}
+              />
             </div>
           );
-          } else if (tableType === "order") {
+        } else if (tableType === "order") {
           return (
             <div className="flex justify-center items-center gap-4">
               <span
                 onClick={() => handlePushToOrder(item)}
                 className="cursor-pointer"
               >
-                <Visibility sx={{ fontSize: 26, color: "#000000" }} />
+                <Visibility sx={{ fontSize: 26, color: "#0d7f3f" }} />
               </span>
             </div>
           );
-          
         } else if (tableType === "Enquiry") {
           return (
             <div className="flex justify-center items-center gap-4">
@@ -287,23 +298,22 @@ const navigate = useNavigate();
                 onClick={() => handleOpenEnquiryDialog(item)}
                 className="cursor-pointer"
               >
-                <Visibility sx={{ fontSize: 26, color: "#000000" }} />
+                <Visibility sx={{ fontSize: 26, color: "#0d7f3f" }} />
               </span>
             </div>
           );
-        }else if(tableType=="collection"){
+        } else if (tableType === "collection") {
           return (
             <div className="flex justify-center items-center gap-4">
-              <Edit sx={{ fontSize: 26, color: "#000000" }} />
-              <Delete sx={{ fontSize: 26, color: "#000000" }} />
+              <Edit sx={{ fontSize: 26, color: "#0d7f3f" }} />
+              <Delete sx={{ fontSize: 26, color: "#0d7f3f" }} />
             </div>
           );
-          
         } else {
           // Default action for testimonial or other types
           return (
             <div className="flex justify-center items-center gap-4">
-              <Edit sx={{ fontSize: 26, color: "#000000" }} />
+              <Edit sx={{ fontSize: 26, color: "#0d7f3f" }} />
             </div>
           );
         }
@@ -313,7 +323,6 @@ const navigate = useNavigate();
             {column.render(item)}
           </div>
         );
-        
       } else {
         return (
           <div
@@ -344,21 +353,24 @@ const navigate = useNavigate();
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+      <div className="overflow-x-auto max-h-[70vh]">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="sticky top-0 text-header">
+          <thead
+            className="bg-white z-10"
+            style={{ position: "sticky", top: 0 }}
+          >
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-3 text-center text-header font-medium uppercase tracking-wider"
+                    className="px-6 py-3 text-center text-header font-medium uppercase tracking-wider bg-white"
                   >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext(),
+                          header.getContext()
                         )}
                   </th>
                 ))}
@@ -383,7 +395,7 @@ const navigate = useNavigate();
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </td>
                   ))}
@@ -421,7 +433,7 @@ const navigate = useNavigate();
                 {Math.min(
                   (table.getState().pagination.pageIndex + 1) *
                     table.getState().pagination.pageSize,
-                  items.length,
+                  items.length
                 )}
               </span>{" "}
               of <span className="font-medium">{items.length}</span> results

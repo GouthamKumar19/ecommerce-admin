@@ -1,5 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import { useMediaQuery, useTheme } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -13,6 +15,10 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   const [logoutVisible, setLogoutVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Use MUI theme and media queries for responsive behavior
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
+
   const getPageTitle = () => {
     const path = location.pathname.toLowerCase();
 
@@ -24,8 +30,8 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       "/testimonials": "Testimonials",
       "/category": "Category",
       "/collections": "Collections",
-      "/collections/new": "Collection", // Add this line
-      "/collection/collection-details": "Collections", // Add this line
+      "/collections/new": "Collection",
+      "/collection/collection-details": "Collections",
       "/enquiry": "Enquiry",
       "/settings": "Settings",
       "/profile": "Profile",
@@ -87,33 +93,33 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
     setDropdownOpen(!dropdownOpen);
   };
 
+  // Fixed hamburger menu click handler
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Hamburger menu clicked - calling toggle function");
+    // Directly call the toggle function from props
+    onToggleSidebar();
+  };
+
   return (
     <>
       <header className="bg-[#0d7f3f] h-14 flex items-center px-6 relative">
-        {/* Menu Button */}
-        <button
-          onClick={onToggleSidebar}
-          className="text-white hover:bg-green-700 p-2 rounded-lg transition-colors"
-          aria-label="Toggle Sidebar"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        {/* Always show hamburger on mobile/tablet */}
+        {isMobile && (
+          <div
+            onClick={handleMenuClick}
+            className="text-white hover:bg-green-700 rounded-lg p-2 transition-colors z-20 cursor-pointer"
+            aria-label="Toggle Sidebar"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
+            <MenuIcon />
+          </div>
+        )}
 
         {/* Center section with title */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
+        <div
+          className={`${isMobile ? "absolute left-1/2 transform -translate-x-1/2" : "ml-135"} flex items-center`}
+        >
           <h1 className="text-white text-2xl font-semibold tracking-wide whitespace-nowrap">
             {getPageTitle()}
           </h1>
@@ -153,7 +159,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
             </div>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-gray-100 text-gray-900">
+              <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-gray-100 text-gray-900 z-50">
                 <div
                   onClick={handleProfileClick}
                   className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 cursor-pointer"
