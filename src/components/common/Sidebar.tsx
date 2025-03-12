@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import LogoImage from "/src/assets/logo/logo.jpeg"; // Update this path to your actual logo file
+import LogoImage from "/src/assets/logo/logo.jpeg";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,45 +27,90 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     { title: "Enquiry", path: "/enquiry", icon: <EnquiryIcon /> },
     { title: "Settings", path: "/settings", icon: <SettingsIcon /> },
   ];
+  
+  // Handle the cancel icon click
+  const handleCancelClick = (e: React.MouseEvent) => {
+    // Stop the event from propagating to parent
+    e.stopPropagation();
+    // Call the onClose function passed from parent
+  
+    // Log for debugging
+    console.log("Cancel icon clicked");
+  };
 
   return (
-    <aside
-      className={`bg-[#0d7f3f] text-white w-64 min-h-screen ${
-        isOpen ? "block" : "hidden"
-      } lg:block transition-all duration-300`}
-    >
-      <div className="p-4 flex items-center justify-center">
-        {/* Use imported logo image */}
-        <img src={LogoImage} alt="Company Logo" className="h-12 w-auto" />
-      </div>
-      <nav className="mt-6">
-        <ul>
-          {navItems.map((item, index) => (
-            <li key={index} className="px-2 py-1">
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center px-4 py-2 rounded-md transition-all ${
-                    isActive
-                      ? "bg-green-900 text-white"
-                      : "text-gray-200 hover:bg-green-800"
-                  }`
-                }
-              >
-                <span className="mr-3">{item.icon}</span>
-                <span>{item.title}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </aside>
+    <>
+      {/* Overlay */}
+      <div 
+        className={`fixed inset-0 bg-black/15 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden ${
+          isOpen ? 'opacity-100 visible z-20' : 'opacity-0 invisible'
+        }`}
+    
+        aria-hidden="true"
+      />
+      
+      {/* Separate Cancel Icon with higher z-index */}
+      {isOpen && (
+        <div 
+          className="fixed top-4 right-4 z-30 lg:hidden cursor-pointer"
+          onClick={handleCancelClick}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-white hover:text-gray-200 transition-colors"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </div>
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 bg-[#0d7f3f] text-white w-64 h-screen z-30 transform transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:relative lg:translate-x-0`}
+      >
+        <div className="p-4 flex items-center justify-center">
+          <img src={LogoImage} alt="Company Logo" className="h-12 w-auto" />
+        </div>
+        <nav className="mt-6 overflow-y-auto">
+          <ul>
+            {navItems.map((item, index) => (
+              <li key={index} className="px-2 py-1">
+                <NavLink
+                  to={item.path}
+                 
+                  className={({ isActive }) =>
+                    `flex items-center px-4 py-2 rounded-md transition-all ${
+                      isActive
+                        ? "bg-green-900 text-white"
+                        : "text-gray-200 hover:bg-green-800"
+                    }`
+                  }
+                >
+                  <span className="mr-3">{item.icon}</span>
+                  <span>{item.title}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+    </>
   );
 };
 
 export default Sidebar;
 
-// Icons
+// Icons Components remain the same
 const DashboardIcon = () => (
   <svg
     className="h-5 w-5"

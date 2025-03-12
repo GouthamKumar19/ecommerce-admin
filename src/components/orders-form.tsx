@@ -6,10 +6,12 @@ import {
   paymentStatuses,
   orderStatuses,
 } from "../config/mock/ordersData";
+import { useNavigate } from "react-router-dom";
 
 const OrdersForm = () => {
   // State to hold the current order
   const [order, setOrder] = useState<Order | null>(null);
+  const navigate = useNavigate();
 
   // States for dropdown controls
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | "">("");
@@ -79,6 +81,10 @@ const OrdersForm = () => {
     }
   };
 
+  const handleBackClick = () => {
+    navigate("/orders");
+  };
+
   if (!order) {
     return <div className="p-4">Loading order data...</div>;
   }
@@ -89,7 +95,11 @@ const OrdersForm = () => {
       {/* Add relative positioning */}
       {/* Back button */}
       <div className="mb-3">
-        <ArrowLeft size={24} className="text-gray-700 cursor-pointer" />
+        <ArrowLeft
+          size={24}
+          className="text-gray-700 cursor-pointer"
+          onClick={handleBackClick}
+        />
       </div>
       {/* Order ID as title */}
       <div className="mb-4 px-2">
@@ -208,7 +218,11 @@ const OrdersForm = () => {
               PAYMENT STATUS
             </label>
             <button
-              className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${showPaymentDropdown ? "focus:outline-none focus:ring-2 focus:ring-green-500" : ""}`}
+              className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${
+                showPaymentDropdown
+                  ? "focus:outline-none focus:ring-2 focus:ring-green-500"
+                  : ""
+              }`}
               style={{ background: "var(--primary-color)" }}
               onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
             >
@@ -216,7 +230,9 @@ const OrdersForm = () => {
                 {paymentStatus || "Payment Status"}
               </span>
               <span
-                className={`transform transition-transform duration-200 text-green-500 ${showPaymentDropdown ? "rotate-180" : ""}`}
+                className={`transform transition-transform duration-200 text-green-500 ${
+                  showPaymentDropdown ? "rotate-180" : ""
+                }`}
               >
                 ▼
               </span>
@@ -246,7 +262,11 @@ const OrdersForm = () => {
                 ORDER STATUS
               </label>
               <button
-                className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${showOrderDropdown ? "focus:outline-none focus:ring-2 focus:ring-green-500" : ""}`}
+                className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${
+                  showOrderDropdown
+                    ? "focus:outline-none focus:ring-2 focus:ring-green-500"
+                    : ""
+                }`}
                 style={{ background: "var(--primary-color)" }}
                 onClick={() => setShowOrderDropdown(!showOrderDropdown)}
               >
@@ -254,7 +274,9 @@ const OrdersForm = () => {
                   {orderStatus || "Order Status"}
                 </span>
                 <span
-                  className={`transform transition-transform duration-200 text-green-500 ${showOrderDropdown ? "rotate-180" : ""}`}
+                  className={`transform transition-transform duration-200 text-green-500 ${
+                    showOrderDropdown ? "rotate-180" : ""
+                  }`}
                 >
                   ▼
                 </span>

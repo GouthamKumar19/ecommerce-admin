@@ -13,26 +13,35 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   const [logoutVisible, setLogoutVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Function to get the current page title based on the path
   const getPageTitle = () => {
-    const path = location.pathname;
+    const path = location.pathname.toLowerCase();
 
-    // Define mapping of paths to titles
-    const pathTitles: { [key: string]: string } = {
-      "/": "Dashboard",
-      "/dashboard": "Dashboard",
-      "/users": "Users",
+    // Define all path patterns and their corresponding titles
+    const pathPatterns = {
       "/products": "Products",
-      "/orders": "Orders",
+      "/product": "Products", // Handle single product routes
+      "/users": "Users",
       "/testimonials": "Testimonials",
       "/category": "Category",
       "/collections": "Collections",
+      "/collections/new": "Collection", // Add this line
+      "/collection/collection-details": "Collections", // Add this line
       "/enquiry": "Enquiry",
       "/settings": "Settings",
       "/profile": "Profile",
+      "/orders": "Orders",
+      "/dashboard": "Dashboard",
+      "/": "Dashboard",
     };
 
-    return pathTitles[path] || "Dashboard"; // Default to Dashboard if path not found
+    // Check each pattern against the current path
+    for (const [pattern, title] of Object.entries(pathPatterns)) {
+      if (path.startsWith(pattern)) {
+        return title;
+      }
+    }
+
+    return "Dashboard"; // Default fallback
   };
 
   useEffect(() => {
@@ -66,7 +75,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
 
   const cancelLogout = () => {
     setLogoutVisible(false);
-    setTimeout(() => setShowLogoutConfirm(false), 0); // No delay, closes instantly
+    setTimeout(() => setShowLogoutConfirm(false), 0);
   };
 
   const handleProfileClick = () => {
@@ -80,10 +89,11 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
 
   return (
     <>
-      <header className="bg-[#0d7f3f] h-14 flex items-center justify-between px-6">
+      <header className="bg-[#0d7f3f] h-14 flex items-center px-6 relative">
+        {/* Menu Button */}
         <button
-          className="text-white hover:bg-green-700 p-2 rounded focus:outline-none lg:hidden"
           onClick={onToggleSidebar}
+          className="text-white hover:bg-green-700 p-2 rounded-lg transition-colors"
           aria-label="Toggle Sidebar"
         >
           <svg
@@ -102,56 +112,67 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
           </svg>
         </button>
 
-        <div className="hidden lg:block w-6"></div>
+        {/* Center section with title */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
+          <h1 className="text-white text-2xl font-semibold tracking-wide whitespace-nowrap">
+            {getPageTitle()}
+          </h1>
+        </div>
 
-        <h1 className="text-white text-2xl font-semibold tracking-wide">
-          {getPageTitle()}
-        </h1>
-
-        <div className="relative" ref={dropdownRef}>
-          <div
-            className="flex items-center space-x-2 cursor-pointer"
-            onClick={toggleDropdown}
-          >
-            <span className="text-white text-sm font-medium">Admin User</span>
-            <img
-              className="h-8 w-8 rounded-full border border-white"
-              src="https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff"
-              alt="Profile"
-            />
-            <svg
-              className={`h-4 w-4 text-white transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+        {/* Right section with profile */}
+        <div className="ml-auto flex items-center space-x-6">
+          {/* Profile dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={toggleDropdown}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
+              <span className="text-white text-sm font-medium">
+                AnmolSShetty
+              </span>
+              <img
+                className="h-8 w-8 rounded-full border border-white"
+                src="https://ui-avatars.com/api/?name=AnmolSShetty&background=0D8ABC&color=fff"
+                alt="Profile"
               />
-            </svg>
-          </div>
-
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-gray-100 text-gray-900">
-              <div
-                onClick={handleProfileClick}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 cursor-pointer"
+              <svg
+                className={`h-4 w-4 text-white transition-transform duration-200 ${
+                  dropdownOpen ? "rotate-180" : ""
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                Profile
-              </div>
-              <div
-                onClick={handleLogout}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 cursor-pointer"
-              >
-                Logout
-              </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </div>
-          )}
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-gray-100 text-gray-900">
+                <div
+                  onClick={handleProfileClick}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 cursor-pointer"
+                >
+                  Profile
+                </div>
+                <div
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 cursor-pointer"
+                >
+                  Logout
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
+
+      {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div
           className={`fixed inset-0 flex items-center justify-center z-50 transition-all duration-200 ${
@@ -205,7 +226,6 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
               </svg>
             </div>
 
-            {/* Logout Message */}
             <h3 className="text-xl font-semibold text-center text-gray-800 mt-4">
               Are you sure?
             </h3>
@@ -213,7 +233,6 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
               You will be logged out of your account.
             </p>
 
-            {/* Buttons */}
             <div className="flex justify-center space-x-4 mt-6">
               <button
                 onClick={confirmLogout}

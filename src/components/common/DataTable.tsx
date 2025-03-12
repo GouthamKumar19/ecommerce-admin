@@ -17,6 +17,7 @@ import {
   getPaginationRowModel,
   PaginationState,
 } from "@tanstack/react-table";
+import { useNavigate } from "react-router-dom";
 
 // Define a base interface for data objects
 interface BaseRecord {
@@ -36,7 +37,7 @@ interface DataTableProps<T extends BaseRecord> {
   columns: TableColumn<T>[];
   idKey: string;
   itemsPerPage?: number;
-  tableType?: "user" | "testimonial" | "product" | "Enquiry";
+  tableType?: "user" | "testimonial" | "product" | "Enquiry" | "collection"|"order";
 }
 
 // Star Rating Component for testimonials
@@ -206,7 +207,7 @@ const DataTable = <T extends BaseRecord>({
   });
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
-
+const navigate = useNavigate();
   const handleToggleRow = (id: string) => {
     setDisabledRows((prev) => {
       if (prev.includes(id)) {
@@ -221,6 +222,11 @@ const DataTable = <T extends BaseRecord>({
     setSelectedItem(item);
     setOpenDialog(true);
   };
+
+  const handlePushToOrder = (item: T) => {
+    // Push to order details page 
+    navigate(`/ordersData/${item.orderId}`);
+  }
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -262,6 +268,18 @@ const DataTable = <T extends BaseRecord>({
               </span>
             </div>
           );
+          } else if (tableType === "order") {
+          return (
+            <div className="flex justify-center items-center gap-4">
+              <span
+                onClick={() => handlePushToOrder(item)}
+                className="cursor-pointer"
+              >
+                <Visibility sx={{ fontSize: 26, color: "#000000" }} />
+              </span>
+            </div>
+          );
+          
         } else if (tableType === "Enquiry") {
           return (
             <div className="flex justify-center items-center gap-4">
@@ -273,6 +291,14 @@ const DataTable = <T extends BaseRecord>({
               </span>
             </div>
           );
+        }else if(tableType=="collection"){
+          return (
+            <div className="flex justify-center items-center gap-4">
+              <Edit sx={{ fontSize: 26, color: "#000000" }} />
+              <Delete sx={{ fontSize: 26, color: "#000000" }} />
+            </div>
+          );
+          
         } else {
           // Default action for testimonial or other types
           return (
@@ -287,6 +313,7 @@ const DataTable = <T extends BaseRecord>({
             {column.render(item)}
           </div>
         );
+        
       } else {
         return (
           <div

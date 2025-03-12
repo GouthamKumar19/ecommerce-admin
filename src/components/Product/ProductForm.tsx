@@ -8,9 +8,12 @@ import {
   IconButton,
   InputAdornment,
   Box,
+  Button,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ImageSelection from "./ImageSelection";
+import AddIcon from "@mui/icons-material/Add";
+import ImageSelection from "../common/ImageSelection";
+import { VariantComponent, Variant } from "./Variant";
 
 interface ProductImage {
   id: number;
@@ -28,14 +31,55 @@ const ProductForm: React.FC = () => {
   const [featured, setFeatured] = useState<boolean>(false);
   const [images, setImages] = useState<ProductImage[]>([]);
 
+  // Add state for variants
+  const [variants, setVariants] = useState<Variant[]>([]);
+
   // Sample category and subcategory data
   const categories = ["Footwear", "Clothing", "Accessories"];
   const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
 
+  // Group variants by completion status
+  const completedVariants = variants.filter((v) => v.isComplete);
+  const incompleteVariants = variants.filter((v) => !v.isComplete);
+
+  // Functions to handle variants
+  const addVariant = () => {
+    const newVariant: Variant = {
+      id: `variant-${Date.now()}`,
+      optionName: "",
+      optionValues: [],
+      isComplete: false,
+    };
+    setVariants([...variants, newVariant]);
+  };
+
+  const deleteVariant = (id: string) => {
+    setVariants(variants.filter((variant) => variant.id !== id));
+  };
+
+  const completeVariant = (updatedVariant: Variant) => {
+    setVariants(
+      variants.map((variant) =>
+        variant.id === updatedVariant.id ? updatedVariant : variant
+      )
+    );
+  };
+
+  // Handle form submission and cancellation
+  const handleSubmit = () => {
+    // Form submission logic here
+    console.log("Form submitted");
+  };
+
+  const handleCancel = () => {
+    // Cancel logic here
+    console.log("Form cancelled");
+  };
+
   return (
-    <div className="ml-8 mr-8 mb-6">
-      <div className="relative ml-0">
-        <div className="mb-6 text-left">
+    <div className="ml-8 mr-8 mb-6 example">
+      <div className="relative ml-0 example">
+        <div className="mb-12 text-left example">
           <IconButton
             style={{
               position: "relative",
@@ -208,8 +252,114 @@ const ProductForm: React.FC = () => {
               </Box>
             </Grid>
           </Grid>
-          {/* Action buttons */}
+
+          {/* Fifth section: Variants - Updated to move the "Add variants" label below components */}
+          <Grid container spacing={3} sx={{ mt: 2, mb: 12 }}>
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" gutterBottom align="left">
+                Variants
+              </Typography>
+              <Box sx={{ width: "100%" }}>
+                {/* Display completed variants first */}
+                {completedVariants.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    {completedVariants.map((variant) => (
+                      <VariantComponent
+                        key={variant.id}
+                        variant={variant}
+                        onDelete={() => deleteVariant(variant.id)}
+                        onComplete={completeVariant}
+                      />
+                    ))}
+                  </Box>
+                )}
+
+                {/* Display incomplete variants */}
+                {incompleteVariants.map((variant) => (
+                  <VariantComponent
+                    key={variant.id}
+                    variant={variant}
+                    onDelete={() => deleteVariant(variant.id)}
+                    onComplete={completeVariant}
+                  />
+                ))}
+
+                {/* Add variants button now appears below all variants */}
+                <Box
+                  sx={{ mt: 2, display: "flex", justifyContent: "flex-start" }}
+                >
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={addVariant}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      textAlign: "left",
+                      padding: "6px 8px",
+                      minWidth: "auto",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                      },
+                    }}
+                    variant="text"
+                  >
+                    Add variants like size and color
+                  </Button>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
         </div>
+
+        {/* Fixed buttons at the bottom right that stay in place during scroll */}
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: "20px",
+            right: "20px",
+            zIndex: 1000,
+            py: 2,
+            px: 2,
+
+            borderRadius: "4px",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 2,
+            maxWidth: "calc(100% - 16px)", // Keep within the container with some margin
+            // Limit the width to stay within the parent container
+            width: "auto",
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleCancel}
+            sx={{
+              borderColor: "grey.500",
+              color: "grey.700",
+              "&:hover": {
+                borderColor: "grey.700",
+                backgroundColor: "grey.50",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+
+
+          
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            sx={{
+              bgcolor: "var(--secondary-color, #4CAF50)",
+              color: "white",
+              "&:hover": {
+                bgcolor: "var(--secondary-dark-color, #388E3C)",
+              },
+            }}
+          >
+            Confirm
+          </Button>
+        </Box>
       </div>
     </div>
   );
