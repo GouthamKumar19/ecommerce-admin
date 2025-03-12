@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Typography, Grid, Box, Button } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import ImageSelection from "../components/common/ImageSelection";
 
 // Define interface matching what ImageSelection expects
@@ -14,17 +14,8 @@ const CollectionForm: React.FC = () => {
   const [collectionName, setCollectionName] = useState("");
   const [images, setImages] = useState<CollectionForm[]>([]);
 
-  const navigate = useNavigate();
 
-  const handleCancel = () => {
-    navigate("/collections");
-  };
 
-  const handleAddCollection = () => {
-    // Implement add collection logic here
-    console.log("Adding collection:", { collectionName, images });
-    navigate("/collections");
-  };
 
   return (
     <div className="ml-8 mr-8 mb-6">
@@ -61,7 +52,7 @@ const CollectionForm: React.FC = () => {
         >
           <Grid item xs={12} style={{ height: "100%" }}>
             <Typography variant="subtitle1" gutterBottom align="left">
-              Collection Images
+              COLLECTION IMAGES
             </Typography>
             <Box
               sx={{
@@ -75,27 +66,33 @@ const CollectionForm: React.FC = () => {
               <ImageSelection images={images} setImages={setImages} />
               <div className="flex justify-end mt-4">
                 <Button
-                  variant="contained"
-                  style={{
-                    backgroundColor: "#0d7f3f",
-                    color: "white",
-                    marginRight: "8px",
-                    minWidth: "100px",
+                  variant="outlined"
+                  sx={{
+                    borderColor: "#0d7f3f",
+                    color: "#0d7f3f",
+                    width: "96px",
+                    mr: 2, // Adds right margin
+                    "&:hover": {
+                      borderColor: "grey.700",
+                      backgroundColor: "grey.50",
+                    },
                   }}
-                  onClick={handleCancel}
                 >
-                  Cancel
+                  CANCEL
                 </Button>
+
                 <Button
                   variant="contained"
-                  style={{
-                    backgroundColor: "#0d7f3f",
+                  sx={{
+                    bgcolor: "var(--secondary-color, #4CAF50)",
                     color: "white",
-                    minWidth: "100px",
+                    width: "96px",
+                    "&:hover": {
+                      bgcolor: "var(--secondary-dark-color, #388E3C)",
+                    },
                   }}
-                  onClick={handleAddCollection}
                 >
-                  Add
+                  ADD
                 </Button>
               </div>
             </Box>

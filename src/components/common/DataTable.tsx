@@ -37,7 +37,7 @@ interface DataTableProps<T extends BaseRecord> {
   columns: TableColumn<T>[];
   idKey: string;
   itemsPerPage?: number;
-  tableType?: "user" | "testimonial" | "product" | "Enquiry" | "collection"|"order";
+  tableType?: "user" | "testimonial" | "product" | "Enquiry" | "collection"|"order"|"category";
 }
 
 // Star Rating Component for testimonials
@@ -208,6 +208,17 @@ const DataTable = <T extends BaseRecord>({
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
 const navigate = useNavigate();
+
+const handleViewOrder = (item: T) => {
+  // Navigate to order details page
+  navigate(`/orders/${item[idKey]}`);
+};
+
+const handleEditProduct = (item: T) => {
+  // Navigate to product details page
+  navigate(`/product/${item[idKey]}`);
+};
+
   const handleToggleRow = (id: string) => {
     setDisabledRows((prev) => {
       if (prev.includes(id)) {
@@ -223,15 +234,19 @@ const navigate = useNavigate();
     setOpenDialog(true);
   };
 
-  const handlePushToOrder = (item: T) => {
-    // Push to order details page 
-    navigate(`/ordersData/${item.orderId}`);
-  }
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedItem(null);
   };
+
+  const handleViewCategory=(item:T)=>{
+    navigate(`/category/${item[idKey]}`);
+  }
+  const handleViewCollection=(item:T)=>{
+    navigate(`/collection/${item[idKey]}`);
+  }
+
 
   // Convert TableColumn array to Tanstack ColumnDef array
   const tableColumns: ColumnDef<T>[] = columns.map((column) => ({
@@ -250,8 +265,14 @@ const navigate = useNavigate();
         if (tableType === "product") {
           return (
             <div className="flex justify-center items-center gap-4">
-              <Visibility sx={{ fontSize: 26, color: "#000000" }} />
+              
+             
+               <span
+                onClick={() => handleEditProduct(item)}
+                className="cursor-pointer"
+              >
               <Edit sx={{ fontSize: 26, color: "#000000" }} />
+              </span>
               <Delete sx={{ fontSize: 26, color: "#000000" }} />
             </div>
           );
@@ -272,13 +293,14 @@ const navigate = useNavigate();
           return (
             <div className="flex justify-center items-center gap-4">
               <span
-                onClick={() => handlePushToOrder(item)}
+                onClick={() => handleViewOrder(item)}
                 className="cursor-pointer"
               >
                 <Visibility sx={{ fontSize: 26, color: "#000000" }} />
               </span>
             </div>
           );
+          
           
         } else if (tableType === "Enquiry") {
           return (
@@ -291,14 +313,31 @@ const navigate = useNavigate();
               </span>
             </div>
           );
-        }else if(tableType=="collection"){
+        } else if (tableType === "category") {
           return (
             <div className="flex justify-center items-center gap-4">
+              <span
+                onClick={() => handleViewCategory(item)}
+                className="cursor-pointer">
+             
+              
+                <Edit sx={{ fontSize: 26, color: "#000000" }} />
+                 </span>
+                <Delete sx={{ fontSize: 26, color: "#000000" }} />
+              
+            </div>
+          );
+        } else if (tableType == "collection") {
+          return (
+            <div className="flex justify-center items-center gap-4">
+              <span
+              onClick={() => handleViewCollection(item)}
+                className="cursor-pointer">
               <Edit sx={{ fontSize: 26, color: "#000000" }} />
+              </span>
               <Delete sx={{ fontSize: 26, color: "#000000" }} />
             </div>
           );
-          
         } else {
           // Default action for testimonial or other types
           return (

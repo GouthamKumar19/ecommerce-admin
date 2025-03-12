@@ -21,8 +21,11 @@ import Enquiry from "../pages/enquiry/enquiry-section";
 import CollectionsPage from "../pages/collections/Collections";
 import CategoryPage from "../pages/category/Category";
 import Order from "../pages/orders/orders";
-import { CategoryDetails } from "../pages/category/CategoryDetails";
+import CategoryDetails from "../pages/category/CategoryDetails"; // Import the CategoryDetails component
 import CollectionDetails from "../pages/collections/collection-details";
+import CollectionProduct from "../pages/collections/collectionProduct";
+import CollectionAddProduct from "../pages/collections/collectionAddProduct";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -63,7 +66,7 @@ const router = createBrowserRouter([
         element: <UserDetailsPage />, // Reuse UserDetailsPage for creating new user
       },
       {
-        path: "/user/id",
+        path: "users/:id",
         element: <UserDetailsPage />,
       },
       {
@@ -83,8 +86,25 @@ const router = createBrowserRouter([
         element: <ProductDetails />,
       },
       {
+        path: "/product/:id",
+        element: <ProductDetails />,
+      },
+
+      {
         path: "/collection/collection-details",
         element: <CollectionDetails />,
+      },
+      {
+        path: "/collection/:id",
+        element: <CollectionDetails />,
+      },
+      {
+        path: "/collection/collection-product",
+        element: <CollectionProduct />,
+      },
+      {
+        path: "/collection/collection-add-product",
+        element: <CollectionAddProduct />,
       },
       {
         path: "/profile",
@@ -103,7 +123,7 @@ const router = createBrowserRouter([
         element: <Enquiry />,
       },
       {
-        path: "//collections",
+        path: "/collections",
         element: <CollectionsPage />,
       },
       {
@@ -111,7 +131,7 @@ const router = createBrowserRouter([
         element: <CategoryPage />,
       },
       {
-        path: "/category/new",
+        path: "/category/:id",
         element: <CategoryDetails />,
       },
     ],

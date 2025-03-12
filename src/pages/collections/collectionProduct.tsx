@@ -12,25 +12,11 @@ const ProductPage: React.FC = () => {
 
   const handleAddNewProduct = () => {
     // Navigate to the user details page for creating a new user
-    navigate("/product/new");
+    navigate("/collection/collection-add-product");
   };
 
   // Define columns for product table
   const columns = [
-    {
-      header: "Featured",
-      key: "featured",
-      render: (item: Product) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={item.featured}
-            className="form-checkbox h-5 w-5 custom-checkbox"
-            readOnly
-          />
-        </div>
-      ),
-    },
     {
       header: "",
       key: "productImage",

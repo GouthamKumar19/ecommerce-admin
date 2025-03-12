@@ -1,35 +1,42 @@
-import React, { useState } from 'react';
-import DataTable from '../../components/common/DataTable';
-import { Category } from '../../types/category.types';
-import { mockCategoryData } from '../../config/mock/categoryTable';
+import React, { useState } from "react";
+import DataTable from "../../components/common/DataTable";
+import { Category } from "../../types/category.types";
+import { mockCategoryData } from "../../config/mock/categoryTable";
 import { useNavigate } from "react-router-dom";
-import { Box, Chip } from '@mui/material';
+import { Box, Chip } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
+import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
 
 const SubcategoryCell: React.FC<{ category: string }> = ({ category }) => {
-  const allSubcategories = [...new Set(mockCategoryData
-    .filter(item => item.category === category)
-    .map(item => item.subcategory))];
+  const allSubcategories = [
+    ...new Set(
+      mockCategoryData
+        .filter((item) => item.category === category)
+        .map((item) => item.subcategory)
+    ),
+  ];
 
   const displayCount = 3;
   const displayedSubcategories = allSubcategories.slice(0, displayCount);
   const remainingCount = Math.max(0, allSubcategories.length - displayCount);
-  
+
   return (
-    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
+    <Box
+      sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", alignItems: "center" }}
+    >
       {displayedSubcategories.map((subcat, index) => (
         <Chip
           key={index}
           label={subcat}
           size="small"
           sx={{
-            backgroundColor: '#e8f5e9',
-            color: '#0d7f3f',
-            '&:hover': {
-              backgroundColor: '#c8e6c9',
+            backgroundColor: "#e8f5e9",
+            color: "#0d7f3f",
+            "&:hover": {
+              backgroundColor: "#c8e6c9",
             },
-            height: '24px',
-            fontSize: '0.75rem',
+            height: "24px",
+            fontSize: "0.75rem",
           }}
         />
       ))}
@@ -48,26 +55,26 @@ const CategoryPage: React.FC = () => {
 
   const columns = [
     {
-      header: 'Category',
-      key: 'category',
+      header: "Category",
+      key: "category",
       render: (item: Category) => (
         <div className="text-sm text-gray-900 capitalize">{item.category}</div>
       ),
     },
     {
-      header: 'Subcategory',
-      key: 'subcategory',
+      header: "Subcategory",
+      key: "subcategory",
       render: (item: Category) => <SubcategoryCell category={item.category} />,
     },
-    
+
     {
-      header: 'Actions',
-      key: 'actions',
+      header: "Actions",
+      key: "actions",
       render: (item: Category) => (
         <div className="flex justify-center items-center gap-2">
           <Visibility
             sx={{ fontSize: 18, cursor: "pointer", color: "#666" }}
-            onClick={() => console.log('View:', item.id)}
+            onClick={() => console.log("View:", item.id)}
           />
           <Edit
             sx={{ fontSize: 18, cursor: "pointer", color: "#666" }}
@@ -88,16 +95,13 @@ const CategoryPage: React.FC = () => {
     navigate("/category/new");
   };
 
-
-  
-
   const handleEdit = (id: string) => {
-    console.log('Edit category:', id);
+    console.log("Edit category:", id);
   };
 
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
-      console.log('Delete category:', id);
+      console.log("Delete category:", id);
     }
   };
 
@@ -106,40 +110,11 @@ const CategoryPage: React.FC = () => {
       <div className="bg-white p-2.5 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-2 p-2">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            <form role="search" className="flex items-center w-full max-w-sm">
-              <div className="relative flex-1">
-                <input
-                  type="search"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder="Search"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"
-                  style={{ height: "42px" }}
-                />
-                <div
-                  style={{
-                    background: "var(--secondary-color)",
-                    height: "42px",
-                  }}
-                  className="absolute rounded-l-none rounded-md inset-y-0 right-0 flex items-center justify-center px-2.5"
-                >
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-4.35-4.35m2.35-5.65A7 7 0 1 1 4 12a7 7 0 0 1 14 0z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-            </form>
+            {/* Use the SearchBar component */}
+            <SearchBar
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+            />
           </div>
 
           <div className="flex ml-auto">
@@ -147,8 +122,7 @@ const CategoryPage: React.FC = () => {
               className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
               onClick={handleAdd}
             >
-              
-            Add Category
+              ADD CATEGORY
             </button>
           </div>
         </div>
@@ -159,7 +133,7 @@ const CategoryPage: React.FC = () => {
           items={categories}
           columns={columns}
           idKey="id"
-          tableType="product"
+          tableType="category"
           itemsPerPage={10}
         />
       </div>

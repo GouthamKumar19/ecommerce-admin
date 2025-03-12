@@ -333,31 +333,31 @@ const ProductForm: React.FC = () => {
             variant="outlined"
             onClick={handleCancel}
             sx={{
-              borderColor: "grey.500",
-              color: "grey.700",
+              borderColor: "#0d7f3f",
+              color: "#0d7f3f",
+              width: "96px", // Ensuring fixed width
               "&:hover": {
                 borderColor: "grey.700",
                 backgroundColor: "grey.50",
               },
             }}
           >
-            Cancel
+            CANCEL
           </Button>
 
-
-          
           <Button
             variant="contained"
             onClick={handleSubmit}
             sx={{
               bgcolor: "var(--secondary-color, #4CAF50)",
               color: "white",
+              width: "96px", // Matching width with CANCEL button
               "&:hover": {
                 bgcolor: "var(--secondary-dark-color, #388E3C)",
               },
             }}
           >
-            Confirm
+            ADD
           </Button>
         </Box>
       </div>

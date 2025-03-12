@@ -1,40 +1,79 @@
-
+import React from "react";
 import CategoryForm from "../../components/Category/CategoryForm";
+import { Box, Button } from "@mui/material";
 
-export const CategoryDetails = () => {
-  // Add handlers for the Add and Cancel actions
+const CategoryDetails: React.FC = () => {
+  // Handlers for Add and Cancel actions
   const handleAdd = () => {
-    // Implement the add functionality
     console.log("Add button clicked");
-    // You might want to submit the form data or trigger a save action
+    // Implement form submission logic here
   };
 
   const handleCancel = () => {
-    // Implement the cancel functionality
     console.log("Cancel button clicked");
-    // You might want to reset the form or navigate back
+    // Implement reset or navigation logic here
   };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow example">
-      {/* Buttons at top */}
+      {/* Buttons at the top */}
       <div className="flex justify-end gap-3 mb-4">
-        <button
-          onClick={handleCancel}
-          className="w-24 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleAdd}
-          className="w-24 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-        >
-          Add
-        </button>
+        
       </div>
 
       {/* Category Form */}
       <CategoryForm />
+
+      {/* Fixed Buttons at Bottom Right */}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          zIndex: 1000,
+          py: 2,
+          px: 2,
+          borderRadius: "4px",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 2,
+          maxWidth: "calc(100% - 16px)", // Keep within the container with some margin
+          width: "auto",
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={handleCancel}
+          sx={{
+            borderColor: "#0d7f3f",
+            color: "#0d7f3f",
+            width: "96px",
+            "&:hover": {
+              borderColor: "grey.700",
+              backgroundColor: "grey.50",
+            },
+          }}
+        >
+          CANCEL
+        </Button>
+
+        <Button
+          variant="contained"
+          onClick={handleAdd}
+          sx={{
+            bgcolor: "var(--secondary-color, #4CAF50)",
+            color: "white",
+            width: "96px",
+            "&:hover": {
+              bgcolor: "var(--secondary-dark-color, #388E3C)",
+            },
+          }}
+        >
+          ADD
+        </Button>
+      </Box>
     </div>
   );
 };
+
+export default CategoryDetails;

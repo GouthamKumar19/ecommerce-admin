@@ -2,20 +2,23 @@ import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
-import { useNavigate } from "react-router-dom";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
 import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  const navigate = useNavigate();
+  const [checkedProducts, setCheckedProducts] = useState<{
+    [key: string]: boolean;
+  }>({}); // State to track checked products
 
-  const handleAddNewProduct = () => {
-    // Navigate to the user details page for creating a new user
-    navigate("/product/new");
+  // Function to handle checkbox change
+  const handleCheckboxChange = (productId: string | number) => {
+    setCheckedProducts((prev) => ({
+      ...prev,
+      [productId]: !prev[productId], // Toggle the checked state
+    }));
   };
 
-  // Define columns for product table
+  // Define columns for product table without 'Actions' column
   const columns = [
     {
       header: "Featured",
@@ -24,9 +27,9 @@ const ProductPage: React.FC = () => {
         <div className="flex justify-center">
           <input
             type="checkbox"
-            checked={item.featured}
+            checked={checkedProducts[item.id]} // Use state to determine if the checkbox is checked
             className="form-checkbox h-5 w-5 custom-checkbox"
-            readOnly
+            onChange={() => handleCheckboxChange(item.id)} // Call the change handler
           />
         </div>
       ),
@@ -87,37 +90,7 @@ const ProductPage: React.FC = () => {
         <div className="text-sm text-gray-900">{item.quantity}</div>
       ),
     },
-    {
-      header: "Actions",
-      key: "actions",
-      render: (item: Product) => (
-        <div className="flex justify-center items-center gap-4">
-          <Visibility
-            sx={{ fontSize: 22, cursor: "pointer" }}
-            onClick={() => navigate(`/products/${item.id}`)}
-          />
-          <Edit
-            sx={{ fontSize: 22, cursor: "pointer" }}
-            onClick={() => navigate(`/products/edit/${item.id}`)}
-          />
-          <Delete
-            sx={{ fontSize: 22, cursor: "pointer", color: "#ff0000" }}
-            onClick={() => handleDeleteProduct(item.id)}
-          />
-        </div>
-      ),
-    },
   ];
-
-  const handleDeleteProduct = (productId: string | number) => {
-    // Implement delete logic here
-    // For example, show a confirmation dialog before deleting
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      console.log(`Deleting product with ID: ${productId}`);
-      // Here you would typically call an API to delete the product
-      // Then update your state or refetch data
-    }
-  };
 
   return (
     <div>
@@ -131,12 +104,18 @@ const ProductPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex ml-auto">
+          <div className="flex ml-auto space-x-4">
             <button
-              className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
-              onClick={handleAddNewProduct}
+              className="w-32 px-4 py-2 bg-blue-600 text-white rounded-md" // Fixed width
+             
             >
-              ADD PRODUCT
+              ADD
+            </button>
+            <button
+              className="w-32 px-4 py-2 bg-gray-300 text-black rounded-md" // Same fixed width
+             
+            >
+              CANCEL
             </button>
           </div>
         </div>

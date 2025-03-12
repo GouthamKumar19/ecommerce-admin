@@ -99,7 +99,7 @@ const SubcategoryForm: React.FC = () => {
           mb: 2,
         }}
       >
-        <Typography variant="h6">Subcategories</Typography>
+        <Typography variant="h6">SUBCATEGORY</Typography>
         <Button
           variant="contained"
          
@@ -111,8 +111,7 @@ const SubcategoryForm: React.FC = () => {
             },
           }}
         >
-          Add Subcategory
-        </Button>
+ADD CATEGORY        </Button>
       </Box>
 
       {subcategories.map((subcategory) => (
@@ -173,7 +172,7 @@ const SubcategoryForm: React.FC = () => {
             >
               <Grid item xs={12} style={{ height: "100%" }}>
                 <Typography variant="subtitle1" gutterBottom align="left">
-                  Subcategory Images
+                  SUBCATEGORY IMAGES
                 </Typography>
                 <Box
                   sx={{

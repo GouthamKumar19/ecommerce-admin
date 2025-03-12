@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Rating from "@mui/material/Rating";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
-import { IconButton } from "@mui/material";
+import { Button, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const TestimonialsDetails = () => {
@@ -96,20 +96,37 @@ const TestimonialsDetails = () => {
         </form>
         <div className="sticky bottom-0 bg-white py-2">
           <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              className="bg-gray-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-gray-600 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            <Button
+              variant="outlined"
               onClick={handleBack}
+              sx={{
+                borderColor: "#0d7f3f",
+                color: "#0d7f3f",
+                width: "96px", // Ensuring fixed width
+                mr: 2, // Adds right margin for spacing
+                "&:hover": {
+                  borderColor: "grey.700",
+                  backgroundColor: "grey.50",
+                },
+              }}
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-blue-600 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              CANCEL
+            </Button>
+
+            <Button
+              variant="contained"
               onClick={handleSubmit}
+              sx={{
+                bgcolor: "var(--secondary-color, #4CAF50)",
+                color: "white",
+                width: "96px", // Matching width with CANCEL button
+                "&:hover": {
+                  bgcolor: "var(--secondary-dark-color, #388E3C)",
+                },
+              }}
             >
-              Add
-            </button>
+              ADD
+            </Button>
           </div>
         </div>
       </div>

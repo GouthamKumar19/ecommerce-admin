@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Button from '@mui/material/Button';
 
 interface AddressPopupProps {
   onClose?: () => void;
@@ -47,9 +48,17 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     }));
   };
 
-  const handleSave = () => {
+  const handleaAdd = () => {
     onSave?.(addressData);
   };
+
+  function handleCancel(): void {
+    onClose?.();
+  }
+
+  function handleAdd(): void {
+    handleaAdd();
+  }
 
   return (
     <div className="p-4 w-full text-left bg-white">
@@ -127,18 +136,34 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
       </div>
 
       <div className="text-right">
-        <button
-          onClick={onClose}
-          className="mr-4 w-24 text-white bg-gray-200 py-2 px-4 rounded"
+        <Button
+          onClick={handleCancel}
+          variant="outlined"
+          sx={{
+            color: "#0d7f3f",
+            borderColor: "#0d7f3f",
+            borderRadius: 2,
+            backgroundColor: "white",
+            padding: "8px 16px",
+            width: "96px",
+          }}
         >
           CANCEL
-        </button>
-        <button
-          onClick={handleSave}
-          className="w-24 text-white py-2 px-4 rounded"
+        </Button>
+        <Button
+          onClick={handleAdd}
+          variant="contained"
+          sx={{
+            backgroundColor: "var(--secondary-color)",
+            color: "#ffffff",
+            borderRadius: 2,
+            ml: 2,
+            padding: "8px 16px",
+            width: "96px",
+          }}
         >
-          SAVE
-        </button>
+          ADD
+        </Button>
       </div>
     </div>
   );

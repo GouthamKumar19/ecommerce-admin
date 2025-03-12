@@ -169,6 +169,8 @@ button:focus-visible {
     border-radius: 4px;
     font-size: 16px;
   }
-  
+  .custom-checkbox {
+  accent-color: var(--secondary-color, #0d7f3f);
+}
   
 }

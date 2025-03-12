@@ -26,10 +26,6 @@ const UserDetailsForm: React.FC = () => {
   });
   const navigate = useNavigate();
 
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   navigate("/user");
-  // };
   const [showAddress, setShowAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressData | null>(
     null,
@@ -127,7 +123,7 @@ const UserDetailsForm: React.FC = () => {
           onClick={() => setShowAddress(true)}
           className="w-1/4 text-white rounded-md mb-4 flex items-center justify-center"
         >
-          + ADD A NEW ADDRESS
+          ADD A NEW ADDRESS
         </button>
 
         {formData.addresses.map((address, index) => (
@@ -222,18 +218,34 @@ const UserDetailsForm: React.FC = () => {
 
         <div className="flex justify-end mt-8">
           <div className="space-x-4">
-            <button
-              className="text-white py-2 px-4 rounded-md w-24"
+            <Button
               onClick={handleBack}
+              variant="outlined"
+              sx={{
+                color: "#0d7f3f",
+                borderColor: "#0d7f3f",
+                borderRadius: 2,
+                backgroundColor: "white",
+                padding: "8px 16px",
+                width: "96px",
+              }}
             >
-              Cancel
-            </button>
-            <button
-              className="bg-primary text-white py-2 px-4 rounded-md w-24"
-              onClick={handleBack}
+              CANCEL
+            </Button>
+            <Button
+              variant="contained"
+              sx={{
+                backgroundColor: "var(--secondary-color)",
+                color: "#ffffff",
+                borderRadius: 2,
+                ml: 2,
+                padding: "8px 16px",
+                width: "96px",
+              }}
+          
             >
-              Add
-            </button>
+              ADD
+            </Button>
           </div>
         </div>
       </div>
