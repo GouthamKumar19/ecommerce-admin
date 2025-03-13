@@ -1,35 +1,42 @@
-import React, { useState } from 'react';
-import DataTable from '../../components/common/DataTable';
-import { Category } from '../../types/category.types';
-import { mockCategoryData } from '../../config/mock/categoryTable';
+import React, { useState } from "react";
+import DataTable from "../../components/common/DataTable";
+import { Category } from "../../types/category.types";
+import { mockCategoryData } from "../../config/mock/categoryTable";
 import { useNavigate } from "react-router-dom";
-import { Box, Chip } from '@mui/material';
-import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { Box, Chip } from "@mui/material";
+import { Edit, Delete } from "@mui/icons-material";
+import ConfirmationDialog from "../../components/common/Dialog";
 
 const SubcategoryCell: React.FC<{ category: string }> = ({ category }) => {
-  const allSubcategories = [...new Set(mockCategoryData
-    .filter(item => item.category === category)
-    .map(item => item.subcategory))];
+  const allSubcategories = [
+    ...new Set(
+      mockCategoryData
+        .filter((item) => item.category === category)
+        .map((item) => item.subcategory)
+    ),
+  ];
 
   const displayCount = 3;
   const displayedSubcategories = allSubcategories.slice(0, displayCount);
   const remainingCount = Math.max(0, allSubcategories.length - displayCount);
-  
+
   return (
-    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
+    <Box
+      sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", alignItems: "center" }}
+    >
       {displayedSubcategories.map((subcat, index) => (
         <Chip
           key={index}
           label={subcat}
           size="small"
           sx={{
-            backgroundColor: '#e8f5e9',
-            color: '#0d7f3f',
-            '&:hover': {
-              backgroundColor: '#c8e6c9',
+            backgroundColor: "#e8f5e9",
+            color: "#0d7f3f",
+            "&:hover": {
+              backgroundColor: "#c8e6c9",
             },
-            height: '24px',
-            fontSize: '0.75rem',
+            height: "24px",
+            fontSize: "0.75rem",
           }}
         />
       ))}
@@ -43,63 +50,67 @@ const SubcategoryCell: React.FC<{ category: string }> = ({ category }) => {
 };
 
 const CategoryPage: React.FC = () => {
-  const [categories] = useState<Category[]>(mockCategoryData);
+  const [categories, setCategories] = useState<Category[]>(mockCategoryData);
   const [searchValue, setSearchValue] = useState<string>("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
+  const navigate = useNavigate();
+
+  const handleAdd = () => {
+    navigate("/category/new");
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    setSelectedCategory(
+      categories.find((category) => category.id === categoryId) || null
+    );
+    setDialogOpen(true);
+  };
+
+  const confirmDeleteCategory = () => {
+    if (selectedCategory) {
+      console.log(`Deleting category with ID: ${selectedCategory.id}`);
+      setCategories(
+        categories.filter((category) => category.id !== selectedCategory.id)
+      );
+    }
+    setDialogOpen(false);
+    setSelectedCategory(null);
+  };
+
+  const actionRenderer = (item: Category) => (
+    <div className="flex justify-center items-center gap-2">
+      <Edit
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => navigate("/category/new")}
+      />
+      <Delete
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => handleDeleteCategory(item.id)}
+      />
+    </div>
+  );
 
   const columns = [
     {
-      header: 'Category',
-      key: 'category',
+      header: "Category",
+      key: "category",
       render: (item: Category) => (
         <div className="text-sm text-gray-900 capitalize">{item.category}</div>
       ),
     },
     {
-      header: 'Subcategory',
-      key: 'subcategory',
+      header: "Subcategory",
+      key: "subcategory",
       render: (item: Category) => <SubcategoryCell category={item.category} />,
     },
-    
     {
-      header: 'Actions',
-      key: 'actions',
-      render: (item: Category) => (
-        <div className="flex justify-center items-center gap-2">
-          <Visibility
-            sx={{ fontSize: 18, cursor: "pointer", color: "#666" }}
-            onClick={() => console.log('View:', item.id)}
-          />
-          <Edit
-            sx={{ fontSize: 18, cursor: "pointer", color: "#666" }}
-            onClick={() => handleEdit(item.id)}
-          />
-          <Delete
-            sx={{ fontSize: 18, cursor: "pointer", color: "#dc2626" }}
-            onClick={() => handleDelete(item.id)}
-          />
-        </div>
-      ),
+      header: "Actions",
+      key: "actions",
     },
   ];
-  const navigate = useNavigate();
-
-  const handleAdd = () => {
-    // Navigate to the user details page for creating a new user
-    navigate("/category/new");
-  };
-
-
-  
-
-  const handleEdit = (id: string) => {
-    console.log('Edit category:', id);
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this category?")) {
-      console.log('Delete category:', id);
-    }
-  };
 
   return (
     <div className="">
@@ -147,8 +158,7 @@ const CategoryPage: React.FC = () => {
               className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
               onClick={handleAdd}
             >
-              
-            Add Category
+              Add Category
             </button>
           </div>
         </div>
@@ -159,10 +169,25 @@ const CategoryPage: React.FC = () => {
           items={categories}
           columns={columns}
           idKey="id"
-          tableType="product"
           itemsPerPage={10}
+          actionRenderer={actionRenderer}
         />
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={dialogOpen}
+        title="Delete Category"
+        subtitle={`Are you sure you want to delete the category "${selectedCategory?.category}"?`}
+        onClose={(confirm: boolean) => {
+          if (confirm) {
+            confirmDeleteCategory();
+          } else {
+            setDialogOpen(false);
+            setSelectedCategory(null);
+          }
+        }}
+      />
     </div>
   );
 };

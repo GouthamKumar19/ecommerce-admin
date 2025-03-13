@@ -6,6 +6,7 @@ import CropIcon from "@mui/icons-material/Crop";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ImageCropper from "./ImageCrop";
 import ImagePopup from "./ImagePopup";
+import "yet-another-react-lightbox/styles.css";
 
 interface ProductImage {
   id: number;
@@ -162,109 +163,119 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      {/* Drag & Drop Upload Area */}
-      <Paper
-        elevation={0}
+      {/* Drag & Drop Upload Area - Minimized width and centered */}
+      <Box
         sx={{
-          p: 3,
-          mb: 4,
-          bgcolor: "background.default",
-          borderRadius: 2,
+          display: "flex",
+          justifyContent: "center",
+          width: "100%",
         }}
       >
-        <Box
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
+        <Paper
+          elevation={0}
           sx={{
-            border: `2px dashed ${dragActive ? "#4CAF50" : "#d0d0d0"}`,
+            p: 3,
+            mb: 4,
+            bgcolor: "background.default",
             borderRadius: 2,
-            p: 4,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: dragActive
-              ? "rgba(76, 175, 80, 0.05)"
-              : "transparent",
-            cursor: isMaxImagesReached ? "not-allowed" : "pointer",
-            opacity: isMaxImagesReached ? 0.7 : 1,
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              borderColor: isMaxImagesReached ? "#d0d0d0" : "#4CAF50",
-              backgroundColor: isMaxImagesReached
-                ? "transparent"
-                : "rgba(76, 175, 80, 0.05)",
-            },
+            width: "70%", // Reduced width
+            maxWidth: "800px",
           }}
         >
-          <CloudUploadIcon
+          <Box
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
             sx={{
-              fontSize: 48,
-              color: dragActive ? "#4CAF50" : "#757575",
-              mb: 2,
-            }}
-          />
-          <Typography
-            variant="h6"
-            gutterBottom
-            color={dragActive ? "primary" : "textPrimary"}
-          >
-            {isMaxImagesReached
-              ? "Maximum images limit reached"
-              : "Drag & Drop Product Images Here"}
-          </Typography>
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            align="center"
-            sx={{ mb: 2 }}
-          >
-            or
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            size="medium"
-            onClick={openFileInput}
-            disabled={isMaxImagesReached}
-            sx={{
-              px: 3,
-              py: 1,
-              textTransform: "none",
-              borderRadius: 1.5,
-              backgroundColor: "#4CAF50",
+              border: `2px dashed ${dragActive ? "#4CAF50" : "#d0d0d0"}`,
+              borderRadius: 2,
+              p: 4,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: dragActive
+                ? "rgba(76, 175, 80, 0.05)"
+                : "transparent",
+              cursor: isMaxImagesReached ? "not-allowed" : "pointer",
+              opacity: isMaxImagesReached ? 0.7 : 1,
+              transition: "all 0.2s ease-in-out",
               "&:hover": {
-                backgroundColor: "#3b8a3e",
-              },
-              "&.Mui-disabled": {
-                backgroundColor: "#cccccc",
-                color: "#666666",
+                borderColor: isMaxImagesReached ? "#d0d0d0" : "#4CAF50",
+                backgroundColor: isMaxImagesReached
+                  ? "transparent"
+                  : "rgba(76, 175, 80, 0.05)",
               },
             }}
           >
-            {isMaxImagesReached ? "Maximum Limit Reached" : "Browse Files"}
-          </Button>
-          <Typography
-            variant="caption"
-            color="textSecondary"
-            align="center"
-            sx={{ mt: 2 }}
-          >
-            {`${images.length}/${MAX_IMAGES} images uploaded • Supported formats: JPG, PNG, GIF`}
-          </Typography>
-        </Box>
+            <CloudUploadIcon
+              sx={{
+                fontSize: 48,
+                color: dragActive ? "#4CAF50" : "#757575",
+                mb: 2,
+              }}
+            />
+            <Typography
+              variant="h6"
+              gutterBottom
+              color={dragActive ? "primary" : "textPrimary"}
+            >
+              {isMaxImagesReached
+                ? "Maximum images limit reached"
+                : "Drag & Drop Product Images Here"}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              align="center"
+              sx={{ mb: 2 }}
+            >
+              or
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              size="medium"
+              onClick={openFileInput}
+              disabled={isMaxImagesReached}
+              sx={{
+                px: 3,
+                py: 1,
+                textTransform: "none",
+                borderRadius: 1.5,
+                backgroundColor: "#4CAF50",
+                "&:hover": {
+                  backgroundColor: "#3b8a3e",
+                },
+                "&.Mui-disabled": {
+                  backgroundColor: "#cccccc",
+                  color: "#666666",
+                },
+              }}
+            >
+              {isMaxImagesReached ? "Maximum Limit Reached" : "Browse Files"}
+            </Button>
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              align="center"
+              sx={{ mt: 2 }}
+            >
+              {`${images.length}/${MAX_IMAGES} images uploaded • Supported formats: JPG, PNG, GIF`}
+            </Typography>
+          </Box>
 
-        {/* Hidden file input */}
-        <input
-          type="file"
-          onChange={handleFileInput}
-          ref={fileInputRef}
-          style={{ display: "none" }}
-          accept="image/*"
-        />
-      </Paper>
+          {/* Hidden file input */}
+          <input
+            type="file"
+            onChange={handleFileInput}
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            accept="image/*"
+          />
+        </Paper>
+      </Box>
 
       {/* Selected Images Gallery */}
       {selectedImages.length > 0 && (
@@ -273,15 +284,14 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
             Selected Images
           </Typography>
 
-          {/* First Row */}
+          {/* First Row - Center aligned */}
           <Box
             sx={{
               display: "flex",
               flexDirection: "row",
               gap: 4,
-              ml: 14,
               mb: 2,
-              justifyContent: "flex-start",
+              justifyContent: "center",
             }}
           >
             {firstRow.map((image) => (
@@ -296,15 +306,14 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
             ))}
           </Box>
 
-          {/* Second Row */}
+          {/* Second Row - Center aligned */}
           {secondRow.length > 0 && (
             <Box
               sx={{
                 display: "flex",
                 flexDirection: "row",
                 gap: 4,
-                ml: 14,
-                justifyContent: "flex-start",
+                justifyContent: "center",
               }}
             >
               {secondRow.map((image) => (
@@ -357,7 +366,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
   image,
   onCrop,
   onDelete,
-  onToggle,
+  
   onImageClick,
 }) => (
   <Box
@@ -384,7 +393,6 @@ const ImageBox: React.FC<ImageBoxProps> = ({
         height: "100%",
         objectFit: "cover",
       }}
-      onClick={() => onToggle(image.id)}
     />
     <Box
       sx={{

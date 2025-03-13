@@ -1,8 +1,19 @@
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
 import { items } from "../../config/mock/userTable";
+import { Edit } from "@mui/icons-material";
+import Switch from "@mui/material/Switch";
+import ConfirmationDialog from "../../components/common/Dialog";
+import { User } from "../../types/users.types"; // Ensure this path is correct
 
-const UsersPage = () => {
+const UsersPage: React.FC = () => {
+  const [disabledRows, setDisabledRows] = useState<string[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogSubtitle, setDialogSubtitle] = useState("");
+  const [currentRow, setCurrentRow] = useState<User | null>(null);
+
   const columns = [
     {
       header: "Name",
@@ -21,11 +32,67 @@ const UsersPage = () => {
       key: "actions",
     },
   ];
+
   const navigate = useNavigate();
 
   const handleAddNewUser = () => {
     // Navigate to the user details page for creating a new user
     navigate("/users/new");
+  };
+
+  const handleToggleRow = (item: User) => {
+    setCurrentRow(item);
+    if (disabledRows.includes(String(item.id))) {
+      setDialogTitle("Enable User");
+      setDialogSubtitle("Are you sure you want to enable this user?");
+    } else {
+      setDialogTitle("Disable User");
+      setDialogSubtitle("Are you sure you want to disable this user?");
+    }
+    setDialogOpen(true);
+  };
+
+  const handleEditUser = (item: User) => {
+    navigate("/users/new", { state: { user: item } });
+  };
+
+  const handleDialogClose = (confirm: boolean) => {
+    if (confirm && currentRow) {
+      setDisabledRows((prev) => {
+        if (prev.includes(String(currentRow.id))) {
+          return prev.filter((rowId) => rowId !== String(currentRow.id));
+        } else {
+          return [...prev, String(currentRow.id)];
+        }
+      });
+    }
+    setDialogOpen(false);
+    setCurrentRow(null);
+  };
+
+  const actionRenderer = (item: User) => {
+    const isDisabled = disabledRows.includes(String(item.id));
+    return (
+      <div className="flex justify-center items-center gap-4">
+        <Edit
+          sx={{ fontSize: 26, color: "#0d7f3f", cursor: "pointer" }}
+          onClick={() => handleEditUser(item)}
+        />
+        <Switch
+          checked={!isDisabled}
+          onChange={() => handleToggleRow(item)}
+          inputProps={{ "aria-label": "Toggle user status" }}
+          sx={{
+            "& .MuiSwitch-switchBase.Mui-checked": {
+              color: "#0d7f3f",
+            },
+            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+              backgroundColor: "#0d7f3f",
+            },
+          }}
+        />
+      </div>
+    );
   };
 
   return (
@@ -46,14 +113,12 @@ const UsersPage = () => {
                 <div
                   style={{
                     background: "var(--secondary-color)",
-
                     height: "42px",
                   }}
                   className="absolute rounded-l-none rounded-md inset-y-0 right-0 flex items-center justify-center px-3"
                 >
                   <svg
                     className="w-6 h-6 text-white text-bold"
-                    // style={{ color: "var(--secondary-color)" }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -86,9 +151,18 @@ const UsersPage = () => {
           columns={columns}
           idKey="id"
           itemsPerPage={15}
-          tableType="user"
+          actionRenderer={actionRenderer}
+          disabledRows={disabledRows}
         />
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={dialogOpen}
+        title={dialogTitle}
+        subtitle={dialogSubtitle}
+        onClose={handleDialogClose}
+      />
     </div>
   );
 };

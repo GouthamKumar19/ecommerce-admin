@@ -1,10 +1,162 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "../../components/common/DataTable";
 import { enquiries } from "../../config/mock/enquiriesTable";
-import { useNavigate } from "react-router-dom";
+
+import { Visibility, Close } from "@mui/icons-material";
+import { Enquiry } from "../../types/enquiry.types";
+
+const CustomModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}> = ({ isOpen, onClose, title, children }) => {
+  const [animateIn, setAnimateIn] = useState(false);
+  
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    if (isOpen) {
+      // Delay before starting the animation
+      timeoutId = setTimeout(() => {
+        setAnimateIn(true);
+      }, 50);
+    } else {
+      setAnimateIn(false);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-auto transition-opacity duration-300"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        backdropFilter: "blur(4px)",
+        opacity: animateIn ? 1 : 0,
+      }}
+      onClick={onClose}
+    >
+      <div
+        className={`bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden transition-all duration-300 ${
+          animateIn
+            ? "opacity-100 transform scale-100"
+            : "opacity-0 transform scale-95"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+        style={{ boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+      >
+        <div
+          className="px-8 py-6 border-b border-gray-200 flex justify-center items-center"
+          style={{ backgroundColor: "#0d7f3f" }}
+        >
+          <h3 className="text-xl font-semibold text-white">{title}</h3>
+          <div
+            className="cursor-pointer p-1.5 rounded-full hover:bg-white/20 transition-colors duration-200 flex items-center justify-center absolute right-8"
+            onClick={onClose}
+          >
+            <Close sx={{ fontSize: 24, color: "#ffffff" }} />
+          </div>
+        </div>
+        <div className="p-8 bg-gradient-to-b from-gray-50 to-white">
+          {children}
+        </div>
+        <div className="px-8 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+          {/* Modal footer content if needed */}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EnquiryPopup: React.FC<{
+  data: {
+    [key: string]: unknown;
+  };
+}> = ({ data }) => {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+        {Object.entries(data).map(([key, value]) => {
+          // Skip rendering the id key or any internal keys that start with underscore
+          if (key === "id" || key.startsWith("_") || key === "actions") {
+            return null;
+          }
+
+          // Format the key for display
+          const formattedKey = key
+            .replace(/([A-Z])/g, " $1")
+            .trim()
+            .split(" ")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+
+          // Special handling for message fields to make them full width and centered
+          if (
+            key === "message" ||
+            key.includes("Message") ||
+            key.includes("Description") ||
+            key === "description"
+          ) {
+            return (
+              <div
+                key={key}
+                className="group text-center col-span-1 md:col-span-2"
+              >
+                <span className="font-medium text-gray-500 text-sm uppercase tracking-wider block mb-2 text-center">
+                  {formattedKey}
+                </span>
+                <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm group-hover:border-blue-300 group-hover:shadow transition-all duration-200">
+                  <span className="text-gray-800 block text-center">
+                    {value ? String(value) : "N/A"}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={key} className="group text-center">
+              <span className="font-medium text-gray-500 text-sm uppercase tracking-wider block mb-2 text-center">
+                {formattedKey}
+              </span>
+              <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm group-hover:border-blue-300 group-hover:shadow transition-all duration-200">
+                <span className="text-gray-800 block text-center">
+                  {value ? String(value) : "N/A"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const EnquirySection: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Enquiry | null>(null);
+
+
+  const handleViewEnquiry = (id: string) => {
+    setSelectedItem(enquiries.find((enquiry) => enquiry.id === id) || null);
+    setOpenDialog(true);
+  };
+
+  const actionRenderer = (item: Enquiry) => (
+    <div className="flex justify-center items-center gap-2">
+      <Visibility
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => handleViewEnquiry(item.id.toString())}
+      />
+    </div>
+  );
 
   // Define columns for enquiry table
   const columns = [
@@ -23,50 +175,12 @@ const EnquirySection: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
-      // @ts-expect-error next non fixable
-      render: (item) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => handleViewEnquiry(item.id)}
-            className="p-2 text-blue-600 hover:text-blue-800"
-            title="View Enquiry"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              ></path>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              ></path>
-            </svg>
-          </button>
-        </div>
-      ),
     },
   ];
 
-  const navigate = useNavigate();
-
-  // const handleAddNewEnquiry = () => {
-  //   // Navigate to the enquiry details page for creating a new enquiry
-  //   navigate("/enquiries/new");
-  // };
-
-  const handleViewEnquiry = (id: string) => {
-    // Navigate to the enquiry details page
-    navigate(`/enquiries/${id}`);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedItem(null);
   };
 
   return (
@@ -123,8 +237,20 @@ const EnquirySection: React.FC = () => {
           idKey="id"
           itemsPerPage={15}
           tableType="Enquiry"
+          actionRenderer={actionRenderer}
         />
       </div>
+
+      {/* Enhanced Custom Modal */}
+      {openDialog && (
+        <CustomModal
+          isOpen={openDialog}
+          onClose={handleCloseDialog}
+          title="Enquiry Details"
+        >
+          {selectedItem && <EnquiryPopup data={selectedItem} />}
+        </CustomModal>
+      )}
     </div>
   );
 };

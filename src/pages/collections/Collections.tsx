@@ -3,16 +3,55 @@ import DataTable from "../../components/common/DataTable";
 import { collectionMockData } from "../../config/mock/collections";
 import type { Collection } from "../../types/collections.types";
 import { useNavigate } from "react-router-dom";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
+import ConfirmationDialog from "../../components/common/Dialog";
 
 const CollectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCollection, setSelectedCollection] =
+    useState<Collection | null>(null);
+  const [collections, setCollections] =
+    useState<Collection[]>(collectionMockData);
   const navigate = useNavigate();
 
   const handleAddNewCollection = () => {
     // Navigate to the collection creation page
     navigate("/collection/collection-details");
   };
+
+  const handleDeleteCollection = (collectionId: string | number) => {
+    setSelectedCollection(
+      collections.find((collection) => collection.id === collectionId) || null
+    );
+    setDialogOpen(true);
+  };
+
+  const confirmDeleteCollection = () => {
+    if (selectedCollection) {
+      console.log(`Deleting collection with ID: ${selectedCollection.id}`);
+      setCollections(
+        collections.filter(
+          (collection) => collection.id !== selectedCollection.id
+        )
+      );
+    }
+    setDialogOpen(false);
+    setSelectedCollection(null);
+  };
+
+  const actionRenderer = (item: Collection) => (
+    <div className="flex justify-center items-center gap-2">
+      <Edit
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => navigate("/collection/collection-details")}
+      />
+      <Delete
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => handleDeleteCollection(item.id)}
+      />
+    </div>
+  );
 
   // Define columns for collections table
   const columns = [
@@ -36,45 +75,19 @@ const CollectionsPage: React.FC = () => {
         <div className="flex text-left">
           <div className="ml-0">
             <div className="text-sm font-medium text-gray-900">{item.name}</div>
-            
           </div>
         </div>
       ),
     },
-
     {
       header: "Actions",
       key: "actions",
-      render: (item: Collection) => (
-        <div className="flex justify-center items-center gap-4">
-          <Visibility
-            sx={{ fontSize: 22, cursor: "pointer" }}
-            onClick={() => navigate(`/collections/${item.id}`)}
-          />
-          <Edit
-            sx={{ fontSize: 22, cursor: "pointer" }}
-            onClick={() => navigate(`/collections/edit/${item.id}`)}
-          />
-          <Delete
-            sx={{ fontSize: 22, cursor: "pointer", color: "#ff0000" }}
-            onClick={() => handleDeleteCollection(item.id)}
-          />
-        </div>
-      ),
     },
   ];
 
-  const handleDeleteCollection = (collectionId: string | number) => {
-    // Implement delete logic here
-    if (window.confirm("Are you sure you want to delete this collection?")) {
-      console.log(`Deleting collection with ID: ${collectionId}`);
-      // Here you would typically call an API to delete the collection
-    }
-  };
-
   // Filter collections based on search value
   const filteredCollections = searchValue
-    ? collectionMockData.filter(
+    ? collections.filter(
         (collection) =>
           collection.name.toLowerCase().includes(searchValue.toLowerCase()) ||
           (collection.description &&
@@ -82,7 +95,7 @@ const CollectionsPage: React.FC = () => {
               .toLowerCase()
               .includes(searchValue.toLowerCase()))
       )
-    : collectionMockData;
+    : collections;
 
   return (
     <div>
@@ -145,8 +158,24 @@ const CollectionsPage: React.FC = () => {
           idKey="id"
           itemsPerPage={10}
           tableType="collection"
+          actionRenderer={actionRenderer}
         />
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={dialogOpen}
+        title="Delete Collection"
+        subtitle={`Are you sure you want to delete the collection "${selectedCollection?.name}"?`}
+        onClose={(confirm: boolean) => {
+          if (confirm) {
+            confirmDeleteCollection();
+          } else {
+            setDialogOpen(false);
+            setSelectedCollection(null);
+          }
+        }}
+      />
     </div>
   );
 };

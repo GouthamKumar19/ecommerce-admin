@@ -2,10 +2,20 @@ import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
 import { StarRating } from "../../components/common/DataTable";
 import { testimonials } from "../../config/mock/testimonialsTable";
-import type { Testimonial } from "../../types/testimonials.types";
+
 import { useNavigate } from "react-router-dom";
+import { Edit } from "@mui/icons-material";
+import { Testimonial } from "../../types/testimonials.types";
 const TestimonialsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
+  const actionRenderer = () => (
+    <div className="flex justify-center items-center gap-4">
+      <Edit
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => navigate(`/testimonials/new`)}
+      />
+    </div>
+  );
 
   // Define columns for testimonials table
   const columns = [
@@ -97,6 +107,7 @@ const TestimonialsPage: React.FC = () => {
           idKey="id"
           itemsPerPage={15}
           tableType="testimonial"
+          actionRenderer={actionRenderer}
         />
       </div>
     </div>

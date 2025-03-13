@@ -3,16 +3,51 @@ import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
 import { useNavigate } from "react-router-dom";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
+import ConfirmationDialog from "../../components/common/Dialog";
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  const navigate = useNavigate();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>(productMockData);
+
 
   const handleAddNewProduct = () => {
-    // Navigate to the user details page for creating a new user
+    // Navigate to the product details page for creating a new product
     navigate("/product/new");
   };
+
+  const handleDeleteProduct = (productId: string | number) => {
+    setSelectedProduct(
+      products.find((product) => product.id === productId) || null
+    );
+    setDialogOpen(true);
+  };
+
+  const confirmDeleteProduct = () => {
+    if (selectedProduct) {
+      console.log(`Deleting product with ID: ${selectedProduct.id}`);
+      setProducts(
+        products.filter((product) => product.id !== selectedProduct.id)
+      );
+    }
+    setDialogOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const actionRenderer = (item: Product) => (
+    <div className="flex justify-center items-center gap-4">
+      <Edit
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => navigate(`/product/new`)}
+      />
+      <Delete
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => handleDeleteProduct(item.id)}
+      />
+    </div>
+  );
 
   // Define columns for product table
   const columns = [
@@ -31,17 +66,17 @@ const ProductPage: React.FC = () => {
       ),
     },
     {
-      header:"",
-      key:"productImage",
-      render:(item:Product)=>(
+      header: "",
+      key: "productImage",
+      render: (item: Product) => (
         <div className="text-center flex-shrink-0 h-10 w-10">
-            <img
-              className="h-10 w-10 rounded-full"
-              src={item.imageUrl}
-              alt={item.name}
-            />
-          </div>
-      ),   
+          <img
+            className="h-10 w-10 rounded-full"
+            src={item.imageUrl}
+            alt={item.name}
+          />
+        </div>
+      ),
     },
     {
       header: "Product Name",
@@ -89,34 +124,11 @@ const ProductPage: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
-      render: (item: Product) => (
-        <div className="flex justify-center items-center gap-4">
-          <Visibility
-            sx={{ fontSize: 22, cursor: "pointer" }}
-            onClick={() => navigate(`/products/${item.id}`)}
-          />
-          <Edit
-            sx={{ fontSize: 22, cursor: "pointer" }}
-            onClick={() => navigate(`/products/edit/${item.id}`)}
-          />
-          <Delete
-            sx={{ fontSize: 22, cursor: "pointer", color: "#ff0000" }}
-            onClick={() => handleDeleteProduct(item.id)}
-          />
-        </div>
-      ),
     },
   ];
+  const navigate = useNavigate();
 
-  const handleDeleteProduct = (productId: string | number) => {
-    // Implement delete logic here
-    // For example, show a confirmation dialog before deleting
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      console.log(`Deleting product with ID: ${productId}`);
-      // Here you would typically call an API to delete the product
-      // Then update your state or refetch data
-    }
-  };
+  
 
   return (
     <div>
@@ -174,13 +186,29 @@ const ProductPage: React.FC = () => {
       {/* Products Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={productMockData}
+          items={products}
           columns={columns}
           idKey="id"
           itemsPerPage={15}
           tableType="product"
+          actionRenderer={actionRenderer}
         />
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={dialogOpen}
+        title="Delete Product"
+        subtitle={`Are you sure you want to delete the product "${selectedProduct?.name}"?`}
+        onClose={(confirm: boolean) => {
+          if (confirm) {
+            confirmDeleteProduct();
+          } else {
+            setDialogOpen(false);
+            setSelectedProduct(null);
+          }
+        }}
+      />
     </div>
   );
 };

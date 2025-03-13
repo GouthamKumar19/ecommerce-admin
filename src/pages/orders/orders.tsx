@@ -3,7 +3,7 @@ import DataTable from "../../components/common/DataTable";
 import { orderMockData } from "../../config/mock/orderNew";
 import type { Order } from "../../types/order.types";
 import { useNavigate } from "react-router-dom";
-import { Visibility, Delete, FilterList } from "@mui/icons-material";
+import { Visibility, FilterList } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import OrderFilterDialog from "../../components/orders/OrderFilterDialog";
 
@@ -16,6 +16,16 @@ const OrderPage: React.FC = () => {
     paymentStatus: "",
     orderStatus: "",
   });
+  const actionRenderer = () => (
+        <div className="flex justify-center items-center gap-4">  
+          <Visibility
+                  sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+                  onClick={() => navigate(`/orders/:id`)}
+                />
+         
+        </div>
+      );
+  
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
   const navigate = useNavigate();
 
@@ -67,26 +77,10 @@ const OrderPage: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
-      render: (item: Order) => (
-        <div className="flex justify-center items-center gap-4">
-          <Visibility
-            className="cursor-pointer"
-            onClick={() => navigate(`/orders/${item.orderId}`)}
-          />
-          <Delete
-            className="cursor-pointer"
-            onClick={() => handleDeleteOrder(item.orderId)}
-          />
-        </div>
-      ),
-    },
+    }
   ];
 
-  const handleDeleteOrder = (orderId: string | number) => {
-    if (window.confirm("Are you sure you want to delete this order?")) {
-      console.log(`Deleting order with ID: ${orderId}`);
-    }
-  };
+ 
 
   const handleFilterClick = () => {
     setOpenFilterDialog(true);
@@ -182,6 +176,7 @@ const OrderPage: React.FC = () => {
           idKey="orderId"
           itemsPerPage={15}
           tableType="order"
+          actionRenderer={actionRenderer}
         />
       </div>
     </div>

@@ -170,6 +170,10 @@ const ProductForm: React.FC = () => {
               </div>
             </Grid>
           </Grid>
+
+          {/* Added spacing after first row */}
+          <Box sx={{ mb: 4 }} />
+
           {/* Second section: Price, Slashed Price */}
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
@@ -198,6 +202,10 @@ const ProductForm: React.FC = () => {
               />
             </Grid>
           </Grid>
+
+          {/* Added spacing after second row */}
+          <Box sx={{ mb: 4 }} />
+
           {/* Third section: Category, Sub Category */}
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
@@ -233,6 +241,10 @@ const ProductForm: React.FC = () => {
               />
             </Grid>
           </Grid>
+
+          {/* Added spacing after third row */}
+          <Box sx={{ mb: 4 }} />
+
           {/* Fourth section: Image Selection Component */}
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -252,6 +264,9 @@ const ProductForm: React.FC = () => {
               </Box>
             </Grid>
           </Grid>
+
+          {/* Added spacing after fourth row */}
+          <Box sx={{ mb: 4 }} />
 
           {/* Fifth section: Variants - Updated to move the "Add variants" label below components */}
           <Grid container spacing={3} sx={{ mt: 2, mb: 12 }}>
@@ -319,7 +334,6 @@ const ProductForm: React.FC = () => {
             zIndex: 1000,
             py: 2,
             px: 2,
-
             borderRadius: "4px",
             display: "flex",
             justifyContent: "flex-end",
@@ -344,8 +358,6 @@ const ProductForm: React.FC = () => {
             Cancel
           </Button>
 
-
-          
           <Button
             variant="contained"
             onClick={handleSubmit}
