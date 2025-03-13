@@ -24,13 +24,16 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       "/testimonials": "Testimonials",
       "/category": "Category",
       "/collections": "Collections",
-      "/collections/new": "Collection", // Add this line
+      "/collections/new": "Collections", // Add this line
       "/collection/collection-details": "Collections", // Add this line
       "/enquiry": "Enquiry",
       "/settings": "Settings",
       "/profile": "Profile",
       "/orders": "Orders",
       "/dashboard": "Dashboard",
+      "/collection/collection-add-product": "Collections",
+      "/collection/collection-product": "Collections",
+"/collection/": "Collections",
       "/": "Dashboard",
     };
 

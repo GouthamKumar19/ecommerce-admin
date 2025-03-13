@@ -131,6 +131,7 @@ const OrderPage: React.FC = () => {
       <OrderFilterDialog
         open={openFilterDialog}
         onClose={() => setOpenFilterDialog(false)}
+        // @ts-expect-error - TODO: fix typings
         onApply={applyFilters}
       />
 

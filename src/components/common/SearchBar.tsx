@@ -4,7 +4,6 @@ import InputBase from "@mui/material/InputBase";
 import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
-// import { clear } from "console";
 
 interface SearchBarProps {
   searchValue: string;
@@ -16,8 +15,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onSearchChange,
 }) => {
   const handleClear = () => {
-    onSearchChange("");
+    onSearchChange(""); // Clear the search value when clicked
   };
+
   return (
     <Paper
       component="form"
@@ -43,7 +43,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         <IconButton
           type="button"
           sx={{ p: "10px" }}
-          aria-label="search"
+          aria-label="clear search"
           onClick={handleClear}
         >
           <CloseIcon />
@@ -51,7 +51,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
       )}
 
       {/* Search Icon */}
-
       <IconButton type="button" sx={{ p: "10px" }} aria-label="search">
         <SearchIcon />
       </IconButton>

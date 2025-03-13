@@ -3,6 +3,8 @@ import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
 import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
+import { Button } from "@mui/material";
+
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -105,18 +107,37 @@ const ProductPage: React.FC = () => {
           </div>
 
           <div className="flex ml-auto space-x-4">
-            <button
-              className="w-32 px-4 py-2 bg-blue-600 text-white rounded-md" // Fixed width
-             
-            >
-              ADD
-            </button>
-            <button
-              className="w-32 px-4 py-2 bg-gray-300 text-black rounded-md" // Same fixed width
-             
+            <Button
+              variant="outlined"
+        
+              sx={{
+                borderColor: "#0d7f3f",
+                color: "#0d7f3f",
+                width: "96px", // Ensuring fixed width
+                mr: 2, // Adds right margin for spacing
+                "&:hover": {
+                  borderColor: "grey.700",
+                  backgroundColor: "grey.50",
+                },
+              }}
             >
               CANCEL
-            </button>
+            </Button>
+
+            <Button
+              variant="contained"
+            
+              sx={{
+                bgcolor: "var(--secondary-color, #4CAF50)",
+                color: "white",
+                width: "96px", // Matching width with CANCEL button
+                "&:hover": {
+                  bgcolor: "var(--secondary-dark-color, #388E3C)",
+                },
+              }}
+            >
+              ADD
+            </Button>
           </div>
         </div>
       </div>

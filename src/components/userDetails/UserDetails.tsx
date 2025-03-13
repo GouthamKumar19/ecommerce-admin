@@ -7,7 +7,6 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import AddressPopup from "./AddressPopup";
 import { Edit, Delete } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
 
 interface AddressData {
   addressLine1: string;
@@ -24,11 +23,10 @@ const UserDetailsForm: React.FC = () => {
     phoneNumber: "",
     addresses: [] as AddressData[],
   });
-  const navigate = useNavigate();
 
   const [showAddress, setShowAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressData | null>(
-    null,
+    null
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
@@ -75,14 +73,12 @@ const UserDetailsForm: React.FC = () => {
       addresses: prev.addresses.filter((_, i) => i !== index),
     }));
   };
-  const handleBack = () => {
-    navigate("/users");
-  };
 
+  
   return (
     <div className="relative w-3/4 mx-auto overflow-hidden example">
       <div
-        className={`mt-4 space-y-4 ${
+        className={`mt-10 space-y-4 ${
           showAddress ? "filter pointer-events-none" : ""
         }`}
       >
@@ -121,13 +117,13 @@ const UserDetailsForm: React.FC = () => {
 
         <button
           onClick={() => setShowAddress(true)}
-          className="w-1/4 text-white rounded-md mb-4 flex items-center justify-center"
+          className="w-1/4 text-white rounded-md mb-4 flex items-center justify-center bg-blue-500"
         >
           ADD A NEW ADDRESS
         </button>
 
         {formData.addresses.map((address, index) => (
-          <div key={index} className="w-full p-4 w-full text-left bg-white">
+          <div key={index} className="w-full p-4 text-left bg-white">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-bold">Address {index + 1}</h3>
               <div className="flex space-x-2">
@@ -216,37 +212,8 @@ const UserDetailsForm: React.FC = () => {
           </div>
         ))}
 
-        <div className="flex justify-end mt-8">
-          <div className="space-x-4">
-            <Button
-              onClick={handleBack}
-              variant="outlined"
-              sx={{
-                color: "#0d7f3f",
-                borderColor: "#0d7f3f",
-                borderRadius: 2,
-                backgroundColor: "white",
-                padding: "8px 16px",
-                width: "96px",
-              }}
-            >
-              CANCEL
-            </Button>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "var(--secondary-color)",
-                color: "#ffffff",
-                borderRadius: 2,
-                ml: 2,
-                padding: "8px 16px",
-                width: "96px",
-              }}
-          
-            >
-              ADD
-            </Button>
-          </div>
+        <div className="fixed bottom-4 right-4 space-x-4">
+        
         </div>
       </div>
 
@@ -257,7 +224,6 @@ const UserDetailsForm: React.FC = () => {
         aria-describedby="address-dialog-description"
         maxWidth="md" // Increase the width of the dialog
         fullWidth // Ensure the dialog takes the full width
-        sx={{ ml: 34 }}
       >
         <DialogTitle id="address-dialog-title">{"Address"}</DialogTitle>
         <DialogContent>
@@ -274,10 +240,9 @@ const UserDetailsForm: React.FC = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => setShowAddress(false)}
-            color="primary"
-          ></Button>
+          <Button onClick={() => setShowAddress(false)} color="primary">
+          
+          </Button>
         </DialogActions>
       </Dialog>
     </div>

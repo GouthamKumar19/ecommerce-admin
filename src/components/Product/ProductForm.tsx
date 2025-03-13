@@ -1,3 +1,4 @@
+// ProductForm.tsx
 import React, { useState } from "react";
 import {
   TextField,
@@ -5,15 +6,14 @@ import {
   Checkbox,
   Autocomplete,
   Grid,
-  IconButton,
   InputAdornment,
   Box,
   Button,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddIcon from "@mui/icons-material/Add";
-import ImageSelection from "../common/ImageSelection";
-import { VariantComponent, Variant } from "./Variant";
+ // Adjust the path to where you save ArrowBackButton
+import ImageSelection from "../common/ImageSelection"; // Your Image Selection Component
+import { VariantComponent, Variant } from "./Variant"; // Your Variant Component
 
 interface ProductImage {
   id: number;
@@ -22,7 +22,6 @@ interface ProductImage {
 }
 
 const ProductForm: React.FC = () => {
-  // const [productName, setProductName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [price, setPrice] = useState<string>("");
   const [slashedPrice, setSlashedPrice] = useState<string>("");
@@ -30,19 +29,12 @@ const ProductForm: React.FC = () => {
   const [subCategory, setSubCategory] = useState<string | null>(null);
   const [featured, setFeatured] = useState<boolean>(false);
   const [images, setImages] = useState<ProductImage[]>([]);
-
-  // Add state for variants
   const [variants, setVariants] = useState<Variant[]>([]);
 
   // Sample category and subcategory data
   const categories = ["Footwear", "Clothing", "Accessories"];
   const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
 
-  // Group variants by completion status
-  const completedVariants = variants.filter((v) => v.isComplete);
-  const incompleteVariants = variants.filter((v) => !v.isComplete);
-
-  // Functions to handle variants
   const addVariant = () => {
     const newVariant: Variant = {
       id: `variant-${Date.now()}`,
@@ -65,59 +57,36 @@ const ProductForm: React.FC = () => {
     );
   };
 
-  // Handle form submission and cancellation
   const handleSubmit = () => {
-    // Form submission logic here
-    console.log("Form submitted");
+    console.log("Form submitted", {
+      description,
+      price,
+      slashedPrice,
+      category,
+      subCategory,
+      featured,
+      images,
+      variants,
+    });
   };
 
   const handleCancel = () => {
-    // Cancel logic here
     console.log("Form cancelled");
   };
 
   return (
     <div className="ml-8 mr-8 mb-6 example">
-      <div className="relative ml-0 example">
-        <div className="mb-12 text-left example">
-          <IconButton
-            style={{
-              position: "relative",
-              left: "0px",
-            }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        </div>
 
-        {/* Form content */}
-        <div>
+        {/* Container for the ArrowBackButton and form header */}
+
+        {/* Form content scrollable */}
+        <div style={{ marginTop: "0px" }}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <Typography variant="subtitle1" gutterBottom align="left">
                 Name
               </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment
-                      position="end"
-                      style={{
-                        position: "absolute",
-                        bottom: "8px",
-                        right: "8px",
-                        color: "rgba(0, 0, 0, 0.38)",
-                        fontSize: "0.65rem",
-                      }}
-                    >
-                      {`${description.length}/10`}
-                    </InputAdornment>
-                  ),
-                }}
-                placeholder="Product Name"
-              />
+              <TextField fullWidth size="small" placeholder="Product Name" />
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -128,7 +97,6 @@ const ProductForm: React.FC = () => {
                 fullWidth
                 multiline
                 rows={3}
-                size="small"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Description"
@@ -148,11 +116,6 @@ const ProductForm: React.FC = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{
-                  "& .MuiInputBase-multiline": {
-                    paddingBottom: "24px",
-                  },
-                }}
               />
             </Grid>
 
@@ -170,7 +133,7 @@ const ProductForm: React.FC = () => {
               </div>
             </Grid>
           </Grid>
-          {/* Second section: Price, Slashed Price */}
+
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <Typography variant="subtitle1" gutterBottom align="left">
@@ -198,7 +161,7 @@ const ProductForm: React.FC = () => {
               />
             </Grid>
           </Grid>
-          {/* Third section: Category, Sub Category */}
+
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <Typography variant="subtitle1" gutterBottom align="left">
@@ -233,7 +196,7 @@ const ProductForm: React.FC = () => {
               />
             </Grid>
           </Grid>
-          {/* Fourth section: Image Selection Component */}
+
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom align="left">
@@ -253,29 +216,13 @@ const ProductForm: React.FC = () => {
             </Grid>
           </Grid>
 
-          {/* Fifth section: Variants - Updated to move the "Add variants" label below components */}
           <Grid container spacing={3} sx={{ mt: 2, mb: 12 }}>
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom align="left">
                 Variants
               </Typography>
               <Box sx={{ width: "100%" }}>
-                {/* Display completed variants first */}
-                {completedVariants.length > 0 && (
-                  <Box sx={{ mb: 3 }}>
-                    {completedVariants.map((variant) => (
-                      <VariantComponent
-                        key={variant.id}
-                        variant={variant}
-                        onDelete={() => deleteVariant(variant.id)}
-                        onComplete={completeVariant}
-                      />
-                    ))}
-                  </Box>
-                )}
-
-                {/* Display incomplete variants */}
-                {incompleteVariants.map((variant) => (
+                {variants.map((variant) => (
                   <VariantComponent
                     key={variant.id}
                     variant={variant}
@@ -283,8 +230,6 @@ const ProductForm: React.FC = () => {
                     onComplete={completeVariant}
                   />
                 ))}
-
-                {/* Add variants button now appears below all variants */}
                 <Box
                   sx={{ mt: 2, display: "flex", justifyContent: "flex-start" }}
                 >
@@ -296,9 +241,6 @@ const ProductForm: React.FC = () => {
                       textAlign: "left",
                       padding: "6px 8px",
                       minWidth: "auto",
-                      "&:hover": {
-                        backgroundColor: "transparent",
-                      },
                     }}
                     variant="text"
                   >
@@ -310,7 +252,6 @@ const ProductForm: React.FC = () => {
           </Grid>
         </div>
 
-        {/* Fixed buttons at the bottom right that stay in place during scroll */}
         <Box
           sx={{
             position: "fixed",
@@ -319,14 +260,9 @@ const ProductForm: React.FC = () => {
             zIndex: 1000,
             py: 2,
             px: 2,
-
-            borderRadius: "4px",
             display: "flex",
             justifyContent: "flex-end",
             gap: 2,
-            maxWidth: "calc(100% - 16px)", // Keep within the container with some margin
-            // Limit the width to stay within the parent container
-            width: "auto",
           }}
         >
           <Button
@@ -335,11 +271,7 @@ const ProductForm: React.FC = () => {
             sx={{
               borderColor: "#0d7f3f",
               color: "#0d7f3f",
-              width: "96px", // Ensuring fixed width
-              "&:hover": {
-                borderColor: "grey.700",
-                backgroundColor: "grey.50",
-              },
+              width: "96px",
             }}
           >
             CANCEL
@@ -351,16 +283,13 @@ const ProductForm: React.FC = () => {
             sx={{
               bgcolor: "var(--secondary-color, #4CAF50)",
               color: "white",
-              width: "96px", // Matching width with CANCEL button
-              "&:hover": {
-                bgcolor: "var(--secondary-dark-color, #388E3C)",
-              },
+              width: "96px",
             }}
           >
             ADD
           </Button>
         </Box>
-      </div>
+      
     </div>
   );
 };

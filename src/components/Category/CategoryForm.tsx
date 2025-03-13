@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Typography, Grid, Box } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import SubcategoryForm from "./SubcategoryForm"; // Import the SubcategoryForm component
+ // Adjust the import path as necessary
 
 // Define interface matching what ImageSelection expects
 interface CollectionForm {
@@ -12,17 +13,25 @@ interface CollectionForm {
 
 const CollectionForm: React.FC = () => {
   const [collectionName, setCollectionName] = useState("");
-
-  // Initialize with the correct structure that includes id and selected properties
   const [images, setImages] = useState<CollectionForm[]>([]);
 
+ 
   return (
     <div className="ml-8 mr-8 mb-6">
+      {/* Fixed Back Button Section */}
+      
+
+      {/* Main Form Content */}
       <div
-        className="collection-form-content mb-4 space-y-8 mx-auto overflow-hidden example"
-        style={{ flex: 1, display: "flex", flexDirection: "column" }}
+        className="collection-form-content mb-4 space-y-8 mx-auto overflow-hidden"
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+         
+        }} // Prevent overlap
       >
-        <div className="form-group text-left">
+        <div className="form-group text-left ">
           <Typography variant="subtitle1" gutterBottom align="left">
             CATEGORY NAME
           </Typography>
@@ -57,7 +66,7 @@ const CollectionForm: React.FC = () => {
               sx={{
                 bgcolor: "white",
                 borderRadius: "6px",
-                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+         
                 p: 4,
                 width: "100%",
               }}

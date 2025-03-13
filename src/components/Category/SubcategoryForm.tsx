@@ -108,6 +108,7 @@ const SubcategoryForm: React.FC = () => {
             backgroundColor: "#0d7f3f",
             "&:hover": {
               backgroundColor: "#0a6633",
+              borderColor:"white",
             },
           }}
         >
@@ -120,11 +121,9 @@ ADD CATEGORY        </Button>
           sx={{
             mb: 4,
             p: 3,
-            border: "1px solid #e0e0e0",
-            borderRadius: "8px",
+           
             position: "relative",
-            borderColor:
-              currentSubcategoryId === subcategory.id ? "#0d7f3f" : "#e0e0e0",
+            
           }}
           onClick={() => handleSelectSubcategory(subcategory.id)}
         >
@@ -178,7 +177,7 @@ ADD CATEGORY        </Button>
                   sx={{
                     bgcolor: "white",
                     borderRadius: "6px",
-                    boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                    boxShadow: "0 4px 6px rgba(255, 255, 255, 0.1)",
                     p: 4,
                     width: "100%",
                   }}
