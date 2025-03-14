@@ -78,7 +78,7 @@ const VariantManager: React.FC<VariantManagerProps> = ({
         gutterBottom
         sx={{
           mt: 3,
-          mb: 2,
+          mb: 1,
           color: "var(--secondary-color)",
           background: "var(--secondary-color)",
         }}

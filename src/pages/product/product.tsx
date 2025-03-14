@@ -12,10 +12,9 @@ const ProductPage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [products, setProducts] = useState<Product[]>(productMockData);
 
-
   const handleAddNewProduct = () => {
     // Navigate to the product details page for creating a new product
-    navigate("/product/new");
+    navigate("/product/new?action=add");
   };
 
   const handleDeleteProduct = (productId: string | number) => {
@@ -40,7 +39,7 @@ const ProductPage: React.FC = () => {
     <div className="flex justify-center items-center gap-4">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate(`/product/new`)}
+        onClick={() => navigate(`/product/${item.id}?action=edit`)}
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
@@ -127,8 +126,6 @@ const ProductPage: React.FC = () => {
     },
   ];
   const navigate = useNavigate();
-
-  
 
   return (
     <div>

@@ -1,4 +1,3 @@
-// ImageSelection.tsx
 import React, { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -7,6 +6,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ImageCropper from "./ImageCrop";
 import ImagePopup from "./ImagePopup";
 import ImageUploader from "./ImageUploader";
+import ConfirmationDialog from "./Dialog"; // Importing the ConfirmationDialog
 import "yet-another-react-lightbox/styles.css";
 
 // Types
@@ -142,6 +142,8 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
   const [currentImageId, setCurrentImageId] = useState<number | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupImage, setPopupImage] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<number | null>(null);
 
   // Derived state
   const selectedImages = images.filter((img) => img.selected);
@@ -184,9 +186,18 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
     );
   };
 
-  const deleteImage = (id: number, e: React.MouseEvent) => {
+  const confirmDeleteImage = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setImages((prev) => prev.filter((img) => img.id !== id));
+    setImageToDelete(id);
+    setDialogOpen(true);
+  };
+
+  const deleteImage = (confirm: boolean) => {
+    if (confirm && imageToDelete !== null) {
+      setImages((prev) => prev.filter((img) => img.id !== imageToDelete));
+    }
+    setDialogOpen(false);
+    setImageToDelete(null);
   };
 
   const openImagePopup = (imageUrl: string) => {
@@ -218,7 +229,10 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
       {/* Selected Images Gallery */}
       {selectedImages.length > 0 && (
         <Box sx={{ mt: 2 }}>
-          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
+          <Typography
+            variant="subtitle1"
+            sx={{ mb: 2, fontWeight: "semibold", fontSize: "1.25rem" }}
+          >
             Selected Images
           </Typography>
 
@@ -237,7 +251,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
                 key={image.id}
                 image={image}
                 onCrop={openCropDialog}
-                onDelete={deleteImage}
+                onDelete={confirmDeleteImage}
                 onToggle={toggleImageSelection}
                 onImageClick={openImagePopup}
               />
@@ -259,7 +273,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
                   key={image.id}
                   image={image}
                   onCrop={openCropDialog}
-                  onDelete={deleteImage}
+                  onDelete={confirmDeleteImage}
                   onToggle={toggleImageSelection}
                   onImageClick={openImagePopup}
                 />
@@ -287,6 +301,14 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
         imageUrl={popupImage}
         onClose={closeImagePopup}
         allImages={selectedImages}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={dialogOpen}
+        title="Delete Image"
+        subtitle="Are you sure you want to delete this image?"
+        onClose={deleteImage}
       />
     </Box>
   );

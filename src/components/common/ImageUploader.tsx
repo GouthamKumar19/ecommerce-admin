@@ -1,4 +1,3 @@
-// ImageUploader.tsx
 import React, { useState, useRef, DragEvent, ChangeEvent } from "react";
 import { Box, Typography, Button, Paper } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -83,8 +82,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           mb: 4,
           bgcolor: "background.default",
           borderRadius: 2,
-          width: "70%",
-          maxWidth: "800px",
+          width: "40%", // Decreased width of the dotted box
+          maxWidth: "600px", // Decreased maxWidth of the dotted box
         }}
       >
         <Box
