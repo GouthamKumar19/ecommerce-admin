@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
 import { items } from "../../config/mock/userTable";
@@ -13,6 +13,25 @@ const UsersPage: React.FC = () => {
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogSubtitle, setDialogSubtitle] = useState("");
   const [currentRow, setCurrentRow] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+      const fetchUsers = async () => {
+        try {
+          // Simulate network delay
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          setUsers(items);
+        } catch (error) {
+          console.error("Error fetching products:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchUsers();
+    }, []);
+  
 
   const columns = [
     {
@@ -137,6 +156,7 @@ const UsersPage: React.FC = () => {
           </div>
           <button
             onClick={handleAddNewUser}
+            disabled={loading}
             className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md "
           >
             Add New User
@@ -147,12 +167,13 @@ const UsersPage: React.FC = () => {
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={items}
+          items={users}
           columns={columns}
           idKey="id"
           itemsPerPage={15}
           actionRenderer={actionRenderer}
           disabledRows={disabledRows}
+          loading={loading}
         />
       </div>
 
