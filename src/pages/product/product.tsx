@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
@@ -7,14 +7,30 @@ import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 
 const ProductPage: React.FC = () => {
+  const navigate = useNavigate(); 
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [products, setProducts] = useState<Product[]>(productMockData);
+  const [loading, setLoading] = useState<boolean>(true);
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        // Simulate network delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setProducts(productMockData);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleAddNewProduct = () => {
-    // Navigate to the product details page for creating a new product
     navigate("/product/new");
   };
 
@@ -124,11 +140,9 @@ const ProductPage: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
+      render: actionRenderer, 
     },
   ];
-  const navigate = useNavigate();
-
-  
 
   return (
     <div>
@@ -176,6 +190,7 @@ const ProductPage: React.FC = () => {
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewProduct}
+              disabled={loading}
             >
               Add Product
             </button>
@@ -192,6 +207,7 @@ const ProductPage: React.FC = () => {
           itemsPerPage={15}
           tableType="product"
           actionRenderer={actionRenderer}
+          loading={loading}
         />
       </div>
 

@@ -9,6 +9,7 @@ import {
   PaginationState,
 } from "@tanstack/react-table";
 import Pagination from "./Pagination";
+import TableSkeletonLoader from "./TableSkeletonLoader";
 
 // Define a base interface for data objects
 interface BaseRecord {
@@ -31,6 +32,7 @@ interface DataTableProps<T extends BaseRecord> {
   actionRenderer?: (item: T) => React.ReactNode;
   disabledRows?: string[];
   tableType?: string;
+  loading?: boolean;
 }
 
 // Star Rating Component for testimonials
@@ -58,6 +60,7 @@ const DataTable = <T extends BaseRecord>({
   itemsPerPage = 15,
   actionRenderer,
   disabledRows = [],
+  loading = false,
 }: DataTableProps<T>) => {
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -110,6 +113,9 @@ const DataTable = <T extends BaseRecord>({
     manualPagination: false,
     pageCount: Math.ceil(items.length / pagination.pageSize),
   });
+  if (loading) {
+    return <TableSkeletonLoader columns={columns.length} rows={itemsPerPage} />;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
