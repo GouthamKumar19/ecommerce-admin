@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft } from "lucide-react";
+
 import { Order, PaymentStatus, OrderStatus } from "../types/orders.types";
 import {
   getOrderById,
   paymentStatuses,
   orderStatuses,
 } from "../config/mock/ordersData";
-import { useNavigate } from "react-router-dom";
+
 
 const OrdersForm = () => {
   // State to hold the current order
   const [order, setOrder] = useState<Order | null>(null);
-  const navigate = useNavigate();
+  
 
   // States for dropdown controls
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | "">("");
@@ -68,22 +68,7 @@ const OrdersForm = () => {
     setShowOrderDropdown(false);
   };
 
-  const handleUpdate = () => {
-    if (order) {
-      // Update the order with new statuses
-      const updatedOrder = {
-        ...order,
-        paymentStatus,
-        orderStatus,
-      };
-      console.log("Updated order:", updatedOrder);
-      // Here you would typically send this to your API
-    }
-  };
-
-  const handleBackClick = () => {
-    navigate("/orders");
-  };
+  
 
   if (!order) {
     return <div className="p-4">Loading order data...</div>;
@@ -91,16 +76,6 @@ const OrdersForm = () => {
 
   return (
     <div ref={containerRef} className="relative">
-      {" "}
-      {/* Add relative positioning */}
-      {/* Back button */}
-      <div className="mb-3">
-        <ArrowLeft
-          size={24}
-          className="text-gray-700 cursor-pointer"
-          onClick={handleBackClick}
-        />
-      </div>
       {/* Order ID as title */}
       <div className="mb-4 px-2">
         <h1 className="text-2xl font-bold flex items-center">
@@ -210,7 +185,9 @@ const OrdersForm = () => {
         </div>
       </div>
       {/* Row 3: Payment Status, Order Status */}
-      <div className="mb-6">
+      <div className="mb-20">
+        {" "}
+        {/* Increased bottom margin to ensure dropdowns have space */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-2 py-1 items-end">
           {/* Payment Status Section */}
           <div className="relative" ref={paymentDropdownRef}>
@@ -239,7 +216,7 @@ const OrdersForm = () => {
             </button>
 
             {showPaymentDropdown && (
-              <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
                 <div className="max-h-40 overflow-y-auto">
                   {paymentStatuses.map((status) => (
                     <div
@@ -256,60 +233,52 @@ const OrdersForm = () => {
           </div>
 
           {/* Order Status Section */}
-          <div className="relative flex items-center" ref={orderDropdownRef}>
-            <div className="flex-grow mr-2">
-              <label className="block font-semibold mb-2 text-sm tracking-wide text-gray-800 text-left">
-                ORDER STATUS
-              </label>
-              <button
-                className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${
-                  showOrderDropdown
-                    ? "focus:outline-none focus:ring-2 focus:ring-green-500"
-                    : ""
+          <div className="relative" ref={orderDropdownRef}>
+            <label className="block font-semibold mb-2 text-sm tracking-wide text-gray-800 text-left">
+              ORDER STATUS
+            </label>
+            <button
+              className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${
+                showOrderDropdown
+                  ? "focus:outline-none focus:ring-2 focus:ring-green-500"
+                  : ""
+              }`}
+              style={{ background: "var(--primary-color)" }}
+              onClick={() => setShowOrderDropdown(!showOrderDropdown)}
+            >
+              <span className="font-normal">
+                {orderStatus || "Order Status"}
+              </span>
+              <span
+                className={`transform transition-transform duration-200 text-green-500 ${
+                  showOrderDropdown ? "rotate-180" : ""
                 }`}
-                style={{ background: "var(--primary-color)" }}
-                onClick={() => setShowOrderDropdown(!showOrderDropdown)}
               >
-                <span className="font-normal">
-                  {orderStatus || "Order Status"}
-                </span>
-                <span
-                  className={`transform transition-transform duration-200 text-green-500 ${
-                    showOrderDropdown ? "rotate-180" : ""
-                  }`}
-                >
-                  ▼
-                </span>
-              </button>
+                ▼
+              </span>
+            </button>
 
-              {showOrderDropdown && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
-                  <div className="max-h-40 overflow-y-auto">
-                    {orderStatuses.map((status) => (
-                      <div
-                        key={status}
-                        className="p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 font-normal"
-                        onClick={() => handleOrderStatusChange(status)}
-                      >
-                        {status}
-                      </div>
-                    ))}
-                  </div>
+            {showOrderDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+                <div className="max-h-40 overflow-y-auto">
+                  {orderStatuses.map((status) => (
+                    <div
+                      key={status}
+                      className="p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 font-normal"
+                      onClick={() => handleOrderStatusChange(status)}
+                    >
+                      {status}
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-      {/* Update Button fixed at the bottom-right */}
-      <button
-        className="bg-green-600 text-white px-8 py-3 rounded-md font-medium hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2 shadow-sm text-base absolute bottom-6 right-6"
-        onClick={handleUpdate}
-      >
-        UPDATE
-      </button>
+
       {/* Extra padding/space at the bottom to ensure dropdowns fit within container */}
-      <div className="h-10"></div>
+      <div className="h-20"></div>
     </div>
   );
 };

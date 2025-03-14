@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import AddressPopup from "./AddressPopup";
+import Button from "@mui/material/Button";
 import { Edit, Delete } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+
+import AddressPopup from "./AddressPopup";
 
 interface AddressData {
   addressLine1: string;
@@ -24,15 +24,11 @@ const UserDetailsForm: React.FC = () => {
     phoneNumber: "",
     addresses: [] as AddressData[],
   });
-  const navigate = useNavigate();
 
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   navigate("/user");
-  // };
+
   const [showAddress, setShowAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressData | null>(
-    null,
+    null
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
@@ -79,25 +75,18 @@ const UserDetailsForm: React.FC = () => {
       addresses: prev.addresses.filter((_, i) => i !== index),
     }));
   };
-  const handleBack = () => {
-    navigate("/users");
-  };
 
   return (
-    <div className="relative w-3/4 mx-auto overflow-hidden example">
-      <div
-        className={`mt-4 space-y-4 ${
-          showAddress ? "filter pointer-events-none" : ""
-        }`}
-      >
-        <div className="flex space-x-4">
+    <div>
+      <div className={`${showAddress ? "filter pointer-events-none" : ""}`}>
+        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
           <input
             type="text"
             name="name"
             placeholder="Name"
             value={formData.name}
             onChange={handleInputChange}
-            className="w-1/3 border rounded-md input-box py-2 px-3"
+            className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
           />
           <input
             type="email"
@@ -105,9 +94,9 @@ const UserDetailsForm: React.FC = () => {
             placeholder="Email"
             value={formData.email}
             onChange={handleInputChange}
-            className="w-1/3 border rounded-md input-box py-2 px-3"
+            className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
           />
-          <div className="relative w-1/3">
+          <div className="relative w-full md:w-1/3">
             <input
               type="tel"
               name="phoneNumber"
@@ -125,28 +114,30 @@ const UserDetailsForm: React.FC = () => {
 
         <button
           onClick={() => setShowAddress(true)}
-          className="w-1/4 text-white rounded-md mb-4 flex items-center justify-center"
+          className="w-full sm:w-2/3 md:w-1/3 text-white rounded-md mt-4 mb-4 flex items-center justify-center"
         >
           + ADD A NEW ADDRESS
         </button>
 
         {formData.addresses.map((address, index) => (
-          <div key={index} className="w-full p-4 w-full text-left bg-white">
+          <div key={index} className="w-full p-4 text-left bg-white mb-4">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-bold">Address {index + 1}</h3>
               <div className="flex space-x-2">
                 <Edit
                   className="text-blue-500 cursor-pointer"
+                  style={{ color: "#0d7f3f" }}
                   onClick={() => handleEditAddress(index)}
                 />
                 <Delete
                   className="text-red-500 cursor-pointer"
+                  style={{ color: "#0d7f3f" }}
                   onClick={() => handleDeleteAddress(index)}
                 />
               </div>
             </div>
-            <div className="flex space-x-4 mb-2 relative">
-              <div className="w-1/2">
+            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-2">
+              <div className="w-full md:w-1/2">
                 <label className="block text-sm mb-1">Address Line 1</label>
                 <input
                   type="text"
@@ -159,7 +150,7 @@ const UserDetailsForm: React.FC = () => {
                   Street address or P.O. Box
                 </p>
               </div>
-              <div className="w-1/2">
+              <div className="w-full md:w-1/2">
                 <label className="block text-sm mb-1">Address Line 2</label>
                 <input
                   type="text"
@@ -183,8 +174,8 @@ const UserDetailsForm: React.FC = () => {
               />
             </div>
 
-            <div className="flex space-x-4 mb-2">
-              <div className="w-1/2">
+            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-2">
+              <div className="w-full md:w-1/2">
                 <label className="block text-sm mb-1">State</label>
                 <input
                   type="text"
@@ -195,7 +186,7 @@ const UserDetailsForm: React.FC = () => {
                 />
               </div>
 
-              <div className="w-1/2">
+              <div className="w-full md:w-1/2">
                 <label className="block text-sm mb-1">PIN Code</label>
                 <input
                   type="text"
@@ -219,23 +210,6 @@ const UserDetailsForm: React.FC = () => {
             </div>
           </div>
         ))}
-
-        <div className="flex justify-end mt-8">
-          <div className="space-x-4">
-            <button
-              className="text-white py-2 px-4 rounded-md w-24"
-              onClick={handleBack}
-            >
-              Cancel
-            </button>
-            <button
-              className="bg-primary text-white py-2 px-4 rounded-md w-24"
-              onClick={handleBack}
-            >
-              Add
-            </button>
-          </div>
-        </div>
       </div>
 
       <Dialog
@@ -243,9 +217,14 @@ const UserDetailsForm: React.FC = () => {
         onClose={() => setShowAddress(false)}
         aria-labelledby="address-dialog-title"
         aria-describedby="address-dialog-description"
-        maxWidth="md" // Increase the width of the dialog
-        fullWidth // Ensure the dialog takes the full width
-        sx={{ ml: 34 }}
+        maxWidth="md"
+        fullWidth
+        sx={{
+          "& .MuiDialog-paper": {
+            margin: { xs: "16px", sm: "auto" },
+            width: { xs: "calc(100% - 32px)", sm: "80%", md: "70%" },
+          },
+        }}
       >
         <DialogTitle id="address-dialog-title">{"Address"}</DialogTitle>
         <DialogContent>

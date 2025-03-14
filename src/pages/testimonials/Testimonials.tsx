@@ -8,15 +8,18 @@ import { Edit } from "@mui/icons-material";
 import { Testimonial } from "../../types/testimonials.types";
 const TestimonialsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  const actionRenderer = () => (
+  
+  const actionRenderer = (item:Testimonial) => (
     <div className="flex justify-center items-center gap-4">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate(`/testimonials/new`)}
+        onClick={() => handleEditUser(item)}
       />
     </div>
   );
-
+   const handleEditUser = (item: Testimonial) => {
+      navigate("/testimonials/:id", { state: { testimonial: item } });
+    };
   // Define columns for testimonials table
   const columns = [
     {
@@ -41,7 +44,7 @@ const TestimonialsPage: React.FC = () => {
 
   const handleAddNewTestimonials = () => {
     // Navigate to the user details page for creating a new user
-    navigate("/testimonials/new");
+    navigate("/testimonials/:id");
   };
 
   return (

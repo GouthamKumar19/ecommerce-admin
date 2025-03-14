@@ -16,18 +16,21 @@ const OrderPage: React.FC = () => {
     paymentStatus: "",
     orderStatus: "",
   });
-  const actionRenderer = () => (
-        <div className="flex justify-center items-center gap-4">  
-          <Visibility
-                  sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-                  onClick={() => navigate(`/orders/:id`)}
-                />
-         
-        </div>
-      );
-  
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
   const navigate = useNavigate();
+
+  const actionRenderer = (item: Order) => (
+    <div className="flex justify-center items-center gap-4">
+      <Visibility
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() =>
+          navigate(`/orders/${item.orderId}?action=edit`, {
+            state: { order: item },
+          })
+        }
+      />
+    </div>
+  );
 
   const columns = [
     {
@@ -77,10 +80,9 @@ const OrderPage: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
-    }
+      render: actionRenderer,
+    },
   ];
-
- 
 
   const handleFilterClick = () => {
     setOpenFilterDialog(true);

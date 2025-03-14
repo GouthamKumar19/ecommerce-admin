@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import Rating from "@mui/material/Rating";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
-import { IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BackArrow from "../../components/common/BackArrow";
 
 const TestimonialsDetails = () => {
   const [rating, setRating] = useState<number>(4);
@@ -19,23 +18,42 @@ const TestimonialsDetails = () => {
   };
 
   return (
-    <div className=" text-left bg-white p-4 rounded-lg shadow h-screen">
-      {/* Back Button */}
-      <div className="mb-4 text-left">
-        <IconButton
-          onClick={handleBack}
-          className="text-gray-700"
-          style={{
-            position: "relative",
-            left: "0px",
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        bgcolor: "white",
+        borderRadius: "8px",
+      }}
+    >
+      {/* Top section - fixed */}
+      
+        <Box
+          sx={{
+            padding: 2,
+            boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            bgcolor: "white",
           }}
         >
-          <ArrowBackIcon />
-        </IconButton>
-      </div>
-
-      {/* Form */}
-      <div className="pl-1">
+          <BackArrow />
+        </Box>
+     
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          padding: 2,
+          paddingBottom: "80px", // Add extra padding at the bottom to prevent overlap
+          scrollbarWidth: "none", // For Firefox
+          "&::-webkit-scrollbar": {
+            display: "none", // For Chrome, Safari, and Opera
+          },
+        }}
+      >
         <form className="w-full max-w-3xl space-y-4" onSubmit={handleSubmit}>
           {/* Grid container for name and rating */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -94,26 +112,38 @@ const TestimonialsDetails = () => {
             />
           </div>
         </form>
-        <div className="sticky bottom-0 bg-white py-2">
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              className="bg-gray-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-gray-600 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-              onClick={handleBack}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-blue-600 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              onClick={handleSubmit}
-            >
-              Add
-            </button>
-          </div>
+      </Box>
+
+      {/* Bottom section - fixed with increased bottom spacing */}
+      <Box
+        sx={{
+          padding: 3, // Increased padding
+          paddingBottom: 4, // Extra bottom padding
+          boxShadow: "0px -2px 4px rgba(0,0,0,0.05)",
+          position: "sticky",
+          bottom: 0,
+          zIndex: 10,
+          bgcolor: "white",
+        }}
+      >
+        <div className="flex justify-end space-x-4">
+          <button
+            type="button"
+            className="bg-gray-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-gray-600 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            onClick={handleBack}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-blue-600 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            onClick={handleSubmit}
+          >
+            Add
+          </button>
         </div>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

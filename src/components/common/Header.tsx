@@ -1,7 +1,8 @@
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
 import { useMediaQuery, useTheme } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import ConfirmationDialog from "./Dialog";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -12,7 +13,6 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [logoutVisible, setLogoutVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Use MUI theme and media queries for responsive behavior
@@ -67,21 +67,14 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
 
   const handleLogout = () => {
     setShowLogoutConfirm(true);
-    setTimeout(() => setLogoutVisible(true), 10);
     setDropdownOpen(false);
   };
 
-  const confirmLogout = () => {
-    setLogoutVisible(false);
-    setTimeout(() => {
-      setShowLogoutConfirm(false);
+  const confirmLogout = (confirm: boolean) => {
+    setShowLogoutConfirm(false);
+    if (confirm) {
       navigate("/auth/login");
-    }, 300);
-  };
-
-  const cancelLogout = () => {
-    setLogoutVisible(false);
-    setTimeout(() => setShowLogoutConfirm(false), 0);
+    }
   };
 
   const handleProfileClick = () => {
@@ -179,83 +172,12 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       </header>
 
       {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div
-          className={`fixed inset-0 flex items-center justify-center z-50 transition-all duration-200 ${
-            logoutVisible
-              ? "backdrop-blur-md bg-black/40 opacity-100"
-              : "opacity-0"
-          }`}
-        >
-          <div
-            className={`bg-white shadow-xl rounded-2xl p-6 max-w-sm w-full mx-4 relative transition-all duration-200 transform ${
-              logoutVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
-            }`}
-          >
-            {/* Close Button */}
-            <div
-              onClick={cancelLogout}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 cursor-pointer"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </div>
-
-            {/* Icon */}
-            <div className="flex justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-red-500"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <circle cx="12" cy="12" r="10" strokeWidth="2"></circle>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8v4m0 4h.01"
-                ></path>
-              </svg>
-            </div>
-
-            <h3 className="text-xl font-semibold text-center text-gray-800 mt-4">
-              Are you sure?
-            </h3>
-            <p className="text-sm text-center text-gray-500 mt-2">
-              You will be logged out of your account.
-            </p>
-
-            <div className="flex justify-center space-x-4 mt-6">
-              <button
-                onClick={confirmLogout}
-                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
-              >
-                Yes
-              </button>
-              <button
-                onClick={cancelLogout}
-                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-all"
-              >
-                No
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationDialog
+        open={showLogoutConfirm}
+        title="Are you sure?"
+        subtitle="You will be logged out of your account."
+        onClose={confirmLogout}
+      />
     </>
   );
 };

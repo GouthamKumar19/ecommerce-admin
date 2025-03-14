@@ -59,7 +59,7 @@ const CategoryPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleAdd = () => {
-    navigate("/category/new");
+    navigate("/category/:id");
   };
 
   const handleDeleteCategory = (categoryId: string) => {
@@ -84,7 +84,7 @@ const CategoryPage: React.FC = () => {
     <div className="flex justify-center items-center gap-2">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate("/category/new")}
+        onClick={() => navigate("/category/:id")}
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}

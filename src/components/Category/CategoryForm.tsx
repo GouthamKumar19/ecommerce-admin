@@ -24,7 +24,7 @@ const CollectionForm: React.FC = () => {
       <div className="collection-form-content mb-4 space-y-8 mx-auto overflow-hidden example" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div className="form-group text-left">
           <Typography variant="subtitle1" gutterBottom align="left">
-            COLLECTION NAME
+            CATEGORY NAME
           </Typography>
           <input
             type="text"

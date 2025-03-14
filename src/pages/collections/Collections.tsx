@@ -17,7 +17,7 @@ const CollectionsPage: React.FC = () => {
 
   const handleAddNewCollection = () => {
     // Navigate to the collection creation page
-    navigate("/collection/collection-details");
+    navigate("/collection/:id");
   };
 
   const handleDeleteCollection = (collectionId: string | number) => {
@@ -39,12 +39,15 @@ const CollectionsPage: React.FC = () => {
     setDialogOpen(false);
     setSelectedCollection(null);
   };
+  const handleEditUser = (item: Collection) => {
+      navigate("/collection/:id", { state: { collection: item } });
+    };
 
   const actionRenderer = (item: Collection) => (
     <div className="flex justify-center items-center gap-2">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate("/collection/collection-details")}
+        onClick={() => handleEditUser(item)}
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}

@@ -11,18 +11,19 @@ import UsersPage from "../pages/users/users";
 import { UserDetailsPage } from "../pages/users/user-details";
 import NotFoundPage from "../pages/not-found";
 import Version from "../pages/version";
-import TestimonialsPage from "../pages/testimonials/Testimonials";
-import TestimonialsDetails from "../pages/testimonials/Testimonials-details";
+import TestimonialsPage from "../pages/testimonials/testimonials";
+import TestimonialsDetails from "../pages/testimonials/testimonials-details";
 import ProductPage from "../pages/product/product";
 import { ProductDetails } from "../pages/product/product-details";
 import Profile from "../pages/profile/Profile";
 import OrderDetails from "../pages/orders/order-details";
 import Enquiry from "../pages/enquiry/enquiry-section";
-import CollectionsPage from "../pages/collections/Collections";
-import CategoryPage from "../pages/category/Category";
+import CollectionsPage from "../pages/collections/collections";
+import CategoryPage from "../pages/category/category";
 import Order from "../pages/orders/orders";
-import { CategoryDetails } from "../pages/category/CategoryDetails";
 import CollectionDetails from "../pages/collections/collection-details";
+import { CategoryDetails } from "../pages/category/category-details";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -59,11 +60,7 @@ const router = createBrowserRouter([
         element: <UsersPage />,
       },
       {
-        path: "users/new",
-        element: <UserDetailsPage />, // Reuse UserDetailsPage for creating new user
-      },
-      {
-        path: "/user/id",
+        path: "/users/:id",
         element: <UserDetailsPage />,
       },
       {
@@ -71,7 +68,7 @@ const router = createBrowserRouter([
         element: <TestimonialsPage />,
       },
       {
-        path: "testimonials/new",
+        path: "testimonials/:id",
         element: <TestimonialsDetails />,
       },
       {
@@ -83,8 +80,8 @@ const router = createBrowserRouter([
         element: <ProductDetails />,
       },
       {
-        path: "/collection/collection-details",
-        element: <CollectionDetails />,
+        path: "/collection/:id",
+        element: <CollectionDetails/>,
       },
       {
         path: "/profile",
@@ -111,7 +108,7 @@ const router = createBrowserRouter([
         element: <CategoryPage />,
       },
       {
-        path: "/category/new",
+        path: "/category/:id",
         element: <CategoryDetails />,
       },
     ],

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Button } from "@mui/material";
 
 interface AddressPopupProps {
   onClose?: () => void;
@@ -38,7 +39,7 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
   }, [initialData]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setAddressData((prev) => ({
@@ -127,18 +128,35 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
       </div>
 
       <div className="text-right">
-        <button
+        <Button
+          variant="outlined"
           onClick={onClose}
-          className="mr-4 w-24 text-white bg-gray-200 py-2 px-4 rounded"
+          sx={{
+            borderColor: "grey.500",
+            color: "grey.700",
+            mr: 2, // Add margin to the right to create a gap
+            "&:hover": {
+              borderColor: "grey.700",
+              backgroundColor: "grey.50",
+            },
+          }}
         >
-          CANCEL
-        </button>
-        <button
+          Cancel
+        </Button>
+
+        <Button
+          variant="contained"
           onClick={handleSave}
-          className="w-24 text-white py-2 px-4 rounded"
+          sx={{
+            bgcolor: "var(--secondary-color, #4CAF50)",
+            color: "white",
+            "&:hover": {
+              bgcolor: "var(--secondary-dark-color, #388E3C)",
+            },
+          }}
         >
-          SAVE
-        </button>
+          Confirm
+        </Button>
       </div>
     </div>
   );

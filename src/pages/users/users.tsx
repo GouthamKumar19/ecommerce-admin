@@ -37,7 +37,7 @@ const UsersPage: React.FC = () => {
 
   const handleAddNewUser = () => {
     // Navigate to the user details page for creating a new user
-    navigate("/users/new");
+    navigate("/users/:id");
   };
 
   const handleToggleRow = (item: User) => {
@@ -53,7 +53,7 @@ const UsersPage: React.FC = () => {
   };
 
   const handleEditUser = (item: User) => {
-    navigate("/users/new", { state: { user: item } });
+    navigate("/users/:id", { state: { user: item } });
   };
 
   const handleDialogClose = (confirm: boolean) => {
