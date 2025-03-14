@@ -38,7 +38,7 @@ const MainLayout = () => {
   );
 
   return (
-    <div className="flex h-screen w-screen bg-gray-100">
+    <div className=" flex h-screen w-screen bg-gray-100">
       {/* Main Content Area */}
       <div
         className="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out"
@@ -51,7 +51,7 @@ const MainLayout = () => {
         <Header onToggleSidebar={toggleSidebar} />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4">
+        <main className="flex-1 overflow-hidden p-4">
           <div className="container mx-auto">
             <Outlet />
           </div>
