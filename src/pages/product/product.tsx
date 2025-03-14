@@ -1,34 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
-import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 
+const fetchProducts = async (): Promise<Product[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(productMockData), 1000);
+  });
+};
+
 const ProductPage: React.FC = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [products, setProducts] = useState<Product[]>(productMockData);
-  const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        // Simulate network delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setProducts(productMockData);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
+  const {
+    data: products = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["products"],
+    queryFn: fetchProducts,
+  });
 
   const handleAddNewProduct = () => {
     navigate("/product/new");
@@ -44,9 +42,7 @@ const ProductPage: React.FC = () => {
   const confirmDeleteProduct = () => {
     if (selectedProduct) {
       console.log(`Deleting product with ID: ${selectedProduct.id}`);
-      setProducts(
-        products.filter((product) => product.id !== selectedProduct.id)
-      );
+      refetch(); // Refetch after deletion (or update cache)
     }
     setDialogOpen(false);
     setSelectedProduct(null);
@@ -65,7 +61,6 @@ const ProductPage: React.FC = () => {
     </div>
   );
 
-  // Define columns for product table
   const columns = [
     {
       header: "Featured",
@@ -140,7 +135,7 @@ const ProductPage: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
-      render: actionRenderer, 
+      render: actionRenderer,
     },
   ];
 
@@ -149,7 +144,6 @@ const ProductPage: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* StoreFront UI inspired search bar */}
             <form role="search" className="flex items-center w-full max-w-sm">
               <div className="relative flex-1">
                 <input
@@ -190,7 +184,7 @@ const ProductPage: React.FC = () => {
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewProduct}
-              disabled={loading}
+              disabled={isLoading}
             >
               Add Product
             </button>
@@ -207,7 +201,7 @@ const ProductPage: React.FC = () => {
           itemsPerPage={15}
           tableType="product"
           actionRenderer={actionRenderer}
-          loading={loading}
+          loading={isLoading}
         />
       </div>
 

@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
+import { useQuery } from "@tanstack/react-query";
 import { orderMockData } from "../../config/mock/orderNew";
 import type { Order } from "../../types/order.types";
 import { useNavigate } from "react-router-dom";
 import { Visibility, FilterList } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import OrderFilterDialog from "../../components/orders/OrderFilterDialog";
+
+const fetchOrders = async (): Promise<Order[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(orderMockData), 1000);
+  });
+};
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -17,18 +24,21 @@ const OrderPage: React.FC = () => {
     orderStatus: "",
   });
   const actionRenderer = () => (
-        <div className="flex justify-center items-center gap-4">  
-          <Visibility
-                  sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-                  onClick={() => navigate(`/orders/:id`)}
-                />
-         
-        </div>
-      );
-  
+    <div className="flex justify-center items-center gap-4">
+      <Visibility
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => navigate(`/orders/:id`)}
+      />
+    </div>
+  );
+
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
   const navigate = useNavigate();
 
+  const { data: orderMockData = [], isLoading } = useQuery({
+    queryKey: ["orderMockData"],
+    queryFn: fetchOrders,
+  });
   const columns = [
     {
       header: "Order ID",
@@ -77,10 +87,8 @@ const OrderPage: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
-    }
+    },
   ];
-
- 
 
   const handleFilterClick = () => {
     setOpenFilterDialog(true);
@@ -139,6 +147,7 @@ const OrderPage: React.FC = () => {
               variant="contained"
               startIcon={<FilterList />}
               onClick={handleFilterClick}
+              disabled={isLoading}
               sx={{
                 backgroundColor: "var(--secondary-color)",
                 color: "#ffffff",
@@ -177,6 +186,7 @@ const OrderPage: React.FC = () => {
           itemsPerPage={15}
           tableType="order"
           actionRenderer={actionRenderer}
+          loading={isLoading}
         />
       </div>
     </div>

@@ -1,11 +1,19 @@
 import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
-import { Category } from "../../types/category.types";
+import { Category } from "../../types/category.types"
+import { useQuery } from "@tanstack/react-query";
 import { mockCategoryData } from "../../config/mock/categoryTable";
 import { useNavigate } from "react-router-dom";
 import { Box, Chip } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
+
+const fetchCategory = async (): Promise<Category[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(mockCategoryData), 1000);
+  });
+};
+
 
 const SubcategoryCell: React.FC<{ category: string }> = ({ category }) => {
   const allSubcategories = [
@@ -19,6 +27,7 @@ const SubcategoryCell: React.FC<{ category: string }> = ({ category }) => {
   const displayCount = 3;
   const displayedSubcategories = allSubcategories.slice(0, displayCount);
   const remainingCount = Math.max(0, allSubcategories.length - displayCount);
+
 
   return (
     <Box
@@ -61,6 +70,10 @@ const CategoryPage: React.FC = () => {
   const handleAdd = () => {
     navigate("/category/new");
   };
+  const { isLoading } = useQuery({
+    queryKey: ["mockCategoryData"],
+    queryFn: fetchCategory,
+  });
 
   const handleDeleteCategory = (categoryId: string) => {
     setSelectedCategory(
@@ -157,6 +170,7 @@ const CategoryPage: React.FC = () => {
             <button
               className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
               onClick={handleAdd}
+              disabled={isLoading}
             >
               Add Category
             </button>
@@ -171,6 +185,7 @@ const CategoryPage: React.FC = () => {
           idKey="id"
           itemsPerPage={10}
           actionRenderer={actionRenderer}
+          loading={isLoading}
         />
       </div>
 
