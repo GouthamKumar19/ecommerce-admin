@@ -38,7 +38,7 @@ const ProductAddPage: React.FC = () => {
   }, [fetchedProducts]);
 
   const handleAddNewProduct = () => {
-    navigate("/collection/collection-add-product");
+    navigate("/collection/collection-product/:id");
   };
   
 
@@ -62,7 +62,11 @@ const ProductAddPage: React.FC = () => {
     );
     setDialogOpen(true);
   };
-
+  const handleEditUser = (item: Product) => {
+      navigate("/collection/collection-product/:id", {
+        state: { Product: item },
+      });
+    };
   const handleDialogClose = (confirm: boolean) => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
@@ -210,8 +214,7 @@ const ProductAddPage: React.FC = () => {
             cursor: "pointer",
             color: isDisabled ? "#7B9B8D" : "#0d7f3f",
           }}
-          onClick={() =>
-            navigate(`/collection/collection-add-product/${item.id}`)
+          onClick={() => handleEditUser(item)
           }
         />
         <Delete

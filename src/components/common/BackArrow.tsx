@@ -43,6 +43,15 @@ const BackArrow = () => {
         return "Add Category";
       }
     }
+  if (path.includes("/collection/collection-product")) {
+  // Check if we have order data in state (viewing or editing)
+    if (state && state.Product) {
+      return "Edit Category";
+    } else {
+      return "Add Category";
+    }
+  }
+
     if (path.includes("/collection/")) {
       // Check if we have order data in state (viewing or editing)
       if (state && state.collection) {

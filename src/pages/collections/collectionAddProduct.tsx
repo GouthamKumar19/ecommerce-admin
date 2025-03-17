@@ -1,4 +1,4 @@
-import React, { useState} from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
@@ -6,6 +6,7 @@ import type { Product } from "../../types/product.types";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
+import BackArrow from "../../components/common/BackArrow";
 
 // Mock fetch function
 const fetchProducts = async (): Promise<Product[]> => {
@@ -161,13 +162,7 @@ const CollectionAddPage: React.FC = () => {
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
-          <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Search bar placeholder */}
-            {isLoading && (
-              <Skeleton variant="rectangular" width={300} height={42} />
-            )}
-          </div>
-
+          <BackArrow /> {/* Add ArrowBack component here */}
           <div className="flex ml-auto space-x-4">
             <Button
               variant="outlined"

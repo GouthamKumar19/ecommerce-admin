@@ -110,7 +110,7 @@ const router = createBrowserRouter([
         element: <ProductAddPage />,
       },
       {
-        path: "/collection/collection-add-product",
+        path: "/collection/collection-product/:id",
         element: <CollectionAddPage />,
       },
       {
