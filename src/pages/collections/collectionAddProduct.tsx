@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
-//import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
+import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
 import { Button } from "@mui/material";
 
 const CollectionAddPage: React.FC = () => {
@@ -10,6 +10,7 @@ const CollectionAddPage: React.FC = () => {
   const [checkedProducts, setCheckedProducts] = useState<{
     [key: string]: boolean;
   }>({}); // State to track checked products
+  const [searchValue, setSearchValue] = useState<string>("");
 
   // Function to handle checkbox change
   const handleCheckboxChange = (productId: string | number) => {
@@ -99,10 +100,10 @@ const CollectionAddPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
             {/* Use the SearchBar component */}
-            {/* <SearchBar
+            <SearchBar
               searchValue={searchValue}
               onSearchChange={setSearchValue}
-            /> */}
+            />
           </div>
 
           <div className="flex ml-auto space-x-4">

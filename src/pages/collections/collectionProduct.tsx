@@ -4,7 +4,7 @@ import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
 import { useNavigate } from "react-router-dom";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
-import SearchBar from "../../components/common/SearchBar";
+import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
 const ProductAddPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const navigate = useNavigate();
