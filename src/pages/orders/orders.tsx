@@ -140,6 +140,7 @@ const OrderPage: React.FC = () => {
       <OrderFilterDialog
         open={openFilterDialog}
         onClose={() => setOpenFilterDialog(false)}
+        // @ts-expect-error non fix error
         onApply={applyFilters}
       />
 

@@ -89,6 +89,10 @@ button:focus-visible {
   font-weight: bold;
 }
 
+input[type="checkbox"] {
+accent-color: var(--secondary-color, #0d7f3f);
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: var(--foreground-color);
