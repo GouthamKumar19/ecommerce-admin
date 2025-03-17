@@ -24,20 +24,23 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
 
     // Define all path patterns and their corresponding titles
     const pathPatterns = {
-      "/products": "Products",
-      "/product": "Products", // Handle single product routes
-      "/users": "Users",
-      "/testimonials": "Testimonials",
-      "/category": "Category",
-      "/collections": "Collections",
-      "/collections/new": "Collection",
-      "/collection/collection-details": "Collections",
-      "/enquiry": "Enquiry",
-      "/settings": "Settings",
-      "/profile": "Profile",
-      "/orders": "Orders",
-      "/dashboard": "Dashboard",
-      "/": "Dashboard",
+      "/products": "PRODUCTS",
+      "/product": "PRODUCTS", // Handle single product routes
+      "/users": "USERS",
+      "/testimonials": "TESTIMONIALS",
+      "/category": "CATEGORY",
+      "/collections": "COLLECTIONS",
+      "/collections/new": "COLLECTIONS",
+      "/collection/collection-details": "COLLECTIONS",
+      "/enquiry": "ENQUIRY",
+      "/settings": "SETTINGS",
+      "/profile": "PROFILE",
+      "/orders": "ORDERS",
+      "/dashboard": "DASHBOARD",
+      "/collection/:id": "COLLECTIONS",
+      "/collections/collection-product": "COLLECTIONS",
+      "/collection/collection-add-product": "COLLECTIONS",
+      "/": "DASHBOARD",
     };
 
     // Check each pattern against the current path
