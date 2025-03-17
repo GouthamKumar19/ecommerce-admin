@@ -7,6 +7,7 @@ import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
 import BackArrow from "../../components/common/BackArrow";
+import SearchBar from "../../components/common/SearchBar"; // Import SearchBar
 
 // Mock fetch function
 const fetchProducts = async (): Promise<Product[]> => {
@@ -19,6 +20,7 @@ const CollectionAddPage: React.FC = () => {
   const [checkedProducts, setCheckedProducts] = useState<{
     [key: string]: boolean;
   }>({});
+  const [searchValue, setSearchValue] = useState<string>(""); // Add searchValue state
   const navigate = useNavigate();
 
   // Use React Query for data fetching with loading state
@@ -45,6 +47,11 @@ const CollectionAddPage: React.FC = () => {
     console.log("Selected products:", checkedProducts);
     navigate(-1);
   };
+
+  // Filter products based on search input
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchValue.toLowerCase())
+  );
 
   // Define columns for product table
   const columns = [
@@ -163,6 +170,12 @@ const CollectionAddPage: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <BackArrow /> {/* Add ArrowBack component here */}
+          <div className="flex justify-center w-full md:w-auto ml-40">
+            <SearchBar
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+            />
+          </div>
           <div className="flex ml-auto space-x-4">
             <Button
               variant="outlined"
@@ -204,7 +217,7 @@ const CollectionAddPage: React.FC = () => {
       {/* Products Table with Skeleton */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={isLoading ? skeletonData : products}
+          items={isLoading ? skeletonData : filteredProducts} // Use filteredProducts
           columns={columns}
           idKey="id"
           itemsPerPage={15}
