@@ -26,6 +26,7 @@ const CollectionsPage: React.FC = () => {
     );
     setDialogOpen(true);
   };
+  
 
   const confirmDeleteCollection = () => {
     if (selectedCollection) {

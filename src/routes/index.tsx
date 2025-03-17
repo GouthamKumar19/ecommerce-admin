@@ -15,7 +15,7 @@ import TestimonialsPage from "../pages/testimonials/testimonials";
 import TestimonialsDetails from "../pages/testimonials/testimonials-details";
 import ProductPage from "../pages/product/product";
 import { ProductDetails } from "../pages/product/product-details";
-import Profile from "../pages/profile/Profile";
+import Profile from "../pages/profile/profile";
 import OrderDetails from "../pages/orders/order-details";
 import Enquiry from "../pages/enquiry/enquiry-section";
 import CollectionsPage from "../pages/collections/collections";

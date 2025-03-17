@@ -4,7 +4,7 @@ import { Category } from "../../types/category.types";
 import { mockCategoryData } from "../../config/mock/categoryTable";
 import { useNavigate } from "react-router-dom";
 import { Box, Chip } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete} from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 
 const SubcategoryCell: React.FC<{ category: string }> = ({ category }) => {
@@ -58,7 +58,8 @@ const CategoryPage: React.FC = () => {
   );
   const navigate = useNavigate();
 
-  const handleAdd = () => {
+  const handleAddNewCollection = () => {
+    // Navigate to the collection creation page
     navigate("/category/:id");
   };
 
@@ -79,12 +80,15 @@ const CategoryPage: React.FC = () => {
     setDialogOpen(false);
     setSelectedCategory(null);
   };
+  const handleEditUser = (item: Category) => {
+    navigate("/category/:id", { state: { Category: item } });
+  };
 
   const actionRenderer = (item: Category) => (
     <div className="flex justify-center items-center gap-2">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate("/category/:id")}
+        onClick={() => handleEditUser(item)}
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
@@ -156,7 +160,7 @@ const CategoryPage: React.FC = () => {
           <div className="flex ml-auto">
             <button
               className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
-              onClick={handleAdd}
+              onClick={handleAddNewCollection}
             >
               Add Category
             </button>

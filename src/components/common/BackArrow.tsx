@@ -31,8 +31,16 @@ const BackArrow = () => {
       // Check if we have order data in state (viewing or editing)
       if (state && state.testimonial) {
         return "Edit Testimonials";
-      }else{
-        return "Add Testimonials" 
+      } else {
+        return "Add Testimonials";
+      }
+    }
+    if (path.includes("/category/")) {
+      // Check if we have order data in state (viewing or editing)
+      if (state && state.Category) {
+        return "Edit Category";
+      } else {
+        return "Add Category";
       }
     }
     if (path.includes("/collection/")) {
@@ -44,7 +52,7 @@ const BackArrow = () => {
       }
     }
     if (path.includes("/profile")) {
-      return "Profile"
+      return "Profile";
     }
 
     // Original product logic
