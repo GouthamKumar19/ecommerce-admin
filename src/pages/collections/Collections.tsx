@@ -38,7 +38,6 @@ const CollectionsPage: React.FC = () => {
     );
     setDialogOpen(true);
   };
-  
 
   const confirmDeleteCollection = () => {
     if (selectedCollection) {
@@ -53,8 +52,8 @@ const CollectionsPage: React.FC = () => {
     setSelectedCollection(null);
   };
   const handleEditUser = (item: Collection) => {
-      navigate("/collection/:id", { state: { collection: item } });
-    };
+    navigate("/collection/:id", { state: { collection: item } });
+  };
 
   const actionRenderer = (item: Collection) => (
     <div className="flex justify-center items-center gap-2">
@@ -77,9 +76,11 @@ const CollectionsPage: React.FC = () => {
       render: (item: Collection) => (
         <div className="text-center flex-shrink-0 h-16 w-24">
           <img
-            className="h-16 w-24 object-cover rounded"
+            className="h-16 w-24 object-cover rounded cursor-pointer"
             src={item.imageUrl}
             alt={item.name}
+            // onClick={() => navigate(`/products/${item.id}`)} // Navigate to ProductPage on banner click
+            onClick={() => navigate(`/collections/collection-product`)}
           />
         </div>
       ),

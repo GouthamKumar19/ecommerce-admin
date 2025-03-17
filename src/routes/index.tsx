@@ -23,6 +23,8 @@ import CategoryPage from "../pages/category/category";
 import Order from "../pages/orders/orders";
 import CollectionDetails from "../pages/collections/collection-details";
 import { CategoryDetails } from "../pages/category/category-details";
+import ProductAddPage from "../pages/collections/collectionProduct";
+import CollectionAddPage from "../pages/collections/collectionAddProduct";
 
 const router = createBrowserRouter([
   {
@@ -81,7 +83,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/collection/:id",
-        element: <CollectionDetails/>,
+        element: <CollectionDetails />,
       },
       {
         path: "/profile",
@@ -102,6 +104,14 @@ const router = createBrowserRouter([
       {
         path: "//collections",
         element: <CollectionsPage />,
+      },
+      {
+        path: "/collections/collection-product",
+        element: <ProductAddPage />,
+      },
+      {
+        path: "/collection/collection-add-product",
+        element:<CollectionAddPage/>,
       },
       {
         path: "/category",
