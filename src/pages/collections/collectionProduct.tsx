@@ -8,6 +8,9 @@ import { Edit, Delete } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const fetchProducts = async (): Promise<Product[]> => {
   return new Promise((resolve) => {
@@ -23,6 +26,10 @@ const ProductAddPage: React.FC = () => {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [disabledProducts, setDisabledProducts] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Product[]>([]);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending" | null;
+  }>({ key: "", direction: null });
 
   const navigate = useNavigate();
 
@@ -62,11 +69,13 @@ const ProductAddPage: React.FC = () => {
     );
     setDialogOpen(true);
   };
+
   const handleEditUser = (item: Product) => {
     navigate("/collection/collection-product/:id", {
       state: { Product: item },
     });
   };
+
   const handleDialogClose = (confirm: boolean) => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
@@ -95,6 +104,84 @@ const ProductAddPage: React.FC = () => {
     product.name.toLowerCase().includes(searchValue.toLowerCase())
   );
 
+  // Handle sorting
+  const handleSort = (key: string) => {
+    let direction: "ascending" | "descending" | null = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    } else if (
+      sortConfig.key === key &&
+      sortConfig.direction === "descending"
+    ) {
+      direction = null;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedProducts = React.useMemo(() => {
+    if (sortConfig.key && sortConfig.direction) {
+      return [...filteredProducts].sort((a, b) => {
+        const aValue = a[sortConfig.key] as string | number;
+        const bValue = b[sortConfig.key] as string | number;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return filteredProducts;
+  }, [filteredProducts, sortConfig]);
+
+  const renderSortIcon = (key: string) => {
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "ascending") {
+        return <ArrowUpwardIcon />;
+      } else if (sortConfig.direction === "descending") {
+        return <ArrowDownwardIcon />;
+      }
+    }
+    return (
+      <div className="flex flex-col gap-0">
+        <SwapVertIcon />
+      </div>
+    );
+  };
+ const actionRenderer = (item: Product) => {
+   const isDisabled = disabledProducts.includes(String(item.id));
+   return (
+     <div className="flex justify-center items-center gap-4">
+       <Switch
+         checked={!isDisabled}
+         onChange={() => handleToggleProduct(item)}
+         inputProps={{ "aria-label": "Toggle product status" }}
+         sx={{
+           "& .MuiSwitch-switchBase.Mui-checked": {
+             color: "#0d7f3f",
+           },
+           "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+             backgroundColor: "#0d7f3f",
+           },
+         }}
+       />
+       <Edit
+         sx={{
+           fontSize: 22,
+           cursor: "pointer",
+           color: isDisabled ? "#7B9B8D" : "#0d7f3f",
+         }}
+         onClick={() => handleEditUser(item)}
+       />
+       <Delete
+         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+         onClick={() => handleDeleteProduct(item)}
+       />
+     </div>
+   );
+ };
   // Define columns for product table
   const columns = [
     {
@@ -111,7 +198,17 @@ const ProductAddPage: React.FC = () => {
       ),
     },
     {
-      header: "Product Name",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Product Name</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("name")}
+          >
+            {renderSortIcon("name")}
+          </div>
+        </div>
+      ),
       key: "name",
       render: (item: Product) => (
         <div className="flex text-left">
@@ -130,7 +227,17 @@ const ProductAddPage: React.FC = () => {
       ),
     },
     {
-      header: "Description",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Description</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("description")}
+          >
+            {renderSortIcon("description")}
+          </div>
+        </div>
+      ),
       key: "description",
       render: (item: Product) => (
         <div
@@ -145,7 +252,17 @@ const ProductAddPage: React.FC = () => {
       ),
     },
     {
-      header: "Price",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Price</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("price")}
+          >
+            {renderSortIcon("price")}
+          </div>
+        </div>
+      ),
       key: "price",
       render: (item: Product) => (
         <div
@@ -171,7 +288,17 @@ const ProductAddPage: React.FC = () => {
       ),
     },
     {
-      header: "Quantity",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Quantity</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("quantity")}
+          >
+            {renderSortIcon("quantity")}
+          </div>
+        </div>
+      ),
       key: "quantity",
       render: (item: Product) => (
         <div
@@ -186,43 +313,17 @@ const ProductAddPage: React.FC = () => {
       ),
     },
     {
-      header: "Actions",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Actions</span>
+        </div>
+      ),
       key: "actions",
+      render: actionRenderer,
     },
   ];
 
-  const actionRenderer = (item: Product) => {
-    const isDisabled = disabledProducts.includes(String(item.id));
-    return (
-      <div className="flex justify-center items-center gap-4">
-        <Switch
-          checked={!isDisabled}
-          onChange={() => handleToggleProduct(item)}
-          inputProps={{ "aria-label": "Toggle product status" }}
-          sx={{
-            "& .MuiSwitch-switchBase.Mui-checked": {
-              color: "#0d7f3f",
-            },
-            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-              backgroundColor: "#0d7f3f",
-            },
-          }}
-        />
-        <Edit
-          sx={{
-            fontSize: 22,
-            cursor: "pointer",
-            color: isDisabled ? "#7B9B8D" : "#0d7f3f",
-          }}
-          onClick={() => handleEditUser(item)}
-        />
-        <Delete
-          sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-          onClick={() => handleDeleteProduct(item)}
-        />
-      </div>
-    );
-  };
+ 
 
   return (
     <div>
@@ -254,7 +355,8 @@ const ProductAddPage: React.FC = () => {
       {/* Products Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={filteredProducts}
+          items={sortedProducts}
+          // @ts-expect-error non fix error
           columns={columns}
           idKey="id"
           itemsPerPage={15}

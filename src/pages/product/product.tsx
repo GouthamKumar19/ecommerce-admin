@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { Edit, Delete} from "@mui/icons-material";
 import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
-import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
-
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const fetchProducts = async (): Promise<Product[]> => {
   return new Promise((resolve) => {
@@ -19,6 +21,11 @@ const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending" | null;
+  }>({ key: "", direction: null });
+
   const navigate = useNavigate();
 
   const handleAddNewProduct = () => {
@@ -64,9 +71,65 @@ const ProductPage: React.FC = () => {
     </div>
   );
 
+  const handleSort = (key: string) => {
+    let direction: "ascending" | "descending" | null = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    } else if (
+      sortConfig.key === key &&
+      sortConfig.direction === "descending"
+    ) {
+      direction = null;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedProducts = React.useMemo(() => {
+    if (sortConfig.key && sortConfig.direction) {
+      return [...products].sort((a, b) => {
+        const aValue = a[sortConfig.key] as string | number;
+        const bValue = b[sortConfig.key] as string | number;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return products;
+  }, [products, sortConfig]);
+
+  const renderSortIcon = (key: string) => {
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "ascending") {
+        return <ArrowUpwardIcon />;
+      } else if (sortConfig.direction === "descending") {
+        return <ArrowDownwardIcon />;
+      }
+    }
+    return (
+      <div className="flex flex-col gap-0">
+        <SwapVertIcon />
+      </div>
+    );
+  };
+
   const columns = [
     {
-      header: "Featured",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Featured</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("featured")}
+          >
+            {renderSortIcon("featured")}
+          </div>
+        </div>
+      ),
       key: "featured",
       render: (item: Product) => (
         <div className="flex justify-center">
@@ -80,7 +143,17 @@ const ProductPage: React.FC = () => {
       ),
     },
     {
-      header: "",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Image</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("productImage")}
+          >
+            
+          </div>
+        </div>
+      ),
       key: "productImage",
       render: (item: Product) => (
         <div className="text-center flex-shrink-0 h-10 w-10">
@@ -93,7 +166,17 @@ const ProductPage: React.FC = () => {
       ),
     },
     {
-      header: "Product Name",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Product Name</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("name")}
+          >
+            {renderSortIcon("name")}
+          </div>
+        </div>
+      ),
       key: "name",
       render: (item: Product) => (
         <div className="flex text-left">
@@ -104,7 +187,17 @@ const ProductPage: React.FC = () => {
       ),
     },
     {
-      header: "Description",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Description</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("description")}
+          >
+            {renderSortIcon("description")}
+          </div>
+        </div>
+      ),
       key: "description",
       render: (item: Product) => (
         <div className="text-sm text-gray-900 max-w-xs truncate">
@@ -113,7 +206,17 @@ const ProductPage: React.FC = () => {
       ),
     },
     {
-      header: "Price",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Price</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("price")}
+          >
+            {renderSortIcon("price")}
+          </div>
+        </div>
+      ),
       key: "price",
       render: (item: Product) => (
         <div className="flex items-center">
@@ -129,14 +232,24 @@ const ProductPage: React.FC = () => {
       ),
     },
     {
-      header: "Quantity",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Quantity</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("quantity")}
+          >
+            {renderSortIcon("quantity")}
+          </div>
+        </div>
+      ),
       key: "quantity",
       render: (item: Product) => (
         <div className="text-sm text-gray-900">{item.quantity}</div>
       ),
     },
     {
-      header: "Actions",
+      header: <span>Actions</span>,
       key: "actions",
       render: actionRenderer,
     },
@@ -169,7 +282,8 @@ const ProductPage: React.FC = () => {
       {/* Products Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={products}
+          items={sortedProducts}
+          // @ts-expect-error non fix error
           columns={columns}
           idKey="id"
           itemsPerPage={15}

@@ -8,6 +8,9 @@ import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
 import { User } from "../../types/users.types"; // Ensure this path is correct
 import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const fetchUsers = async (): Promise<User[]> => {
   return new Promise((resolve) => {
@@ -22,26 +25,78 @@ const UsersPage: React.FC = () => {
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogSubtitle, setDialogSubtitle] = useState("");
   const [currentRow, setCurrentRow] = useState<User | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending" | null;
+  }>({ key: "", direction: null });
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: fetchUsers,
   });
+  const renderSortIcon = (key: string) => {
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "ascending") {
+        return <ArrowUpwardIcon />;
+      } else if (sortConfig.direction === "descending") {
+        return <ArrowDownwardIcon />;
+      }
+    }
+    return (
+      <div className="flex flex-col gap-0">
+        <SwapVertIcon />
+      </div>
+    );
+  };
 
   const columns = [
     {
-      header: "Name",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Name</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("name")}
+          >
+            {renderSortIcon("name")}
+          </div>
+        </div>
+      ),
       key: "name",
     },
     {
-      header: "Email",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Email</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("email")}
+          >
+            {renderSortIcon("email")}
+          </div>
+        </div>
+      ),
       key: "email",
     },
     {
-      header: "Phone",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Phone</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("phone")}
+          >
+            {renderSortIcon("phone")}
+          </div>
+        </div>
+      ),
       key: "phone",
     },
     {
-      header: "Actions",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Actions</span>
+        </div>
+      ),
       key: "actions",
     },
   ];
@@ -82,6 +137,39 @@ const UsersPage: React.FC = () => {
     setDialogOpen(false);
     setCurrentRow(null);
   };
+
+  const handleSort = (key: string) => {
+    let direction: "ascending" | "descending" | null = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    } else if (
+      sortConfig.key === key &&
+      sortConfig.direction === "descending"
+    ) {
+      direction = null;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedUsers = React.useMemo(() => {
+    if (sortConfig.key && sortConfig.direction) {
+      return [...users].sort((a, b) => {
+        const aValue = a[sortConfig.key] as string | number;
+        const bValue = b[sortConfig.key] as string | number;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return users;
+  }, [users, sortConfig]);
+
+  
 
   const actionRenderer = (item: User) => {
     const isDisabled = disabledRows.includes(String(item.id));
@@ -133,7 +221,8 @@ const UsersPage: React.FC = () => {
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={users}
+          items={sortedUsers}
+          // @ts-expect-error non fix error
           columns={columns}
           idKey="id"
           itemsPerPage={15}

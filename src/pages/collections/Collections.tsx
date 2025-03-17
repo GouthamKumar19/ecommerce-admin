@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "../../components/common/DataTable";
-import { useQuery } from "@tanstack/react-query";
 import { collectionMockData } from "../../config/mock/collections";
 import type { Collection } from "../../types/collections.types";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
-import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
+import SearchBar from "../../components/common/SearchBar";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { useQuery } from "@tanstack/react-query";
+
 
 const fetchCollections = async (): Promise<Collection[]> => {
   return new Promise((resolve) => {
@@ -17,57 +21,143 @@ const fetchCollections = async (): Promise<Collection[]> => {
 const CollectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedCollection, setSelectedCollection] =
-    useState<Collection | null>(null);
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogSubtitle, setDialogSubtitle] = useState("");
+  const [currentCollection, setCurrentCollection] = useState<Collection | null>(
+    null
+  );
   const [collections, setCollections] =
     useState<Collection[]>(collectionMockData);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending" | null;
+  }>({ key: "", direction: null });
+
   const navigate = useNavigate();
 
-  const { isLoading } = useQuery({
-    queryKey: ["collectionMockData"],
+  const { data: fetchedCollections = [], isLoading } = useQuery({
+    queryKey: ["collections"],
     queryFn: fetchCollections,
   });
 
+  // Initialize table data when collections are fetched
+  useEffect(() => {
+    if (fetchedCollections.length > 0) {
+      setCollections(fetchedCollections);
+    }
+  }, [fetchedCollections]);
+
   const handleAddNewCollection = () => {
-    // Navigate to the collection creation page
     navigate("/collection/:id");
   };
 
-  const handleDeleteCollection = (collectionId: string | number) => {
-    setSelectedCollection(
-      collections.find((collection) => collection.id === collectionId) || null
+ 
+
+  const handleDeleteCollection = (item: Collection) => {
+    setCurrentCollection(item);
+    setDialogTitle("Delete Collection");
+    setDialogSubtitle(
+      `Are you sure you want to delete the collection "${item.name}"?`
     );
     setDialogOpen(true);
   };
 
-  const confirmDeleteCollection = () => {
-    if (selectedCollection) {
-      console.log(`Deleting collection with ID: ${selectedCollection.id}`);
-      setCollections(
-        collections.filter(
-          (collection) => collection.id !== selectedCollection.id
-        )
-      );
-    }
-    setDialogOpen(false);
-    setSelectedCollection(null);
-  };
-  const handleEditUser = (item: Collection) => {
-    navigate("/collection/:id", { state: { collection: item } });
+  const handleEditCollection = (item: Collection) => {
+    navigate("/collection/:id", {
+      state: { Collection: item },
+    });
   };
 
-  const actionRenderer = (item: Collection) => (
-    <div className="flex justify-center items-center gap-2">
-      <Edit
-        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleEditUser(item)}
-      />
-      <Delete
-        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleDeleteCollection(item.id)}
-      />
-    </div>
+  const handleDialogClose = (confirm: boolean) => {
+    if (confirm && currentCollection) {
+      if (dialogTitle === "Delete Collection") {
+        // Delete the collection from the local state
+        setCollections((prevData) =>
+          prevData.filter(
+            (collection) => collection.id !== currentCollection.id
+          )
+        );
+        console.log(`Deleting collection with ID: ${currentCollection.id}`);
+      } else {
+        // Toggle the collection's enabled/disabled status
+        setCollections((prev) => {
+          if (prev.includes(currentCollection)) {
+            return prev.filter(
+              (collection) => collection.id !== currentCollection.id
+            );
+          } else {
+            return [...prev, currentCollection];
+          }
+        });
+      }
+    }
+    setDialogOpen(false);
+    setCurrentCollection(null);
+  };
+
+  // Filter collections based on search input
+  const filteredCollections = collections.filter((collection) =>
+    collection.name.toLowerCase().includes(searchValue.toLowerCase())
   );
+ const actionRenderer = (item: Collection) => (
+   <div className="flex justify-center items-center gap-2">
+     <Edit
+       sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+       onClick={() => handleEditCollection(item)}
+     />
+     <Delete
+       sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+       onClick={() => handleDeleteCollection(item)}
+     />
+   </div>
+ );
+
+  // Handle sorting
+  const handleSort = (key: string) => {
+    let direction: "ascending" | "descending" | null = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    } else if (
+      sortConfig.key === key &&
+      sortConfig.direction === "descending"
+    ) {
+      direction = null;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedCollections = React.useMemo(() => {
+    if (sortConfig.key && sortConfig.direction) {
+      return [...filteredCollections].sort((a, b) => {
+        const aValue = a[sortConfig.key] as string | number;
+        const bValue = b[sortConfig.key] as string | number;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return filteredCollections;
+  }, [filteredCollections, sortConfig]);
+
+  const renderSortIcon = (key: string) => {
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "ascending") {
+        return <ArrowUpwardIcon />;
+      } else if (sortConfig.direction === "descending") {
+        return <ArrowDownwardIcon />;
+      }
+    }
+    return (
+      <div className="flex flex-col gap-0">
+        <SwapVertIcon />
+      </div>
+    );
+  };
 
   // Define columns for collections table
   const columns = [
@@ -86,7 +176,17 @@ const CollectionsPage: React.FC = () => {
       ),
     },
     {
-      header: "Banner Name",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Banner Name</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("name")}
+          >
+            {renderSortIcon("name")}
+          </div>
+        </div>
+      ),
       key: "name",
       render: (item: Collection) => (
         <div className="flex text-left">
@@ -99,40 +199,33 @@ const CollectionsPage: React.FC = () => {
     {
       header: "Actions",
       key: "actions",
+      render: actionRenderer,
     },
   ];
 
-  // Filter collections based on search value
-  const filteredCollections = searchValue
-    ? collections.filter(
-        (collection) =>
-          collection.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-          (collection.description &&
-            collection.description
-              .toLowerCase()
-              .includes(searchValue.toLowerCase()))
-      )
-    : collections;
-
+ 
   return (
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Use the SearchBar component */}
-            <SearchBar
-              searchValue={searchValue}
-              onSearchChange={setSearchValue}
-            />
+            {/* StoreFront UI inspired search bar */}
+            <div className="flex justify-center w-full md:w-auto flex-grow">
+              {/* Use the SearchBar component */}
+              <SearchBar
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+              />
+            </div>
           </div>
 
           <div className="flex ml-auto">
             <button
-              className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-md"
+              className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewCollection}
               disabled={isLoading}
             >
-              Add Collection
+              ADD COLLECTION
             </button>
           </div>
         </div>
@@ -141,10 +234,11 @@ const CollectionsPage: React.FC = () => {
       {/* Collections Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={filteredCollections}
+          items={sortedCollections}
+          // @ts-expect-error non fix error
           columns={columns}
           idKey="id"
-          itemsPerPage={10}
+          itemsPerPage={15}
           tableType="collection"
           actionRenderer={actionRenderer}
           loading={isLoading}
@@ -154,16 +248,9 @@ const CollectionsPage: React.FC = () => {
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         open={dialogOpen}
-        title="Delete Collection"
-        subtitle={`Are you sure you want to delete the collection "${selectedCollection?.name}"?`}
-        onClose={(confirm: boolean) => {
-          if (confirm) {
-            confirmDeleteCollection();
-          } else {
-            setDialogOpen(false);
-            setSelectedCollection(null);
-          }
-        }}
+        title={dialogTitle}
+        subtitle={dialogSubtitle}
+        onClose={handleDialogClose}
       />
     </div>
   );

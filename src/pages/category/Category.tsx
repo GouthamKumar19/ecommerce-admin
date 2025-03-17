@@ -8,6 +8,9 @@ import { Box, Chip } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const fetchCategory = async (): Promise<Category[]> => {
   return new Promise((resolve) => {
@@ -64,6 +67,10 @@ const CategoryPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null
   );
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending" | null;
+  }>({ key: "", direction: null });
   const navigate = useNavigate();
 
   const handleAddNewCategory = () => {
@@ -109,22 +116,93 @@ const CategoryPage: React.FC = () => {
     </div>
   );
 
+  const handleSort = (key: string) => {
+    let direction: "ascending" | "descending" | null = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    } else if (
+      sortConfig.key === key &&
+      sortConfig.direction === "descending"
+    ) {
+      direction = null;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedCategories = React.useMemo(() => {
+    if (sortConfig.key && sortConfig.direction) {
+      return [...categories].sort((a, b) => {
+        const aValue = a[sortConfig.key] as string | number;
+        const bValue = b[sortConfig.key] as string | number;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return categories;
+  }, [categories, sortConfig]);
+
+  const renderSortIcon = (key: string) => {
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "ascending") {
+        return <ArrowUpwardIcon />;
+      } else if (sortConfig.direction === "descending") {
+        return <ArrowDownwardIcon />;
+      }
+    }
+    return (
+      <div className="flex flex-col gap-0">
+        <SwapVertIcon />
+      </div>
+    );
+  };
+
   const columns = [
     {
-      header: "Category",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Category</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("category")}
+          >
+            {renderSortIcon("category")}
+          </div>
+        </div>
+      ),
       key: "category",
       render: (item: Category) => (
         <div className="text-sm text-gray-900 capitalize">{item.category}</div>
       ),
     },
     {
-      header: "Subcategory",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Subcategory</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("subcategory")}
+          >
+            {renderSortIcon("subcategory")}
+          </div>
+        </div>
+      ),
       key: "subcategory",
       render: (item: Category) => <SubcategoryCell category={item.category} />,
     },
     {
-      header: "Actions",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Actions</span>
+        </div>
+      ),
       key: "actions",
+      render: actionRenderer,
     },
   ];
 
@@ -153,7 +231,8 @@ const CategoryPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <DataTable<Category>
-          items={categories}
+          items={sortedCategories}
+        // @ts-expect-error non fix error
           columns={columns}
           idKey="id"
           itemsPerPage={10}
