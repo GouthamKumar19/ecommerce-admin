@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
 import { StarRating } from "../../components/common/DataTable";
 import { testimonials } from "../../config/mock/testimonialsTable";
@@ -6,8 +7,18 @@ import { testimonials } from "../../config/mock/testimonialsTable";
 import { useNavigate } from "react-router-dom";
 import { Edit } from "@mui/icons-material";
 import { Testimonial } from "../../types/testimonials.types";
+
+const fetchTestimonials = async (): Promise<Testimonial[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(testimonials), 1000); // Simulate 1-second delay
+  });
+};
+
 const TestimonialsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
+  const handleEditUser = (item: Testimonial) => {
+    navigate("/testimonials/:id", { state: { testimonial: item } });
+  };
   
   const actionRenderer = (item:Testimonial) => (
     <div className="flex justify-center items-center gap-4">
@@ -17,9 +28,7 @@ const TestimonialsPage: React.FC = () => {
       />
     </div>
   );
-   const handleEditUser = (item: Testimonial) => {
-      navigate("/testimonials/:id", { state: { testimonial: item } });
-    };
+
   // Define columns for testimonials table
   const columns = [
     {
@@ -46,6 +55,14 @@ const TestimonialsPage: React.FC = () => {
     // Navigate to the user details page for creating a new user
     navigate("/testimonials/:id");
   };
+   const {
+      data: testimonials = [],
+      isLoading,
+      
+    } = useQuery({
+      queryKey: ["testimonials"],
+      queryFn: fetchTestimonials,
+    });
 
   return (
     <div>
@@ -95,6 +112,7 @@ const TestimonialsPage: React.FC = () => {
             <button
               className="px-2 py-2 bg-blue-600 text-white rounded-md "
               onClick={handleAddNewTestimonials}
+              disabled={isLoading}
             >
               Add Testimonials
             </button>
@@ -111,6 +129,7 @@ const TestimonialsPage: React.FC = () => {
           itemsPerPage={15}
           tableType="testimonial"
           actionRenderer={actionRenderer}
+          loading={isLoading}
         />
       </div>
     </div>

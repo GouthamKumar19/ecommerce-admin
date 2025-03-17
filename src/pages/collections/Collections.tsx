@@ -1,10 +1,17 @@
 import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
+import { useQuery } from "@tanstack/react-query";
 import { collectionMockData } from "../../config/mock/collections";
 import type { Collection } from "../../types/collections.types";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
+
+const fetchCollections = async (): Promise<Collection[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(collectionMockData), 1000);
+  });
+};
 
 const CollectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -14,6 +21,11 @@ const CollectionsPage: React.FC = () => {
   const [collections, setCollections] =
     useState<Collection[]>(collectionMockData);
   const navigate = useNavigate();
+
+  const { isLoading } = useQuery({
+    queryKey: ["collectionMockData"],
+    queryFn: fetchCollections,
+  });
 
   const handleAddNewCollection = () => {
     // Navigate to the collection creation page
@@ -147,6 +159,7 @@ const CollectionsPage: React.FC = () => {
             <button
               className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewCollection}
+              disabled={isLoading}
             >
               Add Collection
             </button>
@@ -163,6 +176,7 @@ const CollectionsPage: React.FC = () => {
           itemsPerPage={10}
           tableType="collection"
           actionRenderer={actionRenderer}
+          loading={isLoading}
         />
       </div>
 

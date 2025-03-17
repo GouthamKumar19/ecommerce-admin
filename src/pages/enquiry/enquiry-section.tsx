@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "../../components/common/DataTable";
 import { enquiries } from "../../config/mock/enquiriesTable";
-
+import { useQuery } from "@tanstack/react-query";
 import { Visibility, Close } from "@mui/icons-material";
 import { Enquiry } from "../../types/enquiry.types";
+
+const fetchEnquiry = async (): Promise<Enquiry[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(enquiries), 1000);
+  });
+};
 
 const CustomModal: React.FC<{
   isOpen: boolean;
@@ -143,6 +149,10 @@ const EnquirySection: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Enquiry | null>(null);
 
+  const { data: enquiries = [], isLoading } = useQuery({
+    queryKey: ["enquiries"],
+    queryFn: fetchEnquiry,
+  });
 
   const handleViewEnquiry = (id: string) => {
     setSelectedItem(enquiries.find((enquiry) => enquiry.id === id) || null);
@@ -238,6 +248,7 @@ const EnquirySection: React.FC = () => {
           itemsPerPage={15}
           tableType="Enquiry"
           actionRenderer={actionRenderer}
+          loading={isLoading}
         />
       </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, DragEvent, ChangeEvent } from "react";
-import { Box, Typography, Button, Paper } from "@mui/material";
+import { Box, Typography, Button, Paper, Tooltip } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 interface ImageUploaderProps {
@@ -137,29 +137,34 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           >
             or
           </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            size="medium"
-            onClick={openFileInput}
-            disabled={isMaxImagesReached}
-            sx={{
-              px: 3,
-              py: 1,
-              textTransform: "none",
-              borderRadius: 1.5,
-              backgroundColor: "#4CAF50",
-              "&:hover": {
-                backgroundColor: "#3b8a3e",
-              },
-              "&.Mui-disabled": {
-                backgroundColor: "#cccccc",
-                color: "#666666",
-              },
-            }}
-          >
-            {isMaxImagesReached ? "Maximum Limit Reached" : "Browse Files"}
-          </Button>
+          <Tooltip
+              title=" You can upload up to 10 images"
+              arrow
+            >
+            <Button
+              variant="contained"
+              color="primary"
+              size="medium"
+              onClick={openFileInput}
+              disabled={isMaxImagesReached}
+              sx={{
+                px: 3,
+                py: 1,
+                textTransform: "none",
+                borderRadius: 1.5,
+                backgroundColor: "#4CAF50",
+                "&:hover": {
+                  backgroundColor: "#3b8a3e",
+                },
+                "&.Mui-disabled": {
+                  backgroundColor: "#cccccc",
+                  color: "#666666",
+                },
+              }}
+            >
+              {isMaxImagesReached ? "Maximum Limit Reached" : "Browse Files"}
+            </Button>
+            </Tooltip>
           <Typography
             variant="caption"
             color="textSecondary"

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Box, Typography } from "@mui/material";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CropIcon from "@mui/icons-material/Crop";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ImageCropper from "./ImageCrop";
@@ -25,7 +24,6 @@ interface ImageBoxProps {
   image: ProductImage;
   onCrop: (url: string, id: number) => void;
   onDelete: (id: number, e: React.MouseEvent) => void;
-  onToggle: (id: number) => void;
   onImageClick: (url: string) => void;
 }
 
@@ -38,7 +36,6 @@ const ImageBox: React.FC<ImageBoxProps> = ({
   image,
   onCrop,
   onDelete,
-  onToggle,
   onImageClick,
 }) => (
   <Box
@@ -66,27 +63,6 @@ const ImageBox: React.FC<ImageBoxProps> = ({
         objectFit: "cover",
       }}
     />
-    <Box
-      sx={{
-        position: "absolute",
-        top: 8,
-        right: 8,
-        backgroundColor: "#4CAF50",
-        color: "white",
-        borderRadius: "50%",
-        width: 24,
-        height: 24,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onToggle(image.id);
-      }}
-    >
-      <CheckCircleOutlineIcon fontSize="small" />
-    </Box>
 
     <Box
       sx={{
@@ -178,14 +154,6 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
     setCropOpen(true);
   };
 
-  const toggleImageSelection = (id: number) => {
-    setImages((prev) =>
-      prev.map((img) =>
-        img.id === id ? { ...img, selected: !img.selected } : img
-      )
-    );
-  };
-
   const confirmDeleteImage = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setImageToDelete(id);
@@ -252,7 +220,6 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
                 image={image}
                 onCrop={openCropDialog}
                 onDelete={confirmDeleteImage}
-                onToggle={toggleImageSelection}
                 onImageClick={openImagePopup}
               />
             ))}
@@ -274,7 +241,6 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
                   image={image}
                   onCrop={openCropDialog}
                   onDelete={confirmDeleteImage}
-                  onToggle={toggleImageSelection}
                   onImageClick={openImagePopup}
                 />
               ))}

@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
 import { Category } from "../../types/category.types";
+import { useQuery } from "@tanstack/react-query";
 import { mockCategoryData } from "../../config/mock/categoryTable";
 import { useNavigate } from "react-router-dom";
 import { Box, Chip } from "@mui/material";
-import { Edit, Delete} from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
+
+const fetchCategory = async (): Promise<Category[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(mockCategoryData), 1000);
+  });
+};
 
 const SubcategoryCell: React.FC<{ category: string }> = ({ category }) => {
   const allSubcategories = [
@@ -58,10 +65,14 @@ const CategoryPage: React.FC = () => {
   );
   const navigate = useNavigate();
 
-  const handleAddNewCollection = () => {
+  const handleAddNewCategory = () => {
     // Navigate to the collection creation page
     navigate("/category/:id");
   };
+  const { isLoading } = useQuery({
+    queryKey: ["mockCategoryData"],
+    queryFn: fetchCategory,
+  });
 
   const handleDeleteCategory = (categoryId: string) => {
     setSelectedCategory(
@@ -160,7 +171,7 @@ const CategoryPage: React.FC = () => {
           <div className="flex ml-auto">
             <button
               className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
-              onClick={handleAddNewCollection}
+              onClick={handleAddNewCategory}
             >
               Add Category
             </button>
@@ -175,6 +186,7 @@ const CategoryPage: React.FC = () => {
           idKey="id"
           itemsPerPage={10}
           actionRenderer={actionRenderer}
+          loading={isLoading}
         />
       </div>
 
