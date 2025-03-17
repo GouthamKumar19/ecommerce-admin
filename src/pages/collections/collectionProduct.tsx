@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
+import SearchBar from "../../components/common/SearchBar";
 
 const fetchProducts = async (): Promise<Product[]> => {
   return new Promise((resolve) => {
@@ -229,40 +230,13 @@ const ProductAddPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
             {/* StoreFront UI inspired search bar */}
-            <form role="search" className="flex items-center w-full max-w-sm">
-              <div className="relative flex-1">
-                <input
-                  type="search"
-                  placeholder="Search"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"
-                  style={{ height: "42px" }}
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                />
-                <div
-                  style={{
-                    background: "var(--secondary-color)",
-                    height: "42px",
-                  }}
-                  className="absolute rounded-l-none rounded-md inset-y-0 right-0 flex items-center justify-center px-3"
-                >
-                  <svg
-                    className="w-6 h-6 text-white text-bold"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-4.35-4.35m2.35-5.65A7 7 0 1 1 4 12a7 7 0 0 1 14 0z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-            </form>
+            <div className="flex justify-center w-full md:w-auto flex-grow">
+              {/* Use the SearchBar component */}
+              <SearchBar
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+              />
+            </div>
           </div>
 
           <div className="flex ml-auto">
