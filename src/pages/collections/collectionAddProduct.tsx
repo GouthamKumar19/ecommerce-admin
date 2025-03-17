@@ -6,7 +6,7 @@ import type { Product } from "../../types/product.types";
 import { Button } from "@mui/material";
 
 const CollectionAddPage: React.FC = () => {
-  const [searchValue, setSearchValue] = useState<string>("");
+  // const [searchValue, setSearchValue] = useState<string>("");
   const [checkedProducts, setCheckedProducts] = useState<{
     [key: string]: boolean;
   }>({}); // State to track checked products
