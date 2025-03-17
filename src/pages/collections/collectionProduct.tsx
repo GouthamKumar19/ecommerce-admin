@@ -40,7 +40,6 @@ const ProductAddPage: React.FC = () => {
   const handleAddNewProduct = () => {
     navigate("/collection/collection-product/:id");
   };
-  
 
   const handleToggleProduct = (item: Product) => {
     setCurrentProduct(item);
@@ -63,10 +62,10 @@ const ProductAddPage: React.FC = () => {
     setDialogOpen(true);
   };
   const handleEditUser = (item: Product) => {
-      navigate("/collection/collection-product/:id", {
-        state: { Product: item },
-      });
-    };
+    navigate("/collection/collection-product/:id", {
+      state: { Product: item },
+    });
+  };
   const handleDialogClose = (confirm: boolean) => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
@@ -214,8 +213,7 @@ const ProductAddPage: React.FC = () => {
             cursor: "pointer",
             color: isDisabled ? "#7B9B8D" : "#0d7f3f",
           }}
-          onClick={() => handleEditUser(item)
-          }
+          onClick={() => handleEditUser(item)}
         />
         <Delete
           sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}

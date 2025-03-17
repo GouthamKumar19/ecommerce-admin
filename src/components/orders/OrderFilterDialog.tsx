@@ -5,22 +5,22 @@ import {
   DialogContent,
   DialogTitle,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Box,
   Typography,
   TextField,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Paper,
 } from "@mui/material";
 
 interface OrderFilterDialogProps {
   open: boolean;
   onClose: () => void;
   onApply: (filters: {
-    paymentStatus: string;
-    orderStatus: string;
-    date: string;
+    paymentStatus: string[];
+    orderStatus: string[];
+    date: string ;
   }) => void;
 }
 
@@ -29,12 +29,32 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
   onClose,
   onApply,
 }) => {
-  const [paymentStatus, setPaymentStatus] = useState<string>("");
-  const [orderStatus, setOrderStatus] = useState<string>("");
+  const [paymentStatus, setPaymentStatus] = useState<string[]>([]);
+  const [orderStatus, setOrderStatus] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
 
+  const handlePaymentStatusChange = (status: string) => {
+    setPaymentStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((item) => item !== status)
+        : [...prev, status]
+    );
+  };
+
+  const handleOrderStatusChange = (status: string) => {
+    setOrderStatus((prev) =>
+      prev.includes(status)
+        ? prev.filter((item) => item !== status)
+        : [...prev, status]
+    );
+  };
+
   const handleApply = () => {
-    onApply({ paymentStatus, orderStatus, date: selectedDate });
+    onApply({
+      paymentStatus,
+      orderStatus,
+      date: selectedDate,
+    });
     onClose();
   };
 
@@ -51,40 +71,189 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
       </DialogTitle>
       <DialogContent dividers sx={{ p: 3 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          <FormControl
-            fullWidth
-            variant="outlined"
-            sx={{ bgcolor: "#f5f5f5", borderRadius: 2 }}
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
+            }}
           >
-            <InputLabel>Payment Status</InputLabel>
-            <Select
-              value={paymentStatus}
-              onChange={(e) => setPaymentStatus(e.target.value as string)}
-              label="Payment Status"
+            <Typography
+              variant="subtitle1"
+              sx={{ mb: 1, fontWeight: "medium" }}
             >
-              <MenuItem value="">All Orders</MenuItem>
-              <MenuItem value="Complete">Complete</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
-              <MenuItem value="Failed">Failed</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl
-            fullWidth
-            variant="outlined"
-            sx={{ bgcolor: "#f5f5f5", borderRadius: 2 }}
+              Payment Status
+            </Typography>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={paymentStatus.includes("Complete")}
+                    onChange={() => handlePaymentStatusChange("Complete")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Complete"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={paymentStatus.includes("Pending")}
+                    onChange={() => handlePaymentStatusChange("Pending")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Pending"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={paymentStatus.includes("Failed")}
+                    onChange={() => handlePaymentStatusChange("Failed")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Failed"
+              />
+            </FormGroup>
+          </Paper>
+
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
+            }}
           >
-            <InputLabel>Order Status</InputLabel>
-            <Select
-              value={orderStatus}
-              onChange={(e) => setOrderStatus(e.target.value as string)}
-              label="Order Status"
+            <Typography
+              variant="subtitle1"
+              sx={{ mb: 1, fontWeight: "medium" }}
             >
-              <MenuItem value="">All Orders</MenuItem>
-              <MenuItem value="Shipped">Shipped</MenuItem>
-              <MenuItem value="Processing">Processing</MenuItem>
-              <MenuItem value="Cancelled">Cancelled</MenuItem>
-            </Select>
-          </FormControl>
+              Order Status
+            </Typography>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={orderStatus.includes("Order Placed")}
+                    onChange={() => handleOrderStatusChange("Order Placed")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Order Placed"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={orderStatus.includes("Order Confirmed")}
+                    onChange={() => handleOrderStatusChange("Order Confirmed")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Order Confirmed"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={orderStatus.includes("Processing")}
+                    onChange={() => handleOrderStatusChange("Processing")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Processing"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={orderStatus.includes("Ready to Ship")}
+                    onChange={() => handleOrderStatusChange("Ready to Ship")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Ready to Ship"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={orderStatus.includes("Shipped")}
+                    onChange={() => handleOrderStatusChange("Shipped")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Shipped"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={orderStatus.includes("Delivered")}
+                    onChange={() => handleOrderStatusChange("Delivered")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Delivered"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={orderStatus.includes("Cancelled")}
+                    onChange={() => handleOrderStatusChange("Cancelled")}
+                    sx={{
+                      color: "var(--secondary-color)",
+                      "&.Mui-checked": {
+                        color: "var(--secondary-color)",
+                      },
+                    }}
+                  />
+                }
+                label="Cancelled"
+              />
+            </FormGroup>
+          </Paper>
         </Box>
       </DialogContent>
       <DialogActions
@@ -97,11 +266,10 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
           sx={{
-            bgcolor: "#f5f5f5",
             borderRadius: 2,
             "& .MuiOutlinedInput-root": {
-              color: "green",
-              borderColor: "green",
+              color: "var(--secondary-color)",
+              borderColor: "var(--secondary-color)",
             },
           }}
         />

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Chip } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
+import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
 
 const fetchCategory = async (): Promise<Category[]> => {
   return new Promise((resolve) => {
@@ -132,40 +133,11 @@ const CategoryPage: React.FC = () => {
       <div className="bg-white p-2.5 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-2 p-2">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            <form role="search" className="flex items-center w-full max-w-sm">
-              <div className="relative flex-1">
-                <input
-                  type="search"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder="Search"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"
-                  style={{ height: "42px" }}
-                />
-                <div
-                  style={{
-                    background: "var(--secondary-color)",
-                    height: "42px",
-                  }}
-                  className="absolute rounded-l-none rounded-md inset-y-0 right-0 flex items-center justify-center px-2.5"
-                >
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-4.35-4.35m2.35-5.65A7 7 0 1 1 4 12a7 7 0 0 1 14 0z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-            </form>
+            {/* Use the SearchBar component */}
+            <SearchBar
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+            />
           </div>
 
           <div className="flex ml-auto">
