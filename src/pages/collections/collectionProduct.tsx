@@ -1,18 +1,95 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
 import { productMockData } from "../../config/mock/productTable";
 import type { Product } from "../../types/product.types";
 import { useNavigate } from "react-router-dom";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
-import SearchBar from "../../components/common/SearchBar";
+import { Edit, Delete } from "@mui/icons-material";
+import Switch from "@mui/material/Switch";
+import ConfirmationDialog from "../../components/common/Dialog";
+
+const fetchProducts = async (): Promise<Product[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(productMockData), 1000);
+  });
+};
+
 const ProductAddPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogSubtitle, setDialogSubtitle] = useState("");
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [disabledProducts, setDisabledProducts] = useState<string[]>([]);
+  const [tableData, setTableData] = useState<Product[]>([]);
+
   const navigate = useNavigate();
 
+  const { data: fetchedProducts = [], isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: fetchProducts,
+  });
+
+  // Initialize table data when products are fetched
+  useEffect(() => {
+    if (fetchedProducts.length > 0) {
+      setTableData(fetchedProducts);
+    }
+  }, [fetchedProducts]);
+
   const handleAddNewProduct = () => {
-    // Navigate to the user details page for creating a new user
     navigate("/collection/collection-add-product");
   };
+  
+
+  const handleToggleProduct = (item: Product) => {
+    setCurrentProduct(item);
+    if (disabledProducts.includes(String(item.id))) {
+      setDialogTitle("Enable Product");
+      setDialogSubtitle(`Are you sure you want to enable "${item.name}"?`);
+    } else {
+      setDialogTitle("Disable Product");
+      setDialogSubtitle(`Are you sure you want to disable "${item.name}"?`);
+    }
+    setDialogOpen(true);
+  };
+
+  const handleDeleteProduct = (item: Product) => {
+    setCurrentProduct(item);
+    setDialogTitle("Delete Product");
+    setDialogSubtitle(
+      `Are you sure you want to delete the product "${item.name}"?`
+    );
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = (confirm: boolean) => {
+    if (confirm && currentProduct) {
+      if (dialogTitle === "Delete Product") {
+        // Delete the product from the local state
+        setTableData((prevData) =>
+          prevData.filter((product) => product.id !== currentProduct.id)
+        );
+        console.log(`Deleting product with ID: ${currentProduct.id}`);
+      } else {
+        // Toggle the product's enabled/disabled status
+        setDisabledProducts((prev) => {
+          if (prev.includes(String(currentProduct.id))) {
+            return prev.filter((id) => id !== String(currentProduct.id));
+          } else {
+            return [...prev, String(currentProduct.id)];
+          }
+        });
+      }
+    }
+    setDialogOpen(false);
+    setCurrentProduct(null);
+  };
+
+  // Filter products based on search input
+  const filteredProducts = tableData.filter((product) =>
+    product.name.toLowerCase().includes(searchValue.toLowerCase())
+  );
 
   // Define columns for product table
   const columns = [
@@ -35,7 +112,15 @@ const ProductAddPage: React.FC = () => {
       render: (item: Product) => (
         <div className="flex text-left">
           <div className="ml-0">
-            <div className="text-sm font-medium text-gray-900">{item.name}</div>
+            <div
+              className={`text-sm font-medium ${
+                disabledProducts.includes(String(item.id))
+                  ? "text-gray-400"
+                  : "text-gray-900"
+              }`}
+            >
+              {item.name}
+            </div>
           </div>
         </div>
       ),
@@ -44,7 +129,13 @@ const ProductAddPage: React.FC = () => {
       header: "Description",
       key: "description",
       render: (item: Product) => (
-        <div className="text-sm text-gray-900 max-w-xs truncate">
+        <div
+          className={`text-sm max-w-xs truncate ${
+            disabledProducts.includes(String(item.id))
+              ? "text-gray-400"
+              : "text-gray-900"
+          }`}
+        >
           {item.description}
         </div>
       ),
@@ -53,8 +144,18 @@ const ProductAddPage: React.FC = () => {
       header: "Price",
       key: "price",
       render: (item: Product) => (
-        <div className="flex items-center">
-          <span className="text-sm font-medium text-gray-900">
+        <div
+          className={`flex items-center ${
+            disabledProducts.includes(String(item.id)) ? "text-gray-400" : ""
+          }`}
+        >
+          <span
+            className={`text-sm font-medium ${
+              disabledProducts.includes(String(item.id))
+                ? "text-gray-400"
+                : "text-gray-900"
+            }`}
+          >
             ${item.price.toFixed(2)}
           </span>
           {item.discountPrice && (
@@ -69,39 +170,56 @@ const ProductAddPage: React.FC = () => {
       header: "Quantity",
       key: "quantity",
       render: (item: Product) => (
-        <div className="text-sm text-gray-900">{item.quantity}</div>
+        <div
+          className={`text-sm ${
+            disabledProducts.includes(String(item.id))
+              ? "text-gray-400"
+              : "text-gray-900"
+          }`}
+        >
+          {item.quantity}
+        </div>
       ),
     },
     {
       header: "Actions",
       key: "actions",
-      render: (item: Product) => (
-        <div className="flex justify-center items-center gap-4">
-          <Visibility
-            sx={{ fontSize: 22, cursor: "pointer" }}
-            onClick={() => navigate(`/products/${item.id}`)}
-          />
-          <Edit
-            sx={{ fontSize: 22, cursor: "pointer" }}
-            onClick={() => navigate(`/products/edit/${item.id}`)}
-          />
-          <Delete
-            sx={{ fontSize: 22, cursor: "pointer", color: "#ff0000" }}
-            onClick={() => handleDeleteProduct(item.id)}
-          />
-        </div>
-      ),
     },
   ];
 
-  const handleDeleteProduct = (productId: string | number) => {
-    // Implement delete logic here
-    // For example, show a confirmation dialog before deleting
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      console.log(`Deleting product with ID: ${productId}`);
-      // Here you would typically call an API to delete the product
-      // Then update your state or refetch data
-    }
+  const actionRenderer = (item: Product) => {
+    const isDisabled = disabledProducts.includes(String(item.id));
+    return (
+      <div className="flex justify-center items-center gap-4">
+        <Switch
+          checked={!isDisabled}
+          onChange={() => handleToggleProduct(item)}
+          inputProps={{ "aria-label": "Toggle product status" }}
+          sx={{
+            "& .MuiSwitch-switchBase.Mui-checked": {
+              color: "#0d7f3f",
+            },
+            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+              backgroundColor: "#0d7f3f",
+            },
+          }}
+        />
+        <Edit
+          sx={{
+            fontSize: 22,
+            cursor: "pointer",
+            color: isDisabled ? "#7B9B8D" : "#0d7f3f",
+          }}
+          onClick={() =>
+            navigate(`/collection/collection-add-product/${item.id}`)
+          }
+        />
+        <Delete
+          sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+          onClick={() => handleDeleteProduct(item)}
+        />
+      </div>
+    );
   };
 
   return (
@@ -109,17 +227,48 @@ const ProductAddPage: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Use the SearchBar component */}
-            <SearchBar
-              searchValue={searchValue}
-              onSearchChange={setSearchValue}
-            />
+            {/* StoreFront UI inspired search bar */}
+            <form role="search" className="flex items-center w-full max-w-sm">
+              <div className="relative flex-1">
+                <input
+                  type="search"
+                  placeholder="Search"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"
+                  style={{ height: "42px" }}
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                />
+                <div
+                  style={{
+                    background: "var(--secondary-color)",
+                    height: "42px",
+                  }}
+                  className="absolute rounded-l-none rounded-md inset-y-0 right-0 flex items-center justify-center px-3"
+                >
+                  <svg
+                    className="w-6 h-6 text-white text-bold"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 21l-4.35-4.35m2.35-5.65A7 7 0 1 1 4 12a7 7 0 0 1 14 0z"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
+            </form>
           </div>
 
           <div className="flex ml-auto">
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewProduct}
+              disabled={isLoading}
             >
               ADD PRODUCT
             </button>
@@ -130,13 +279,24 @@ const ProductAddPage: React.FC = () => {
       {/* Products Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={productMockData}
+          items={filteredProducts}
           columns={columns}
           idKey="id"
           itemsPerPage={15}
           tableType="product"
+          actionRenderer={actionRenderer}
+          disabledRows={disabledProducts}
+          loading={isLoading}
         />
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={dialogOpen}
+        title={dialogTitle}
+        subtitle={dialogSubtitle}
+        onClose={handleDialogClose}
+      />
     </div>
   );
 };
