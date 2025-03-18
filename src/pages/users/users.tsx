@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
-import { items } from "../../config/mock/userTable";
+import { items } from "../../config/mock/userTable"; // Assuming this provides mock data
 import { Edit } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
@@ -14,7 +14,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const fetchUsers = async (): Promise<User[]> => {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(items), 1000);
+    setTimeout(() => resolve(items), 1000); // Simulating fetch delay
   });
 };
 
@@ -29,24 +29,27 @@ const UsersPage: React.FC = () => {
     key: string;
     direction: "ascending" | "descending" | null;
   }>({ key: "", direction: null });
+
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: fetchUsers,
   });
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Optional: If you need to perform any actions when the component mounts
+  }, []);
+
   const renderSortIcon = (key: string) => {
     if (sortConfig.key === key) {
-      if (sortConfig.direction === "ascending") {
-        return <ArrowUpwardIcon />;
-      } else if (sortConfig.direction === "descending") {
-        return <ArrowDownwardIcon />;
-      }
+      return sortConfig.direction === "ascending" ? (
+        <ArrowUpwardIcon />
+      ) : (
+        <ArrowDownwardIcon />
+      );
     }
-    return (
-      <div className="flex flex-col gap-0">
-        <SwapVertIcon />
-      </div>
-    );
+    return <SwapVertIcon />;
   };
 
   const columns = [
@@ -112,16 +115,14 @@ const UsersPage: React.FC = () => {
     },
   ];
 
-  const navigate = useNavigate();
-
   const handleAddNewUser = () => {
     // Navigate to the user details page for creating a new user
-    navigate("/users/:id");
+    navigate("/users/new");
   };
 
   const handleToggleRow = (item: User) => {
     setCurrentRow(item);
-    if (disabledRows.includes(String(item.id))) {
+    if (disabledRows.includes(String(item._id))) {
       setDialogTitle("Enable User");
       setDialogSubtitle("Are you sure you want to enable this user?");
     } else {
@@ -132,16 +133,16 @@ const UsersPage: React.FC = () => {
   };
 
   const handleEditUser = (item: User) => {
-    navigate("/users/:id", { state: { user: item } });
+    navigate(`/users/${item._id}`, { state: { user: item } }); // Updated to use _id
   };
 
   const handleDialogClose = (confirm: boolean) => {
     if (confirm && currentRow) {
       setDisabledRows((prev) => {
-        if (prev.includes(String(currentRow.id))) {
-          return prev.filter((rowId) => rowId !== String(currentRow.id));
+        if (prev.includes(String(currentRow._id))) {
+          return prev.filter((rowId) => rowId !== String(currentRow._id));
         } else {
-          return [...prev, String(currentRow.id)];
+          return [...prev, String(currentRow._id)];
         }
       });
     }
@@ -181,7 +182,7 @@ const UsersPage: React.FC = () => {
   }, [users, sortConfig]);
 
   const actionRenderer = (item: User) => {
-    const isDisabled = disabledRows.includes(String(item.id));
+    const isDisabled = disabledRows.includes(String(item._id)); // Updated to _id
     return (
       <div className="flex justify-center items-center gap-4">
         <Edit
@@ -232,7 +233,7 @@ const UsersPage: React.FC = () => {
         <DataTable
           items={sortedUsers}
           columns={columns}
-          idKey="id"
+          idKey="_id" // Updated to use _id
           itemsPerPage={15}
           actionRenderer={actionRenderer}
           disabledRows={disabledRows}
