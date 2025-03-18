@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+
 import DataTable from "../../components/common/DataTable";
-import { enquiries } from "../../config/mock/enquiriesTable";
+import { enquiries } from "../../config/mock/enquiriesTable"; // Keep this as mock data if needed
 import { Visibility, Close } from "@mui/icons-material";
 import { Enquiry } from "../../types/enquiry.types";
 import SearchBar from "../../components/common/SearchBar";
@@ -12,6 +12,7 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
+import { getAllEnquiry } from "../../api/enquiry"; // Import your API function
 
 // Add this interface to match what DataTable expects
 interface TableColumn<T> {
@@ -20,11 +21,11 @@ interface TableColumn<T> {
   render?: (item: T) => React.ReactNode;
 }
 
-const fetchEnquiry = async (): Promise<Enquiry[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(enquiries), 1000);
-  });
-};
+// const fetchEnquiry = async (): Promise<Enquiry[]> => {
+//   return new Promise((resolve) => {
+//     setTimeout(() => resolve(enquiries), 1000);
+//   });
+// };
 
 const CustomModal: React.FC<{
   isOpen: boolean;
@@ -163,14 +164,39 @@ const EnquirySection: React.FC = () => {
     key: "",
     direction: null,
   });
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: enquiries = [], isLoading } = useQuery({
-    queryKey: ["enquiries"],
-    queryFn: fetchEnquiry,
-  });
+  const payload = {
+    options: {
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: ["createdAt"], // Adjust sort parameters as needed
+      sortDesc: [true],
+    },
+  };
+
+  useEffect(() => {
+    const fetchEnquiriesData = async () => {
+      setIsLoading(true); // Start loading
+      setError(null); // Reset error
+
+      try {
+        const response = await getAllEnquiry(payload); // Call the API with payload
+        setEnquiries(response); // Update state with fetched data
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch enquiries");
+      } finally {
+        setIsLoading(false); // Stop loading
+      }
+    };
+
+    fetchEnquiriesData();
+  }, []);
 
   const handleViewEnquiry = (id: string) => {
-    setSelectedItem(enquiries.find((enquiry) => enquiry.id === id) || null);
+    setSelectedItem(enquiries.find((enquiry) => enquiry._id === id) || null); // Update how you identify items here
     setOpenDialog(true);
   };
 
@@ -189,7 +215,7 @@ const EnquirySection: React.FC = () => {
     <div className="flex justify-center items-center gap-2">
       <Visibility
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleViewEnquiry(item.id.toString())}
+        onClick={() => handleViewEnquiry(item._id)} // Using _id now
       />
     </div>
   );
