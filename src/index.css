@@ -78,13 +78,19 @@ button:focus-visible {
   font-weight: bold;
   color: #000000;
 }
+
 .input-box {
   border-color: #d1d5db80;
   background-color: #f3f4f6ed;
 }
+
 .text-header {
   background-color: var(--background-color);
   font-weight: bold;
+}
+
+input[type="checkbox"] {
+accent-color: var(--secondary-color, #0d7f3f);
 }
 
 @media (prefers-color-scheme: light) {
@@ -100,10 +106,11 @@ button:focus-visible {
   button {
     background-color: var(--secondary-color);
   }
-  html,
-  body {
+
+  html{
     overflow: hidden;
   }
+
   .example::-webkit-scrollbar {
     overflow: hidden;
   }
@@ -125,20 +132,23 @@ button:focus-visible {
     padding-right: 10px;
     /* Ensure content is not hidden behind the hidden scrollbar */
   }
+
   html {
     overflow: hidden;
-  }.category-form-container {
+  }
+
+  .category-form-container {
     padding: 20px;
     max-width: 600px;
     margin: 0 auto;
   }
-  
+
   .category-form-header {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
   }
-  
+
   .back-button {
     background: none;
     border: none;
@@ -147,21 +157,21 @@ button:focus-visible {
     margin-right: 15px;
     padding: 5px 10px;
   }
-  
+
   .category-form-content {
     margin-top: 30px;
   }
-  
+
   .form-group {
     margin-bottom: 20px;
   }
-  
+
   .form-group label {
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
   }
-  
+
   .form-group input {
     width: 100%;
     padding: 12px;
@@ -169,6 +179,11 @@ button:focus-visible {
     border-radius: 4px;
     font-size: 16px;
   }
+
+  .custom-checkbox {
+    accent-color: var(--secondary-color, #0d7f3f);
+  }
   
   
+
 }

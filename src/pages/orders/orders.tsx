@@ -1,11 +1,22 @@
 import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
+import { useQuery } from "@tanstack/react-query";
 import { orderMockData } from "../../config/mock/orderNew";
 import type { Order } from "../../types/order.types";
 import { useNavigate } from "react-router-dom";
-import { Visibility, Delete, FilterList } from "@mui/icons-material";
+import { Visibility, FilterList } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import OrderFilterDialog from "../../components/orders/OrderFilterDialog";
+import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+
+const fetchOrders = async (): Promise<Order[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(orderMockData), 1000);
+  });
+};
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -16,33 +27,142 @@ const OrderPage: React.FC = () => {
     paymentStatus: "",
     orderStatus: "",
   });
+
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending" | null;
+  }>({ key: "", direction: null });
   const navigate = useNavigate();
+
+  const actionRenderer = (item: Order) => (
+    <div className="flex justify-center items-center gap-4">
+      <Visibility
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() =>
+          navigate(`/orders/${item.orderId}?action=edit`, {
+            state: { order: item },
+          })
+        }
+      />
+    </div>
+  );
+
+  const { data: orderMockData = [], isLoading } = useQuery({
+    queryKey: ["orderMockData"],
+    queryFn: fetchOrders,
+  });
+
+  const handleSort = (key: string) => {
+    let direction: "ascending" | "descending" | null = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    } else if (
+      sortConfig.key === key &&
+      sortConfig.direction === "descending"
+    ) {
+      direction = null;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedOrders = React.useMemo(() => {
+    if (sortConfig.key && sortConfig.direction) {
+      return [...orderMockData].sort((a, b) => {
+        const aValue = a[sortConfig.key] as string | number;
+        const bValue = b[sortConfig.key] as string | number;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return orderMockData;
+  }, [orderMockData, sortConfig]);
+
+  const renderSortIcon = (key: string) => {
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "ascending") {
+        return <ArrowUpwardIcon />;
+      } else if (sortConfig.direction === "descending") {
+        return <ArrowDownwardIcon />;
+      }
+    }
+    return (
+      <div className="flex flex-col gap-0">
+        <SwapVertIcon />
+      </div>
+    );
+  };
 
   const columns = [
     {
-      header: "Order ID",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Order ID</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("orderId")}
+          >
+            {renderSortIcon("orderId")}
+          </div>
+        </div>
+      ),
       key: "orderId",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">{item.orderId}</div>
       ),
     },
     {
-      header: "Username",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Username</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("username")}
+          >
+            {renderSortIcon("username")}
+          </div>
+        </div>
+      ),
       key: "username",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">{item.username}</div>
       ),
     },
     {
-      header: "Amount",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Amount</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("amount")}
+          >
+            {renderSortIcon("amount")}
+          </div>
+        </div>
+      ),
       key: "amount",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">${item.amount.toFixed(2)}</div>
       ),
     },
     {
-      header: "Date",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Date</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("date")}
+          >
+            {renderSortIcon("date")}
+          </div>
+        </div>
+      ),
       key: "date",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">
@@ -51,42 +171,48 @@ const OrderPage: React.FC = () => {
       ),
     },
     {
-      header: "Payment Status",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Payment Status</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("paymentStatus")}
+          >
+            {renderSortIcon("paymentStatus")}
+          </div>
+        </div>
+      ),
       key: "paymentStatus",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">{item.paymentStatus}</div>
       ),
     },
     {
-      header: "Order Status",
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Order Status</span>
+          <div
+            className="flex flex-col ml-1 cursor-pointer"
+            onClick={() => handleSort("orderStatus")}
+          >
+            {renderSortIcon("orderStatus")}
+          </div>
+        </div>
+      ),
       key: "orderStatus",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">{item.orderStatus}</div>
       ),
     },
     {
-      header: "Actions",
-      key: "actions",
-      render: (item: Order) => (
-        <div className="flex justify-center items-center gap-4">
-          <Visibility
-            className="cursor-pointer"
-            onClick={() => navigate(`/orders/${item.orderId}`)}
-          />
-          <Delete
-            className="cursor-pointer"
-            onClick={() => handleDeleteOrder(item.orderId)}
-          />
+      header: (
+        <div className="flex items-center justify-center">
+          <span>Actions</span>
         </div>
       ),
+      key: "actions",
     },
   ];
-
-  const handleDeleteOrder = (orderId: string | number) => {
-    if (window.confirm("Are you sure you want to delete this order?")) {
-      console.log(`Deleting order with ID: ${orderId}`);
-    }
-  };
 
   const handleFilterClick = () => {
     setOpenFilterDialog(true);
@@ -104,40 +230,11 @@ const OrderPage: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            <form role="search" className="flex items-center w-full max-w-sm">
-              <div className="relative flex-1">
-                <input
-                  type="search"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder="Search"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"
-                  style={{ height: "42px" }}
-                />
-                <div
-                  className="absolute rounded-l-none rounded-md inset-y-0 right-0 flex items-center justify-center px-3"
-                  style={{
-                    background: "var(--secondary-color)",
-                    height: "42px",
-                  }}
-                >
-                  <svg
-                    className="w-6 h-6 text-white text-bold"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-4.35-4.35m2.35-5.65A7 7 0 1 1 4 12a7 7 0 0 1 14 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </form>
+            {/* Use the SearchBar component */}
+            <SearchBar
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+            />
           </div>
 
           <div className="flex ml-auto">
@@ -145,6 +242,7 @@ const OrderPage: React.FC = () => {
               variant="contained"
               startIcon={<FilterList />}
               onClick={handleFilterClick}
+              disabled={isLoading}
               sx={{
                 backgroundColor: "var(--secondary-color)",
                 color: "#ffffff",
@@ -159,12 +257,13 @@ const OrderPage: React.FC = () => {
       <OrderFilterDialog
         open={openFilterDialog}
         onClose={() => setOpenFilterDialog(false)}
+        // @ts-expect-error non fix error
         onApply={applyFilters}
       />
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable<Order>
-          items={orderMockData
+          items={sortedOrders
             .filter(
               (order) =>
                 !filters.paymentStatus ||
@@ -178,10 +277,13 @@ const OrderPage: React.FC = () => {
             .filter((order) =>
               order.orderId.toLowerCase().includes(searchValue.toLowerCase())
             )}
+          // @ts-expect-error non fix error
           columns={columns}
           idKey="orderId"
           itemsPerPage={15}
           tableType="order"
+          actionRenderer={actionRenderer}
+          loading={isLoading}
         />
       </div>
     </div>

@@ -2,9 +2,9 @@
 import { Box } from "@mui/material";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
-import CollectionForm from "../../components/CollectionForm";
+import CategoryForm from "../../components/Category/CategoryForm";
 
-export const CollectionDetails = () => {
+export const CategoryDetails = () => {
   return (
     <Box
       sx={{
@@ -42,7 +42,7 @@ export const CollectionDetails = () => {
           },
         }}
       >
-        <CollectionForm />
+        <CategoryForm />
       </Box>
 
       {/* Bottom section - fixed with increased bottom spacing */}
@@ -63,4 +63,4 @@ export const CollectionDetails = () => {
   );
 };
 
-export default CollectionDetails;
+export default CategoryDetails;
