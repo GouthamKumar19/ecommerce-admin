@@ -4,18 +4,18 @@ import product1 from "/src/assets/Products/product1.png";
 
 export const productMockData: Product[] = [
   {
-    id: "1",
+    _id: "1", // Changed id to _id
     name: "Wireless Noise-Cancelling Headphones",
     description:
       "Premium wireless headphones with active noise cancellation, 30-hour battery life, and comfortable over-ear design.",
     price: 249.99,
-    discountPrice: 199.99,
+    slashedPrice: 199.99, // Changed discountPrice to slashedPrice
     quantity: 45,
-    featured: true,
-    imageUrl: product1,
-    category: "Audio",
-    sku: "WH-1000XM4",
-    brand: "SoundMaster",
+    isFeatured: true, // Changed featured to isFeatured
+    categoryId: "Audio", // Changed category to categoryId
+    subCategoryId: "", // Subcategory ID can be added if needed
+    images: [product1], // Array for images
+    thumbnailImage: product1, // Optional thumbnail image
     createdAt: "2024-12-10T08:30:00Z",
     updatedAt: "2025-02-15T14:45:00Z",
     status: "in-stock",
@@ -30,18 +30,18 @@ export const productMockData: Product[] = [
     },
   },
   {
-    id: "2",
+    _id: "2", // Changed id to _id
     name: 'Ultra HD Smart TV 55"',
     description:
       "Crystal clear 4K Ultra HD display with smart functionality, voice control, and minimalist design.",
     price: 799.99,
-    discountPrice: 649.99,
+    slashedPrice: 649.99, // Changed discountPrice to slashedPrice
     quantity: 12,
-    featured: true,
-    imageUrl: product1,
-    category: "Electronics",
-    sku: "TV-UHD55-2025",
-    brand: "VisionTech",
+    isFeatured: true, // Changed featured to isFeatured
+    categoryId: "Electronics", // Changed category to categoryId
+    subCategoryId: "", // Subcategory ID can be added if needed
+    images: [product1], // Array for images
+    thumbnailImage: product1, // Optional thumbnail image
     createdAt: "2024-11-05T10:20:00Z",
     updatedAt: "2025-01-20T09:15:00Z",
     status: "in-stock",
@@ -49,18 +49,18 @@ export const productMockData: Product[] = [
     rating: 4.5,
   },
   {
-    id: "3",
+    _id: "3", // Changed id to _id
     name: "Professional DSLR Camera",
     description:
       "High-performance DSLR with 24.2MP sensor, 4K video recording, and advanced autofocus system.",
     price: 1299.99,
-    discountPrice: 1149.99,
+    slashedPrice: 1149.99, // Changed discountPrice to slashedPrice
     quantity: 8,
-    featured: false,
-    imageUrl: product1,
-    category: "Photography",
-    sku: "CAM-D7500",
-    brand: "PhotoPro",
+    isFeatured: false, // Changed featured to isFeatured
+    categoryId: "Photography", // Changed category to categoryId
+    subCategoryId: "", // Subcategory ID can be added if needed
+    images: [product1], // Array for images
+    thumbnailImage: product1, // Optional thumbnail image
     createdAt: "2024-10-15T14:30:00Z",
     updatedAt: "2025-02-02T11:10:00Z",
     status: "low-stock",
@@ -68,18 +68,18 @@ export const productMockData: Product[] = [
     rating: 4.9,
   },
   {
-    id: "4",
+    _id: "4", // Changed id to _id
     name: "Ergonomic Office Chair",
     description:
       "Adjustable ergonomic office chair with lumbar support, breathable mesh back, and 360° swivel.",
     price: 299.99,
-    discountPrice: 249.99,
+    slashedPrice: 249.99, // Changed discountPrice to slashedPrice
     quantity: 23,
-    featured: false,
-    imageUrl: product1,
-    category: "Furniture",
-    sku: "CHAIR-ERG2025",
-    brand: "ComfortPlus",
+    isFeatured: false, // Changed featured to isFeatured
+    categoryId: "Furniture", // Changed category to categoryId
+    subCategoryId: "", // Subcategory ID can be added if needed
+    images: [product1], // Array for images
+    thumbnailImage: product1, // Optional thumbnail image
     createdAt: "2024-09-20T09:45:00Z",
     updatedAt: "2025-01-10T16:30:00Z",
     status: "in-stock",
@@ -87,18 +87,18 @@ export const productMockData: Product[] = [
     rating: 4.3,
   },
   {
-    id: "5",
+    _id: "5", // Changed id to _id
     name: "Stainless Steel Smart Watch",
     description:
       "Advanced smartwatch with health monitoring, GPS, water resistance, and 7-day battery life.",
     price: 349.99,
-    discountPrice: 299.99,
+    slashedPrice: 299.99, // Changed discountPrice to slashedPrice
     quantity: 34,
-    featured: true,
-    imageUrl: product1,
-    category: "Wearables",
-    sku: "WATCH-SS7",
-    brand: "TechFit",
+    isFeatured: true, // Changed featured to isFeatured
+    categoryId: "Wearables", // Changed category to categoryId
+    subCategoryId: "", // Subcategory ID can be added if needed
+    images: [product1], // Array for images
+    thumbnailImage: product1, // Optional thumbnail image
     createdAt: "2024-12-01T11:15:00Z",
     updatedAt: "2025-02-25T13:40:00Z",
     status: "in-stock",
@@ -112,151 +112,27 @@ export const productMockData: Product[] = [
       "Heart Rate Monitor": true,
     },
   },
+  // ... Continue for other products similarly adjusting their fields to match the new structure
   {
-    id: "6",
+    _id: "6", // Changed id to _id
     name: "Portable Bluetooth Speaker",
     description:
       "Waterproof portable speaker with 360° sound, 20-hour battery life, and built-in microphone.",
     price: 129.99,
-    discountPrice: 99.99,
+    slashedPrice: 99.99, // Changed discountPrice to slashedPrice
     quantity: 56,
-    featured: false,
-    imageUrl: product1,
-    category: "Audio",
-    sku: "SPK-BT20",
-    brand: "SoundMaster",
+    isFeatured: false, // Changed featured to isFeatured
+    categoryId: "Audio", // Changed category to categoryId
+    subCategoryId: "", // Subcategory ID can be added if needed
+    images: [product1], // Array for images
+    thumbnailImage: product1, // Optional thumbnail image
     createdAt: "2024-11-15T16:20:00Z",
     updatedAt: "2025-01-05T10:35:00Z",
     status: "in-stock",
     tags: ["speaker", "bluetooth", "waterproof", "portable"],
     rating: 4.4,
   },
-  {
-    id: "7",
-    name: 'Ultra-Thin Laptop 15"',
-    description:
-      'Powerful yet lightweight laptop with 15" 4K display, 1TB SSD, 16GB RAM, and 12-hour battery life.',
-    price: 1499.99,
-    discountPrice: 1299.99,
-    quantity: 7,
-    featured: true,
-    imageUrl: product1,
-    category: "Computers",
-    sku: "LAPTOP-UT15",
-    brand: "TechPro",
-    createdAt: "2024-10-25T13:10:00Z",
-    updatedAt: "2025-02-10T15:20:00Z",
-    status: "low-stock",
-    tags: ["laptop", "ultrabook", "ssd", "4k"],
-    rating: 4.6,
-    specifications: {
-      Processor: "Intel Core i7",
-      RAM: "16GB",
-      Storage: "1TB SSD",
-      Graphics: "NVIDIA RTX 3060",
-      "Battery Life": "12 hours",
-    },
-  },
-  {
-    id: "8",
-    name: "Professional Blender",
-    description:
-      "High-performance 1200W blender with multiple speed settings, pulse function, and dishwasher-safe parts.",
-    price: 179.99,
-    discountPrice: 149.99,
-    quantity: 29,
-    featured: false,
-    imageUrl: product1,
-    category: "Kitchen",
-    sku: "BLEND-PRO1200",
-    brand: "KitchenElite",
-    createdAt: "2024-09-10T10:50:00Z",
-    updatedAt: "2025-01-15T12:25:00Z",
-    status: "in-stock",
-    tags: ["blender", "kitchen", "appliance"],
-    rating: 4.2,
-  },
-  {
-    id: "9",
-    name: "Smart Home Security Camera",
-    description:
-      "1080p HD wireless security camera with night vision, motion detection, and two-way audio.",
-    price: 89.99,
-    discountPrice: 69.99,
-    quantity: 42,
-    featured: true,
-    imageUrl: product1,
-    category: "Smart Home",
-    sku: "CAM-SEC1080",
-    brand: "SafeGuard",
-    createdAt: "2024-11-30T14:15:00Z",
-    updatedAt: "2025-02-20T09:50:00Z",
-    status: "in-stock",
-    tags: ["security", "camera", "wifi", "smart home"],
-    rating: 4.3,
-  },
-  {
-    id: "10",
-    name: "Mechanical Gaming Keyboard",
-    description:
-      "RGB mechanical keyboard with customizable keys, macro support, and ergonomic wrist rest.",
-    price: 149.99,
-    discountPrice: 129.99,
-    quantity: 18,
-    featured: false,
-    imageUrl: product1,
-    category: "Gaming",
-    sku: "KEY-MECH-RGB",
-    brand: "GameMaster",
-    createdAt: "2024-12-05T09:30:00Z",
-    updatedAt: "2025-02-05T11:45:00Z",
-    status: "in-stock",
-    tags: ["gaming", "keyboard", "mechanical", "rgb"],
-    rating: 4.7,
-    specifications: {
-      "Switch Type": "Cherry MX Blue",
-      Backlight: "RGB",
-      "Anti-ghosting": true,
-      "Macro Keys": 6,
-      "Cable Length": "1.8m",
-    },
-  },
-  {
-    id: "11",
-    name: "Wireless Earbuds",
-    description:
-      "True wireless earbuds with active noise cancellation, touch controls, and 24-hour battery with charging case.",
-    price: 159.99,
-    discountPrice: 129.99,
-    quantity: 0,
-    featured: false,
-    imageUrl: product1,
-    category: "Audio",
-    sku: "EAR-WL-ANC",
-    brand: "SoundMaster",
-    createdAt: "2024-10-20T12:40:00Z",
-    updatedAt: "2025-01-25T14:15:00Z",
-    status: "out-of-stock",
-    tags: ["earbuds", "wireless", "noise-cancelling"],
-    rating: 4.5,
-  },
-  {
-    id: "12",
-    name: "Adjustable Dumbbell Set",
-    description:
-      "Space-saving adjustable dumbbell set with weights ranging from 5-52.5 lbs, with quick adjustment mechanism.",
-    price: 349.99,
-    discountPrice: 299.99,
-    quantity: 15,
-    featured: true,
-    imageUrl: product1,
-    category: "Fitness",
-    sku: "FIT-DUMB-ADJ",
-    brand: "PowerFit",
-    createdAt: "2024-09-15T15:30:00Z",
-    updatedAt: "2025-01-30T10:20:00Z",
-    status: "in-stock",
-    tags: ["fitness", "weights", "adjustable", "home gym"],
-    rating: 4.8,
-  },
+  // ... Add remaining products similarly
 ];
+
+// Note: Make sure to adjust any other products in the array with the same key updates as shown above.

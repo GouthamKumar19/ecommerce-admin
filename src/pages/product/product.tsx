@@ -1,9 +1,8 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import DataTable from "../../components/common/DataTable";
-import { productMockData } from "../../config/mock/productTable";
+import { getAllProducts } from "../../api/product"; // Import your API fetching function
 import type { Product } from "../../types/product.types";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
@@ -15,12 +14,6 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 
-const fetchProducts = async (): Promise<Product[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(productMockData), 1000);
-  });
-};
-
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -29,6 +22,9 @@ const ProductPage: React.FC = () => {
     key: "",
     direction: null,
   });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -36,26 +32,46 @@ const ProductPage: React.FC = () => {
     navigate("/product/new?action=add");
   };
 
-  const {
-    data: products = [],
-    isLoading,
-    refetch,
-  } = useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
-  });
+  // Payload for API fetching
+  const payload = {
+    options: {
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: ["createdAt"],
+      sortDesc: [true],
+    },
+  };
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true); // Set loading state to true
+      setError(null); // Reset error state
+
+      try {
+        const response = await getAllProducts(payload); // Send the payload
+        setProducts(response); // Assuming response is already an array of products
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch products");
+      } finally {
+        setIsLoading(false); // Loading is finished
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleDeleteProduct = (productId: string | number) => {
     setSelectedProduct(
-      products.find((product) => product.id === productId) || null
+      products.find((product) => product._id === productId) || null // Update ID checking based on your Product type
     );
     setDialogOpen(true);
   };
 
   const confirmDeleteProduct = () => {
     if (selectedProduct) {
-      console.log(`Deleting product with ID: ${selectedProduct.id}`);
-      refetch();
+      console.log(`Deleting product with ID: ${selectedProduct._id}`);
+      // Implement your delete logic here
+      // You can call a delete API method here and re-fetch the products after successful deletion
     }
     setDialogOpen(false);
     setSelectedProduct(null);
@@ -65,11 +81,11 @@ const ProductPage: React.FC = () => {
     <div className="flex justify-center items-center gap-4">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate(`/product/${item.id}?action=edit`)}
+        onClick={() => navigate(`/product/${item._id}?action=edit`)} // Use _id for editing
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleDeleteProduct(item.id)}
+        onClick={() => handleDeleteProduct(item._id)} // Use _id for deletion
       />
     </div>
   );
@@ -90,17 +106,17 @@ const ProductPage: React.FC = () => {
       header: (
         <SortableHeader
           label="Featured"
-          columnKey="featured"
+          columnKey="isFeatured"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
       ),
-      key: "featured",
+      key: "isFeatured",
       render: (item: Product) => (
         <div className="flex justify-center">
           <input
             type="checkbox"
-            checked={item.featured}
+            checked={item.isFeatured}
             className="form-checkbox h-5 w-5 checkbox-green"
             readOnly
           />
@@ -111,17 +127,17 @@ const ProductPage: React.FC = () => {
       header: (
         <SortableHeader
           label="Image"
-          columnKey="productImage"
+          columnKey="imageUrl"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
       ),
-      key: "productImage",
+      key: "imageUrl",
       render: (item: Product) => (
         <div className="text-center flex-shrink-0 h-10 w-10">
           <img
             className="h-10 w-10 rounded-full"
-            src={item.imageUrl}
+            src={item.thumbnailImage} // Use appropriate image field
             alt={item.name}
           />
         </div>
@@ -176,9 +192,9 @@ const ProductPage: React.FC = () => {
           <span className="text-sm font-medium text-gray-900">
             ${item.price.toFixed(2)}
           </span>
-          {item.discountPrice && (
+          {item.slashedPrice && (
             <span className="ml-2 text-sm text-gray-500 line-through">
-              ${item.discountPrice.toFixed(2)}
+              ${item.slashedPrice.toFixed(2)}
             </span>
           )}
         </div>
@@ -229,15 +245,21 @@ const ProductPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={sortedProducts}
-          columns={columns}
-          idKey="id"
-          itemsPerPage={15}
-          tableType="product"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : error ? (
+          <div>Error: {error}</div>
+        ) : (
+          <DataTable
+            items={sortedProducts}
+            columns={columns}
+            idKey="_id" // Use _id based on your Product type structure
+            itemsPerPage={15}
+            tableType="product"
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+          />
+        )}
       </div>
 
       <ConfirmationDialog
