@@ -195,12 +195,15 @@ const OrdersForm = () => {
               PAYMENT STATUS
             </label>
             <button
-              className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${
+              className={` w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700  hover:bg-gray-50 ${
                 showPaymentDropdown
                   ? "focus:outline-none focus:ring-2 focus:ring-green-500"
                   : ""
               }`}
-              style={{ background: "var(--primary-color)" }}
+              style={{
+                background: "var(--primary-color)",
+                color: "var(--secondary-color)",
+              }}
               onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
             >
               <span className="font-normal">
@@ -243,7 +246,10 @@ const OrdersForm = () => {
                   ? "focus:outline-none focus:ring-2 focus:ring-green-500"
                   : ""
               }`}
-              style={{ background: "var(--primary-color)" }}
+              style={{
+                background: "var(--primary-color)",
+                color: "var(--secondary-color)",
+              }}
               onClick={() => setShowOrderDropdown(!showOrderDropdown)}
             >
               <span className="font-normal">

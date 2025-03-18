@@ -5,9 +5,20 @@ import { enquiries } from "../../config/mock/enquiriesTable";
 import { Visibility, Close } from "@mui/icons-material";
 import { Enquiry } from "../../types/enquiry.types";
 import SearchBar from "../../components/common/SearchBar";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import SortableHeader, {
+  SortConfig,
+} from "../../components/common/SortableHeader";
+import {
+  useSortableData,
+  getNextSortDirection,
+} from "../../components/common/SortUtils";
+
+// Add this interface to match what DataTable expects
+interface TableColumn<T> {
+  header: React.ReactNode;
+  key: string;
+  render?: (item: T) => React.ReactNode;
+}
 
 const fetchEnquiry = async (): Promise<Enquiry[]> => {
   return new Promise((resolve) => {
@@ -27,7 +38,6 @@ const CustomModal: React.FC<{
     let timeoutId: ReturnType<typeof setTimeout>;
 
     if (isOpen) {
-      // Delay before starting the animation
       timeoutId = setTimeout(() => {
         setAnimateIn(true);
       }, 50);
@@ -93,12 +103,10 @@ const EnquiryPopup: React.FC<{
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
         {Object.entries(data).map(([key, value]) => {
-          // Skip rendering the id key or any internal keys that start with underscore
           if (key === "id" || key.startsWith("_") || key === "actions") {
             return null;
           }
 
-          // Format the key for display
           const formattedKey = key
             .replace(/([A-Z])/g, " $1")
             .trim()
@@ -106,7 +114,6 @@ const EnquiryPopup: React.FC<{
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ");
 
-          // Special handling for message fields to make them full width and centered
           if (
             key === "message" ||
             key.includes("Message") ||
@@ -152,10 +159,10 @@ const EnquirySection: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Enquiry | null>(null);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending" | null;
-  }>({ key: "", direction: null });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "",
+    direction: null,
+  });
 
   const { data: enquiries = [], isLoading } = useQuery({
     queryKey: ["enquiries"],
@@ -168,50 +175,15 @@ const EnquirySection: React.FC = () => {
   };
 
   const handleSort = (key: string) => {
-    let direction: "ascending" | "descending" | null = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    } else if (
-      sortConfig.key === key &&
-      sortConfig.direction === "descending"
-    ) {
-      direction = null;
-    }
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
     setSortConfig({ key, direction });
   };
 
-  const sortedEnquiries = React.useMemo(() => {
-    if (sortConfig.key && sortConfig.direction) {
-      return [...enquiries].sort((a, b) => {
-        const aValue = a[sortConfig.key] as string | number;
-        const bValue = b[sortConfig.key] as string | number;
-
-        if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return enquiries;
-  }, [enquiries, sortConfig]);
-
-  const renderSortIcon = (key: string) => {
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "ascending") {
-        return <ArrowUpwardIcon />;
-      } else if (sortConfig.direction === "descending") {
-        return <ArrowDownwardIcon />;
-      }
-    }
-    return (
-      <div className="flex flex-col gap-0">
-        <SwapVertIcon />
-      </div>
-    );
-  };
+  const sortedEnquiries = useSortableData(enquiries, sortConfig);
 
   const actionRenderer = (item: Enquiry) => (
     <div className="flex justify-center items-center gap-2">
@@ -222,57 +194,45 @@ const EnquirySection: React.FC = () => {
     </div>
   );
 
-  // Define columns for enquiry table
-  const columns = [
+  // Updated columns with proper typing
+  const columns: TableColumn<Enquiry>[] = [
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Name</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("name")}
-          >
-            {renderSortIcon("name")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Name"
+          columnKey="name"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "name",
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Email</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("email")}
-          >
-            {renderSortIcon("email")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Email"
+          columnKey="email"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "email",
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Message</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("message")}
-          >
-            {renderSortIcon("message")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Message"
+          columnKey="message"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "message",
     },
     {
-      header: (
-        <div className="flex items-center justify-center">
-          <span>Actions</span>
-        </div>
-      ),
+      header: <span>Actions</span>,
       key: "actions",
+      render: actionRenderer,
     },
   ];
 
@@ -286,7 +246,6 @@ const EnquirySection: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Replaced custom search bar with SearchBar component */}
             <SearchBar
               searchValue={searchValue}
               onSearchChange={setSearchValue}
@@ -297,11 +256,9 @@ const EnquirySection: React.FC = () => {
         </div>
       </div>
 
-      {/* Enquiries Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
           items={sortedEnquiries}
-          // @ts-expect-error non fix error
           columns={columns}
           idKey="id"
           itemsPerPage={15}
@@ -311,7 +268,6 @@ const EnquirySection: React.FC = () => {
         />
       </div>
 
-      {/* Enhanced Custom Modal */}
       {openDialog && (
         <CustomModal
           isOpen={openDialog}

@@ -18,7 +18,7 @@ interface BaseRecord {
 
 // Generic Table Column interface
 interface TableColumn<T> {
-  header: string;
+  header: React.ReactNode;
   key: string;
   render?: (item: T) => React.ReactNode;
 }

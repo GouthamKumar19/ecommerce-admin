@@ -7,10 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { Box, Chip } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
-import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import SearchBar from "../../components/common/SearchBar";
+import SortableHeader, {
+  SortConfig,
+} from "../../components/common/SortableHeader";
+import {
+  useSortableData,
+  getNextSortDirection,
+} from "../../components/common/SortUtils";
 
 const fetchCategory = async (): Promise<Category[]> => {
   return new Promise((resolve) => {
@@ -67,16 +71,16 @@ const CategoryPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null
   );
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending" | null;
-  }>({ key: "", direction: null });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "",
+    direction: null,
+  });
   const navigate = useNavigate();
 
   const handleAddNewCategory = () => {
-    // Navigate to the collection creation page
     navigate("/category/:id");
   };
+
   const { isLoading } = useQuery({
     queryKey: ["mockCategoryData"],
     queryFn: fetchCategory,
@@ -99,6 +103,7 @@ const CategoryPage: React.FC = () => {
     setDialogOpen(false);
     setSelectedCategory(null);
   };
+
   const handleEditUser = (item: Category) => {
     navigate("/category/:id", { state: { Category: item } });
   };
@@ -117,63 +122,25 @@ const CategoryPage: React.FC = () => {
   );
 
   const handleSort = (key: string) => {
-    let direction: "ascending" | "descending" | null = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    } else if (
-      sortConfig.key === key &&
-      sortConfig.direction === "descending"
-    ) {
-      direction = null;
-    }
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
     setSortConfig({ key, direction });
   };
 
-  const sortedCategories = React.useMemo(() => {
-    if (sortConfig.key && sortConfig.direction) {
-      return [...categories].sort((a, b) => {
-        const aValue = a[sortConfig.key] as string | number;
-        const bValue = b[sortConfig.key] as string | number;
-
-        if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return categories;
-  }, [categories, sortConfig]);
-
-  const renderSortIcon = (key: string) => {
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "ascending") {
-        return <ArrowUpwardIcon />;
-      } else if (sortConfig.direction === "descending") {
-        return <ArrowDownwardIcon />;
-      }
-    }
-    return (
-      <div className="flex flex-col gap-0">
-        <SwapVertIcon />
-      </div>
-    );
-  };
+  const sortedCategories = useSortableData(categories, sortConfig);
 
   const columns = [
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Category</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("category")}
-          >
-            {renderSortIcon("category")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Category"
+          columnKey="category"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "category",
       render: (item: Category) => (
@@ -182,25 +149,18 @@ const CategoryPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Subcategory</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("subcategory")}
-          >
-            {renderSortIcon("subcategory")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Subcategory"
+          columnKey="subcategory"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "subcategory",
       render: (item: Category) => <SubcategoryCell category={item.category} />,
     },
     {
-      header: (
-        <div className="flex items-center justify-center">
-          <span>Actions</span>
-        </div>
-      ),
+      header: <span>Actions</span>,
       key: "actions",
       render: actionRenderer,
     },
@@ -211,7 +171,6 @@ const CategoryPage: React.FC = () => {
       <div className="bg-white p-2.5 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-2 p-2">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Use the SearchBar component */}
             <SearchBar
               searchValue={searchValue}
               onSearchChange={setSearchValue}
@@ -232,7 +191,7 @@ const CategoryPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <DataTable<Category>
           items={sortedCategories}
-        // @ts-expect-error non fix error
+          
           columns={columns}
           idKey="id"
           itemsPerPage={10}
@@ -241,7 +200,6 @@ const CategoryPage: React.FC = () => {
         />
       </div>
 
-      {/* Confirmation Dialog */}
       <ConfirmationDialog
         open={dialogOpen}
         title="Delete Category"

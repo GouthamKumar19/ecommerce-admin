@@ -33,6 +33,7 @@ const UsersPage: React.FC = () => {
     queryKey: ["users"],
     queryFn: fetchUsers,
   });
+
   const renderSortIcon = (key: string) => {
     if (sortConfig.key === key) {
       if (sortConfig.direction === "ascending") {
@@ -62,6 +63,9 @@ const UsersPage: React.FC = () => {
         </div>
       ),
       key: "name",
+      render: (item: User) => (
+        <div className="text-sm text-gray-900">{item.name}</div>
+      ),
     },
     {
       header: (
@@ -76,6 +80,9 @@ const UsersPage: React.FC = () => {
         </div>
       ),
       key: "email",
+      render: (item: User) => (
+        <div className="text-sm text-gray-900">{item.email}</div>
+      ),
     },
     {
       header: (
@@ -90,6 +97,9 @@ const UsersPage: React.FC = () => {
         </div>
       ),
       key: "phone",
+      render: (item: User) => (
+        <div className="text-sm text-gray-900">{item.phone}</div>
+      ),
     },
     {
       header: (
@@ -98,6 +108,7 @@ const UsersPage: React.FC = () => {
         </div>
       ),
       key: "actions",
+      render: (item: User) => actionRenderer(item),
     },
   ];
 
@@ -169,8 +180,6 @@ const UsersPage: React.FC = () => {
     return users;
   }, [users, sortConfig]);
 
-  
-
   const actionRenderer = (item: User) => {
     const isDisabled = disabledRows.includes(String(item.id));
     return (
@@ -222,7 +231,6 @@ const UsersPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
           items={sortedUsers}
-          // @ts-expect-error non fix error
           columns={columns}
           idKey="id"
           itemsPerPage={15}
