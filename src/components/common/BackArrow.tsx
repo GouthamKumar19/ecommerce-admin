@@ -46,9 +46,9 @@ const BackArrow = () => {
     if (path.includes("/collection/collection-product")) {
       // Check if we have order data in state (viewing or editing)
       if (state && state.Product) {
-        return "Edit Category";
+        return "Edit Collection";
       } else {
-        return "Add Category";
+        return "Add Collection";
       }
     }
     if (path.includes("/collection/collection-product/")) {
