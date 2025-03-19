@@ -1,16 +1,37 @@
-export interface OrderItem {
-  productId: string;
+export interface CustomerDetails {
   name: string;
-  quantity: number;
-  price: number;
 }
 
-export type Order = {
+export interface PaymentDetails {
+  status: string;
+}
+
+export interface Order {
+  _id: string;
   orderId: string;
-  username: string;
-  amount: number;
+  customerId: string;
+  customerDetails: CustomerDetails;
+  total: number;
+  createdAt: string;
+  paymentId: string;
+  paymentDetails: PaymentDetails;
+  status: string;
+  updatedAt: string;
+  [key: string]: unknown; // Add index signature to satisfy Record<string, unknown>
+}
+
+export interface OrderResponse {
+  status: number;
+  message: string;
+  data: {
+    totalCount: number;
+    tableData: Order[];
+  };
+}
+
+// Add interface for filter props
+export interface OrderFilters {
+  paymentStatus: string[];
+  orderStatus: string[];
   date: string;
-  paymentStatus: string;
-  orderStatus: string;
-  [key: string]: unknown; // Use 'unknown' instead of 'any'
-};
+}
