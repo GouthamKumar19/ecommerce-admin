@@ -30,7 +30,7 @@ const UsersPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  // Define payload for API call
+
   const payload = {
     options: {
       page: 1,
@@ -48,7 +48,8 @@ const UsersPage: React.FC = () => {
       setTimeout(async () => {
         try {
           const response = await getAllUser(payload);
-          setUsers(response);
+          setUsers(response.data);
+          console.log("User Details:",response.data)
         } catch (err: any) {
           setError(err.message || "Failed to fetch users");
         } finally {
