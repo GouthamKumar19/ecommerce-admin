@@ -65,9 +65,10 @@ const CollectionAddPage: React.FC = () => {
           ) : (
             <input
               type="checkbox"
+              // @ts-ignore
               checked={checkedProducts[item.id] || false}
               className="form-checkbox h-5 w-5 custom-checkbox"
-              onChange={() => handleCheckboxChange(item.id)}
+              onChange={() => handleCheckboxChange(item._id)}
             />
           )}
         </div>
@@ -83,6 +84,7 @@ const CollectionAddPage: React.FC = () => {
           ) : (
             <img
               className="h-10 w-10 rounded-full"
+              // @ts-ignore
               src={item.imageUrl}
               alt={item.name}
             />
@@ -134,6 +136,7 @@ const CollectionAddPage: React.FC = () => {
               </span>
               {item.discountPrice && (
                 <span className="ml-2 text-sm text-gray-500 line-through">
+                  {/* @ts-ignore */}
                   ${item.discountPrice.toFixed(2)}
                 </span>
               )}

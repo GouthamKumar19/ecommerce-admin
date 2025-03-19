@@ -70,6 +70,10 @@ const router = createBrowserRouter([
         element: <TestimonialsPage />,
       },
       {
+        path: "testimonials/new",
+        element: <TestimonialsDetails />,
+      },
+      {
         path: "testimonials/:id",
         element: <TestimonialsDetails />,
       },

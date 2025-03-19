@@ -156,6 +156,7 @@ const ProductAddPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-10 w-10">
           <img
             className="h-10 w-10 rounded-full"
+            // @ts-ignore
             src={item.imageUrl}
             alt={item.name}
           />
@@ -237,6 +238,7 @@ const ProductAddPage: React.FC = () => {
           </span>
           {item.discountPrice && (
             <span className="ml-2 text-sm text-gray-500 line-through">
+              {/* @ts-ignore */}
               ${item.discountPrice.toFixed(2)}
             </span>
           )}

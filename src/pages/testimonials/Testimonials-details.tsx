@@ -1,16 +1,120 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Rating from "@mui/material/Rating";
 import Box from "@mui/material/Box";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import BackArrow from "../../components/common/BackArrow";
+import {
+  createTestimonial,
+  updateTestimonial,
+  getTestimonialById,
+} from "../../api/tesstimonial";
+
+interface TestimonialFormData {
+  _id?: string;
+  name: string;
+  ratings: number;
+  description: string;
+}
 
 const TestimonialsDetails = () => {
-  const [rating, setRating] = useState<number>(4);
-  const navigate = useNavigate();
+  const [formData, setFormData] = useState<TestimonialFormData>({
+    name: "",
+    ratings: 5,
+    description: "",
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const location = useLocation();
+
+  // Fetch testimonial data if editing
+  useEffect(() => {
+    const fetchTestimonial = async () => {
+      if (id && id !== ":id" && id !== "new") {
+        setIsLoading(true);
+        setIsEdit(true);
+
+        try {
+          // Use the API function to get the testimonial
+          const response = await getTestimonialById(id);
+
+          if (response && response.data) {
+            setFormData({
+              _id: response.data._id,
+              name: response.data.name,
+              ratings: response.data.ratings || response.data.rating,
+              description: response.data.description,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching testimonial:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else if (location.state?.testimonial) {
+        // Handle case when testimonial data is passed via location state
+        const { testimonial } = location.state;
+        setIsEdit(true);
+        setFormData({
+          _id: String(testimonial._id || testimonial.id),
+          name: testimonial.name,
+          ratings: testimonial.ratings || testimonial.rating,
+          description: testimonial.description,
+        });
+      }
+    };
+
+    fetchTestimonial();
+  }, [id, location.state]);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleRatingChange = (
+    _: React.SyntheticEvent,
+    newValue: number | null
+  ) => {
+    setFormData((prev) => ({ ...prev, ratings: newValue || 0 }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/testimonials");
+    setIsLoading(true);
+
+    try {
+      let response;
+
+      if (isEdit) {
+        // Update existing testimonial
+        response = await updateTestimonial(formData);
+      } else {
+        // Create new testimonial
+        response = await createTestimonial(formData);
+      }
+
+      console.log(
+        `Testimonial ${isEdit ? "updated" : "created"} successfully:`,
+        response
+      );
+
+      // Navigate back to testimonials list
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate("/testimonials");
+      }, 500);
+    } catch (error) {
+      console.error(
+        `Error ${isEdit ? "updating" : "creating"} testimonial:`,
+        error
+      );
+      setIsLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -28,20 +132,19 @@ const TestimonialsDetails = () => {
       }}
     >
       {/* Top section - fixed */}
-      
-        <Box
-          sx={{
-            padding: 2,
-            boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
-            position: "sticky",
-            top: 0,
-            zIndex: 10,
-            bgcolor: "white",
-          }}
-        >
-          <BackArrow />
-        </Box>
-     
+      <Box
+        sx={{
+          padding: 2,
+          boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          bgcolor: "white",
+        }}
+      >
+        <BackArrow />
+      </Box>
+
       <Box
         sx={{
           flex: 1,
@@ -70,6 +173,8 @@ const TestimonialsDetails = () => {
                 id="name"
                 placeholder="Name"
                 className="w-full h-11 text-border input-box px-3 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                value={formData.name}
+                onChange={handleInputChange}
                 required
               />
             </div>
@@ -85,10 +190,8 @@ const TestimonialsDetails = () => {
               <Box className="h-11 px-3 border input-box rounded bg-white flex items-center">
                 <Rating
                   name="ratings"
-                  value={rating}
-                  onChange={(_, newValue) => {
-                    setRating(newValue || 0);
-                  }}
+                  value={formData.ratings}
+                  onChange={handleRatingChange}
                   precision={1}
                   size="medium"
                 />
@@ -108,6 +211,8 @@ const TestimonialsDetails = () => {
               id="description"
               placeholder="Description"
               className="w-full px-3 py-2 input-box border rounded min-h-[100px] resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              value={formData.description}
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -131,6 +236,7 @@ const TestimonialsDetails = () => {
             type="button"
             className="bg-gray-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-gray-600 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             onClick={handleBack}
+            disabled={isLoading}
           >
             Cancel
           </button>
@@ -138,8 +244,9 @@ const TestimonialsDetails = () => {
             type="submit"
             className="bg-blue-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-blue-600 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             onClick={handleSubmit}
+            disabled={isLoading}
           >
-            Add
+            {isEdit ? "Update" : "Add"}
           </button>
         </div>
       </Box>

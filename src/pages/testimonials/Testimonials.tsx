@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
 import { StarRating } from "../../components/common/DataTable";
-import { testimonials } from "../../config/mock/testimonialsTable";
 import { useNavigate } from "react-router-dom";
 import { Edit } from "@mui/icons-material";
 import { Testimonial } from "../../types/testimonials.types";
@@ -14,11 +13,16 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
+import { getAllTestimonials } from "../../api/tesstimonial";
 
 const fetchTestimonials = async (): Promise<Testimonial[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(testimonials), 1000); // Simulate 1-second delay
-  });
+  try {
+    const response = await getAllTestimonials();
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching testimonials:", error);
+    return [];
+  }
 };
 
 const TestimonialsPage: React.FC = () => {
@@ -31,7 +35,7 @@ const TestimonialsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleEditUser = (item: Testimonial) => {
-    navigate("/testimonials/:id", { state: { testimonial: item } });
+    navigate(`/testimonials/${item._id}`);
   };
 
   const actionRenderer = (item: Testimonial) => (
@@ -102,7 +106,7 @@ const TestimonialsPage: React.FC = () => {
   ];
 
   const handleAddNewTestimonials = () => {
-    navigate("/testimonials/:id");
+    navigate("/testimonials/new");
   };
 
   return (

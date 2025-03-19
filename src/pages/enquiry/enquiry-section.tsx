@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import DataTable from "../../components/common/DataTable";
-import { enquiries } from "../../config/mock/enquiriesTable"; // Keep this as mock data if needed
+// import { enquiries } from "../../config/mock/enquiriesTable"; // Keep this as mock data if needed
 import { Visibility, Close } from "@mui/icons-material";
 import { Enquiry } from "../../types/enquiry.types";
 import SearchBar from "../../components/common/SearchBar";
@@ -181,7 +181,7 @@ const EnquirySection: React.FC = () => {
     const fetchEnquiriesData = async () => {
       setIsLoading(true); // Start loading
       setError(null); // Reset error
-
+      console.log(error);
       try {
         const response = await getAllEnquiry(payload); // Call the API with payload
         setEnquiries(response); // Update state with fetched data

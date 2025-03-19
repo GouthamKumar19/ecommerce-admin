@@ -7,8 +7,10 @@ export interface BaseRecord {
 
 export interface Testimonial extends BaseRecord {
   id: string | number;
+  _id?: string; // API response format
   name: string;
   rating: number;
+  ratings?: number; // API response format
   description: string;
   createdAt?: string;
   updatedAt?: string;
