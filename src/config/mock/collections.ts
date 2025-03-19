@@ -4,10 +4,10 @@ import product1 from "/src/assets/collection/summer.jpg";
 
 export const collectionMockData: Collection[] = [
   {
-    id: "1",
+    _id: "1", // Renamed from id to _id
     name: "Summer Collection",
     description: "The latest summer fashion trends with breathable fabrics and vibrant colors.",
-    imageUrl: product1,
+    bannerImage: product1, // Renamed from imageUrl to bannerImage
     status: "active",
     createdAt: "2024-12-15T08:30:00Z",
     updatedAt: "2025-02-10T14:45:00Z",
@@ -22,10 +22,10 @@ export const collectionMockData: Collection[] = [
     seoKeywords: ["summer fashion", "summer collection", "2025 fashion", "seasonal clothing"]
   },
   {
-    id: "2",
+    _id: "2", // Renamed from id to _id
     name: "Winter Essentials",
     description: "Stay warm with our carefully curated winter essentials collection.",
-    imageUrl: product1,
+    bannerImage: product1, // Renamed from imageUrl to bannerImage
     status: "active",
     createdAt: "2024-11-10T10:15:00Z",
     updatedAt: "2025-01-15T09:30:00Z",
@@ -39,10 +39,10 @@ export const collectionMockData: Collection[] = [
     seoDescription: "Explore our Winter Essentials collection to stay warm without compromising on style."
   },
   {
-    id: "3",
+    _id: "3", // Renamed from id to _id
     name: "Tech Gadgets",
     description: "Cutting-edge technology and innovative gadgets for modern living.",
-    imageUrl: product1,
+    bannerImage: product1, // Renamed from imageUrl to bannerImage
     status: "active",
     createdAt: "2024-10-25T14:20:00Z",
     updatedAt: "2025-02-05T11:40:00Z",
@@ -52,10 +52,10 @@ export const collectionMockData: Collection[] = [
     tags: ["tech", "gadgets", "electronics"]
   },
   {
-    id: "4",
+    _id: "4", // Renamed from id to _id
     name: "Home Essentials",
     description: "Everything you need to make your house a home.",
-    imageUrl: product1,
+    bannerImage: product1, // Renamed from imageUrl to bannerImage
     status: "draft",
     createdAt: "2024-12-05T09:45:00Z",
     updatedAt: "2025-01-20T15:30:00Z",
@@ -65,10 +65,10 @@ export const collectionMockData: Collection[] = [
     tags: ["home", "furniture", "essentials"]
   },
   {
-    id: "5",
+    _id: "5", // Renamed from id to _id
     name: "Special Deals",
     description: "Limited time offers on our most popular products.",
-    imageUrl: product1,
+    bannerImage: product1, // Renamed from imageUrl to bannerImage
     status: "active",
     createdAt: "2025-01-05T11:30:00Z",
     updatedAt: "2025-02-20T10:15:00Z",

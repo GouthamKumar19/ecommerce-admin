@@ -17,24 +17,35 @@ export interface BaseRecord {
   [key: string]: RecordValue; // More specific index signature
 }
 
+// Updated Collection interface based on the provided snippet
 export interface Collection extends BaseRecord {
-  id: string | number;
+  _id: string; // Keeping the name "_id" to match the provided sample data
   name: string;
-  description?: string;
-  imageUrl: string;
-  status: "active" | "inactive" | "draft";
-  createdAt: string | Date;
-  updatedAt: string | Date;
-  featured?: boolean;
-  startDate?: string | Date;
-  endDate?: string | Date;
-  position?: number;
-  products?: string[] | number[]; // IDs of products in this collection
-  tags?: string[];
-  seoTitle?: string;
-  seoDescription?: string;
-  seoKeywords?: string[];
+  bannerImage: string; // Banner image URL
+  createdAt: string | Date; // Using string for ISO format compatibility
+  updatedAt: string | Date; // Using string for ISO format compatibility
+  description?: string; // Optional field
+  status?: "active" | "inactive" | "draft"; // Optional field
+  featured?: boolean; // Optional field
+  startDate?: string | Date; // Optional field
+  endDate?: string | Date; // Optional field
+  position?: number; // Optional field
+  products?: string[] | number[]; // Optional: IDs of products in this collection
+  tags?: string[]; // Optional: Tags associated with the collection
+  seoTitle?: string; // Optional: SEO Title
+  seoDescription?: string; // Optional: SEO Description
+  seoKeywords?: string[]; // Optional: SEO Keywords
   customAttributes?: {
-    [key: string]: string | number | boolean;
+    [key: string]: string | number | boolean; // Optional: Custom attributes
+  };
+}
+
+// Interface for the response structure
+export interface ApiResponse {
+  status: number; // HTTP status code
+  message: string; // Response message
+  data: {
+    totalCount: number; // Total number of collections
+    tableData: Collection[]; // Array of Collection items
   };
 }
