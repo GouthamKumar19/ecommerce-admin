@@ -1,14 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box } from "@mui/material";
 
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
+import { getProfile, updateProfile } from "../../api/profile";
 
 const Profile: React.FC = () => {
-  
   const [name, setName] = useState("");
-  const [email] = useState("abc@gmail.com");
+  const [email, setEmail] = useState("");
   const [showEmailAlert, setShowEmailAlert] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = "123"; // Replace with actual token
+        const response = await getProfile(token);
+        const { name, email } = response.data;
+
+        setName(name);
+        setEmail(email);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
@@ -22,7 +39,29 @@ const Profile: React.FC = () => {
     setShowEmailAlert(false);
   };
 
-  
+  const handleSubmit = async () => {
+    console.log("Form submitted"); // Add this log to confirm form submission
+    const token = "123"; // Replace with actual token
+    try {
+      const updatedProfile = {
+        _id: "6512c5f3e4b09a12d8f42b68",
+        name,
+        email,
+        role: "ADMIN",
+        createdAt: "2024-02-06T15:30:00.000Z",
+        updatedAt: new Date().toISOString(),
+      };
+      const response = await updateProfile(token, updatedProfile);
+      console.log("Profile updated successfully:", response.message);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
+  };
+
+  const handleCancel = () => {
+    console.log("Form cancelled");
+    // Reset the form or perform any cancel actions here
+  };
 
   return (
     <Box
@@ -114,7 +153,7 @@ const Profile: React.FC = () => {
           bgcolor: "white",
         }}
       >
-        <ActionBox />
+        <ActionBox handleSubmit={handleSubmit} handleCancel={handleCancel} />
       </Box>
     </Box>
   );

@@ -58,7 +58,10 @@ export const ProductDetails = () => {
           bgcolor: "white",
         }}
       >
-        <ActionBox />
+        <ActionBox 
+          handleSubmit={() => console.log("Submit action triggered")} 
+          handleCancel={() => console.log("Cancel action triggered")} 
+        />
       </Box>
     </Box>
   );

@@ -1,15 +1,15 @@
-
+import React from "react";
 import { Box, Button } from "@mui/material";
 
-const ActionBox = () => {
-  const handleCancel = () => {
-    console.log("Form cancelled");
-  };
+interface ActionBoxProps {
+  handleSubmit: () => void;
+  handleCancel: () => void;
+}
 
-  const handleSubmit = () => {
-    console.log("Form submitted");
-  };
-
+const ActionBox: React.FC<ActionBoxProps> = ({
+  handleSubmit,
+  handleCancel,
+}) => {
   return (
     <Box
       sx={{

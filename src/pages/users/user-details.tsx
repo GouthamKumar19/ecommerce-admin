@@ -56,7 +56,11 @@ export const UserDetailsPage = () => {
           bgcolor: "white",
         }}
       >
-        <ActionBox />
+        <ActionBox handleSubmit={function (): void {
+          throw new Error("Function not implemented.");
+        } } handleCancel={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
       </Box>
     </Box>
   );
