@@ -5,7 +5,7 @@ import { items } from '../config/mock/userTable'; // Adjust the import path to w
 
 let currentController: AbortController;
 
-export const getAllProducts = async (payload: any): Promise<User[]> => { // Accept the payload parameter
+export const getAllUser = async (payload: any): Promise<User[]> => { // Accept the payload parameter
   console.log("Payload received:", payload); // Log the payload for debugging
   
   try {
