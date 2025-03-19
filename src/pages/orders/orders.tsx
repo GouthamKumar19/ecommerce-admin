@@ -51,19 +51,19 @@ const OrderPage: React.FC = () => {
   });
   const navigate = useNavigate();
 
+  // In OrderPage.tsx
   const actionRenderer = (item: Order) => (
     <div className="flex justify-center items-center gap-4">
       <Visibility
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
         onClick={() =>
-          navigate(`/orders/${item.orderId}?action=edit`, {
-            state: { order: item },
+          navigate(`/orders/${item._id}`, {
+            state: { orderId: item._id },
           })
         }
       />
     </div>
   );
-
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"],
     queryFn: fetchOrders,

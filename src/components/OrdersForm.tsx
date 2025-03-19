@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-
 import { Order, PaymentStatus, OrderStatus } from "../types/orders.types";
 import {
   getOrderById,
@@ -7,17 +6,15 @@ import {
   orderStatuses,
 } from "../config/mock/ordersData";
 
-
 const OrdersForm = () => {
   // State to hold the current order
   const [order, setOrder] = useState<Order | null>(null);
-  
 
   // States for dropdown controls
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | "">("");
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("PENDING");
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
 
-  const [orderStatus, setOrderStatus] = useState<OrderStatus | "">("");
+  const [orderStatus, setOrderStatus] = useState<OrderStatus>("ORDER_PLACED");
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
 
   // Refs for dropdown containers
@@ -50,12 +47,15 @@ const OrdersForm = () => {
 
   // Fetch order data on component mount
   useEffect(() => {
-    const mockOrder = getOrderById("ORD12345");
+    const mockOrder = getOrderById("P123");
+
     if (mockOrder) {
       setOrder(mockOrder);
-      setPaymentStatus(mockOrder.paymentStatus);
-      setOrderStatus(mockOrder.orderStatus);
+      setPaymentStatus(mockOrder.paymentDetails.status);
+      setOrderStatus(mockOrder.status);
     }
+
+    // console.log(orders, "orders from");
   }, []);
 
   const handlePaymentStatusChange = (status: PaymentStatus) => {
@@ -68,7 +68,15 @@ const OrdersForm = () => {
     setShowOrderDropdown(false);
   };
 
-  
+  const formatAddress = (address: Order["shippingAddressDetails"]) => {
+    return [
+      address.line1,
+      address.line2,
+      `${address.city}, ${address.state} ${address.pinCode}`,
+    ]
+      .filter(Boolean)
+      .join(", ");
+  };
 
   if (!order) {
     return <div className="p-4">Loading order data...</div>;
@@ -80,9 +88,10 @@ const OrdersForm = () => {
       <div className="mb-4 px-2">
         <h1 className="text-2xl font-bold flex items-center">
           <span className="mr-2">ORDER ID:</span>
-          <span className="text-gray-700">{order.id}</span>
+          <span className="text-gray-700">{order.orderId}</span>
         </h1>
       </div>
+
       {/* Row 1: Name, Shipping Address, Billing Address */}
       <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-2 py-1">
@@ -93,7 +102,7 @@ const OrdersForm = () => {
             </label>
             <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 flex items-center justify-center h-20">
               <div className="text-sm text-gray-700 leading-tight text-center">
-                <p className="font-normal">{order.customerName}</p>
+                <p className="font-normal">{order.customerDetails.name}</p>
               </div>
             </div>
           </div>
@@ -106,10 +115,7 @@ const OrdersForm = () => {
             <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 h-20">
               <div className="text-sm text-gray-700 leading-tight">
                 <p className="font-normal">
-                  {order.shippingAddress.name}, {order.shippingAddress.zipCode}
-                </p>
-                <p className="font-normal">
-                  {order.shippingAddress.streetAddress}
+                  {formatAddress(order.shippingAddressDetails)}
                 </p>
               </div>
             </div>
@@ -123,16 +129,14 @@ const OrdersForm = () => {
             <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 h-20">
               <div className="text-sm text-gray-700 leading-tight">
                 <p className="font-normal">
-                  {order.billingAddress.name}, {order.billingAddress.zipCode}
-                </p>
-                <p className="font-normal">
-                  {order.billingAddress.streetAddress}
+                  {formatAddress(order.billingAddressDetails)}
                 </p>
               </div>
             </div>
           </div>
         </div>
       </div>
+
       {/* Row 2: Products */}
       <div className="mb-6">
         <div className="px-2 py-1">
@@ -142,41 +146,51 @@ const OrdersForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {order.products.map((product) => (
               <div
-                key={product.id}
+                key={product.productId}
                 className="flex items-start bg-gray-50 p-4 rounded-lg border border-gray-300"
               >
                 <div className="mr-3">
                   <img
-                    src={product.image}
-                    alt={`${product.brand} ${product.name}`}
+                    src={product.productDetails.thumbnailImage}
+                    alt={product.productDetails.name}
                     className="w-16 h-16 object-cover rounded-md shadow-sm"
                   />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900 text-base">
-                    {product.brand}
+                    {product.productDetails.name}
                   </p>
                   <p className="text-sm text-gray-700 font-normal">
-                    {product.name}
+                    {product.productDetails.description}
                   </p>
                   <div className="mt-2 space-y-1 flex flex-col items-center">
                     <div className="flex justify-center w-full text-sm">
                       <span className="font-medium text-gray-700 mr-2">
-                        DISCOUNT:
+                        Quantity:
                       </span>
-                      <span className="text-gray-900">{product.discount}%</span>
+                      <span className="text-gray-900">{product.quantity}</span>
                     </div>
                     <div className="flex justify-center w-full text-sm">
                       <span className="font-medium text-gray-700 mr-2">
                         AMOUNT:
                       </span>
-                      <span className="text-gray-900">
-                        ${product.currentPrice}
-                      </span>
-                      <span className="ml-1 line-through text-gray-400">
-                        ${product.originalPrice}
-                      </span>
+                      <span className="text-gray-900">${product.amount}</span>
+                      {product.productDetails.slashedPrice && (
+                        <span className="ml-1 line-through text-gray-400">
+                          ${product.productDetails.slashedPrice}
+                        </span>
+                      )}
                     </div>
+                    {product.variants && product.variants.length > 0 && (
+                      <div className="flex justify-center w-full text-sm">
+                        {product.variants.map((variant, index) => (
+                          <span key={variant._id}>
+                            {index > 0 && ", "}
+                            {variant.name}: {variant.value}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -184,10 +198,9 @@ const OrdersForm = () => {
           </div>
         </div>
       </div>
+
       {/* Row 3: Payment Status, Order Status */}
       <div className="mb-20">
-        {" "}
-        {/* Increased bottom margin to ensure dropdowns have space */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-2 py-1 items-end">
           {/* Payment Status Section */}
           <div className="relative" ref={paymentDropdownRef}>
@@ -195,7 +208,7 @@ const OrdersForm = () => {
               PAYMENT STATUS
             </label>
             <button
-              className={` w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700  hover:bg-gray-50 ${
+              className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 ${
                 showPaymentDropdown
                   ? "focus:outline-none focus:ring-2 focus:ring-green-500"
                   : ""
@@ -206,9 +219,7 @@ const OrdersForm = () => {
               }}
               onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
             >
-              <span className="font-normal">
-                {paymentStatus || "Payment Status"}
-              </span>
+              <span className="font-normal">{paymentStatus}</span>
               <span
                 className={`transform transition-transform duration-200 text-green-500 ${
                   showPaymentDropdown ? "rotate-180" : ""
@@ -241,7 +252,7 @@ const OrdersForm = () => {
               ORDER STATUS
             </label>
             <button
-              className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 bg-[color:var(--primary-color)] hover:bg-gray-50 ${
+              className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 ${
                 showOrderDropdown
                   ? "focus:outline-none focus:ring-2 focus:ring-green-500"
                   : ""
@@ -252,9 +263,7 @@ const OrdersForm = () => {
               }}
               onClick={() => setShowOrderDropdown(!showOrderDropdown)}
             >
-              <span className="font-normal">
-                {orderStatus || "Order Status"}
-              </span>
+              <span className="font-normal">{orderStatus}</span>
               <span
                 className={`transform transition-transform duration-200 text-green-500 ${
                   showOrderDropdown ? "rotate-180" : ""

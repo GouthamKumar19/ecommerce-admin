@@ -1,39 +1,77 @@
-// types.ts
-
 export interface Address {
-  name: string;
-  zipCode: string;
-  streetAddress: string;
+  userId: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pinCode: string;
+  isShipping: boolean;
+  isDefault: boolean;
 }
 
-export interface Product {
-  id: string;
-  brand: string;
+export interface Variant {
+  _id: string;
   name: string;
-  image: string;
-  discount: number;
-  currentPrice: number;
-  originalPrice: number;
+  value: string;
+  variantId: string;
 }
 
-export type PaymentStatus = "Pending" | "Complete" | "Failed";
+export interface ProductDetails {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  slashedPrice: number;
+  isFeatured: boolean;
+  categoryId: string;
+  subCategoryId: string;
+  images: string[];
+  thumbnailImage: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderProduct {
+  productDetails: ProductDetails;
+  productId: string;
+  price: number;
+  quantity: number;
+  amount: number;
+  variants: Variant[];
+}
+
+export interface CustomerDetails {
+  name: string;
+}
+
+export interface PaymentDetails {
+  status: PaymentStatus;
+}
+
+export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED";
 
 export type OrderStatus =
-  | "Shipped"
-  | "Order Placed"
-  | "Processing"
-  | "Order Confirmed"
-  | "Delivered"
-  | "Cancelled"
-  | "Ready To Ship";
+  | "SHIPPED"
+  | "ORDER_PLACED"
+  | "PROCESSING"
+  | "ORDER_CONFIRMED"
+  | "DELIVERED"
+  | "CANCELLED"
+  | "READY_TO_SHIP";
 
 export interface Order {
-  id: string;
-  customerName: string;
-  shippingAddress: Address;
-  billingAddress: Address;
-  products: Product[];
-  paymentStatus: PaymentStatus;
-  orderStatus: OrderStatus;
-  orderDate: string;
+  _id: string;
+  orderId: string;
+  customerId: string;
+  customerDetails: CustomerDetails;
+  shippingAddressId: string;
+  shippingAddressDetails: Address;
+  billingAddressId: string;
+  billingAddressDetails: Address;
+  products: OrderProduct[];
+  status: OrderStatus;
+  paymentId: string;
+  paymentDetails: PaymentDetails;
+  createdAt: string;
+  updatedAt: string;
 }
