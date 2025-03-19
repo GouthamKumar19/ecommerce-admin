@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
-import { productMockData } from "../../config/mock/productTable";
-import type { Product } from "../../types/product.types";
+import { productMockData } from "../../config/mock/productCollectionTable";
+import type { Product } from "../../types/collectionProduct.types";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
 import BackArrow from "../../components/common/BackArrow";
 import SearchBar from "../../components/common/SearchBar";
-
+import { getProductById } from "../../api/CollectionProduct"; // Adjust the import path as needed
 // Mock fetch function
 const fetchProducts = async (): Promise<Product[]> => {
   return new Promise((resolve) => {
@@ -43,12 +43,38 @@ const CollectionAddPage: React.FC = () => {
   };
 
   // Function to handle add button click
-  const handleAdd = () => {
-    const selectedProducts = Object.entries(checkedProducts)
-      .filter(([ isChecked]) => isChecked)
-      .map(([productId]) => productId);
-    console.log("Selected products:", selectedProducts);
-    navigate(-1);
+  // Function to handle add button click
+  const handleAdd = async () => {
+    try {
+      const selectedProductIds = Object.entries(checkedProducts)
+        .filter(([ isChecked]) => isChecked)
+        .map(([productId]) => productId);
+
+      // Fetch complete details for each selected product
+      const selectedProductsDetails = await Promise.all(
+        selectedProductIds.map(async (productId) => {
+          try {
+            const response = await getProductById(productId);
+            return response.data;
+          } catch (error) {
+            console.error(`Error fetching product ${productId}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Filter out any null values from failed requests
+      const validProducts = selectedProductsDetails.filter(
+        (product) => product !== null
+      );
+
+      // Log the complete product details
+      console.log("Selected products details:", validProducts);
+
+      navigate(-1);
+    } catch (error) {
+      console.error("Error processing selected products:", error);
+    }
   };
 
   // Filter products based on search input
@@ -137,7 +163,7 @@ const CollectionAddPage: React.FC = () => {
               </span>
               {item.discountPrice && (
                 <span className="ml-2 text-sm text-gray-500 line-through">
-                 {/* @ts-ignore */}
+                  {/* @ts-ignore */}
                   ${item.discountPrice.toFixed(2)}
                 </span>
               )}
