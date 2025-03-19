@@ -1,18 +1,24 @@
 import { Product } from "../types/product.types";
 import { productMockData } from "../config/mock/productCollectionTable";
 
-interface CollectionProductFormData {
+interface ProductFormData {
   _id?: string;
   name: string;
   description: string;
   price: number;
-  category: string;
-  status: string;
+  slashedPrice?: number;
   quantity: number;
   isFeatured: boolean;
   categoryId: string;
-  subCategoryId: string;
+  subCategoryId?: string;
   images: string[];
+  thumbnailImage?: string;
+  collectionId: string;
+  productId: string;
+  status: string;
+  tags?: string[];
+  rating?: number;
+  specifications?: Record<string, any>;
 }
 
 interface ApiResponse<T> {
@@ -20,192 +26,180 @@ interface ApiResponse<T> {
   message: string;
   data: T;
 }
-
-const logApiAction = (action: string, data?: any) => {
-  console.log({
-    timestamp: "2025-03-19 06:07:46",
-    user: "suzzy-og",
-    action,
-    project: {
-      collectionId: 1,
-      productId: 1,
-    },
-    ...data,
-  });
-};
-
-// Create a new collection product
-export const createCollectionProduct = async (
-  productData: CollectionProductFormData
+// Create a new product
+export const createProduct = async (
+  productData: ProductFormData
 ): Promise<ApiResponse<Product>> => {
   try {
-    logApiAction("CREATE_PRODUCT", { productData });
+    console.log("[API] Creating product with data:", productData); // Fixed: Changed productMockData to productData
+
+    // Uncomment when API is ready
+    // const response = await axiosInstance.post('/admin/products/create-update', productData);
+    // return response.data;
 
     // Mock response
     const mockResponse: ApiResponse<Product> = {
       status: 200,
-      message: "Collection product created successfully",
+      message: "Product created successfully",
       data: {
-        id: String(productMockData.length + 1),
         _id: String(productMockData.length + 1),
-        name: productData.name,
-        description: productData.description,
-        price: productData.price,
-        category: productData.category,
-        status: productData.status,
-        quantity: productData.quantity,
-        isFeatured: productData.isFeatured,
-        categoryId: productData.categoryId,
-        subCategoryId: productData.subCategoryId,
-        images: productData.images,
+        ...productData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      },
+      } as Product, // Add type assertion here
     };
 
-    logApiAction("CREATE_PRODUCT_SUCCESS", { response: mockResponse });
+    console.log("[API] Mock create response:", mockResponse);
     return Promise.resolve(mockResponse);
   } catch (error) {
-    logApiAction("CREATE_PRODUCT_ERROR", { error });
+    console.error("[API] Error creating product:", error);
     throw error;
   }
 };
 
-// Update an existing collection product
-export const updateCollectionProduct = async (
-  productData: CollectionProductFormData
+// Update an existing product
+export const updateProduct = async (
+  productData: ProductFormData
 ): Promise<ApiResponse<Product>> => {
   try {
-    logApiAction("UPDATE_PRODUCT", { productData });
+    console.log("[API] Updating product with data:", productData);
+
+    // Uncomment when API is ready
+    // const response = await axiosInstance.post('/admin/products/create-update', productData);
+    // return response.data;
 
     // Mock response
     const mockResponse: ApiResponse<Product> = {
       status: 200,
-      message: "Collection product updated successfully",
+      message: "Product created successfully",
       data: {
-        id: productData._id!,
-        _id: productData._id!,
-        name: productData.name,
-        description: productData.description,
-        price: productData.price,
-        category: productData.category,
-        status: productData.status,
-        quantity: productData.quantity,
-        isFeatured: productData.isFeatured,
-        categoryId: productData.categoryId,
-        subCategoryId: productData.subCategoryId,
-        images: productData.images,
+        _id: String(productMockData.length + 1),
+        ...productData,
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        createdAt: "2023-07-15T08:00:00Z",
-      },
+      } as Product, // Add type assertion here
     };
 
-    logApiAction("UPDATE_PRODUCT_SUCCESS", { response: mockResponse });
+    console.log("[API] Mock update response:", mockResponse);
     return Promise.resolve(mockResponse);
   } catch (error) {
-    logApiAction("UPDATE_PRODUCT_ERROR", { error });
+    console.error("[API] Error updating product:", error);
     throw error;
   }
 };
 
-// Get a collection product by ID
-export const getCollectionProductById = async (
+// Get a product by ID
+export const getProductById = async (
   id: string
 ): Promise<ApiResponse<Product>> => {
   try {
-    logApiAction("GET_PRODUCT_BY_ID", { productId: id });
+    console.log("[API] Fetching product with ID:", id);
 
-    // Mock response using product data
-    const product = productMockData.find((p) => p.id === id || p._id === id);
+    // Uncomment when API is ready
+    // const response = await axiosInstance.get(`/admin/products/getOne/${id}`);
+    // return response.data;
+
+    // Mock response using productMockData
+    const product = productMockData.find((p) => p._id === id);
 
     if (!product) {
-      logApiAction("GET_PRODUCT_BY_ID_ERROR", { error: "Product not found" });
-      throw new Error("Collection product not found");
+      throw new Error("Product not found");
     }
 
     const mockResponse: ApiResponse<Product> = {
       status: 200,
-      message: "Collection product fetched successfully",
+      message: "Success",
       data: product,
     };
 
-    logApiAction("GET_PRODUCT_BY_ID_SUCCESS", { response: mockResponse });
+    console.log("[API] Mock get response:", mockResponse);
     return Promise.resolve(mockResponse);
   } catch (error) {
-    logApiAction("GET_PRODUCT_BY_ID_ERROR", { error });
+    console.error("[API] Error fetching product:", error);
     throw error;
   }
 };
 
-// Get all collection products
-export const getAllCollectionProducts = async (): Promise<
-  ApiResponse<Product[]>
-> => {
+// Get all products
+export const getAllProducts = async (): Promise<ApiResponse<Product[]>> => {
   try {
-    logApiAction("GET_ALL_PRODUCTS");
+    console.log("[API] Fetching all products");
 
-    // Mock response using product data
+    // Add this line to log the mock products data
+    console.log("[API] Mock products data:", productMockData);
+
     const mockResponse: ApiResponse<Product[]> = {
       status: 200,
-      message: "Collection products fetched successfully",
+      message: "Success",
       data: productMockData,
     };
 
-    logApiAction("GET_ALL_PRODUCTS_SUCCESS", {
-      count: productMockData.length,
-      response: mockResponse,
-    });
+    console.log("[API] Mock getAll response:", mockResponse);
     return Promise.resolve(mockResponse);
   } catch (error) {
-    logApiAction("GET_ALL_PRODUCTS_ERROR", { error });
+    console.error("[API] Error fetching all products:", error);
     throw error;
   }
 };
 
-// Delete a collection product
-export const deleteCollectionProduct = async (
+// Delete a product
+export const deleteProduct = async (
   id: string
-): Promise<ApiResponse<void>> => {
+): Promise<ApiResponse<{ deleted: boolean }>> => {
   try {
-    logApiAction("DELETE_PRODUCT", { productId: id });
+    console.log("[API] Deleting product with ID:", id);
+
+    // Uncomment when API is ready
+    // const response = await axiosInstance.delete(`/admin/products/delete/${id}`);
+    // return response.data;
 
     // Mock response
-    const mockResponse: ApiResponse<void> = {
+    const mockResponse: ApiResponse<{ deleted: boolean }> = {
       status: 200,
-      message: "Collection product deleted successfully",
-      data: undefined,
+      message: "Product deleted successfully",
+      data: { deleted: true },
     };
 
-    logApiAction("DELETE_PRODUCT_SUCCESS", { response: mockResponse });
+    console.log("[API] Mock delete response:", mockResponse);
     return Promise.resolve(mockResponse);
   } catch (error) {
-    logApiAction("DELETE_PRODUCT_ERROR", { error });
+    console.error("[API] Error deleting product:", error);
     throw error;
   }
 };
 
-// Toggle product status (enable/disable)
+// Toggle product status
 export const toggleProductStatus = async (
   id: string,
-  enable: boolean
-): Promise<ApiResponse<void>> => {
+  enabled: boolean
+): Promise<ApiResponse<Product>> => {
   try {
-    logApiAction("TOGGLE_PRODUCT_STATUS", {
-      productId: id,
-      action: enable ? "ENABLE" : "DISABLE",
-    });
+    console.log("[API] Toggling product status:", { id, enabled });
+
+    // Uncomment when API is ready
+    // const response = await axiosInstance.patch(`/admin/products/toggle-status/${id}`, { enabled });
+    // return response.data;
 
     // Mock response
-    const mockResponse: ApiResponse<void> = {
+    const product = productMockData.find((p) => p._id === id);
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    const mockResponse: ApiResponse<Product> = {
       status: 200,
-      message: `Collection product ${enable ? "enabled" : "disabled"} successfully`,
-      data: undefined,
+      message: `Product ${enabled ? "enabled" : "disabled"} successfully`,
+      data: {
+        ...product,
+        status: enabled ? "in-stock" : "disabled",
+        updatedAt: new Date().toISOString(),
+      },
     };
 
-    logApiAction("TOGGLE_PRODUCT_STATUS_SUCCESS", { response: mockResponse });
+    console.log("[API] Mock toggle status response:", mockResponse);
     return Promise.resolve(mockResponse);
   } catch (error) {
-    logApiAction("TOGGLE_PRODUCT_STATUS_ERROR", { error });
+    console.error("[API] Error toggling product status:", error);
     throw error;
   }
 };

@@ -27,7 +27,7 @@ export interface Product extends BaseRecord {
   categoryId: string; // Required category ID
   collectionId?: string; // Required collection ID
   productId?: string; // Required product ID
-  subCategoryId: string; // Required sub-category ID
+  subCategoryId?: string; // Required sub-category ID
   images: string[]; // Array for multiple images
   thumbnailImage?: string; // Optional thumbnail image
   createdAt: string | Date; // Date of creation

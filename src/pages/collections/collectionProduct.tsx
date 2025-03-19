@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
-import { productMockData } from "../../config/mock/productCollectionTable";
+// import { productMockData } from "../../config/mock/productCollectionTable";
 import type { Product } from "../../types/collectionProduct.types";
 import { useNavigate } from "react-router-dom";
 import { Delete } from "@mui/icons-material";
@@ -15,11 +15,15 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-
+import { getAllProducts } from "../../api/CollectionProduct";
 const fetchProducts = async (): Promise<Product[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(productMockData), 1000);
-  });
+  try {
+    const response = await getAllProducts();
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return [];
+  }
 };
 
 const ProductAddPage: React.FC = () => {
