@@ -1,4 +1,4 @@
-import { Product } from "../types/product.types";
+import { Product } from "../types/collectionProduct.types";
 import { productMockData } from "../config/mock/productCollectionTable";
 
 interface ProductFormData {
