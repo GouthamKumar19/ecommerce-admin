@@ -7,10 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { Visibility, FilterList } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import OrderFilterDialog from "../../components/orders/OrderFilterDialog";
-import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import SearchBar from "../../components/common/SearchBar";
+import SortableHeader, {
+  SortConfig,
+} from "../../components/common/SortableHeader";
+import {
+  useSortableData,
+  getNextSortDirection,
+} from "../../components/common/SortUtils";
 
 const fetchOrders = async (): Promise<Order[]> => {
   return new Promise((resolve) => {
@@ -29,10 +33,10 @@ const OrderPage: React.FC = () => {
   });
 
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending" | null;
-  }>({ key: "", direction: null });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "",
+    direction: null,
+  });
   const navigate = useNavigate();
 
   const actionRenderer = (item: Order) => (
@@ -54,63 +58,25 @@ const OrderPage: React.FC = () => {
   });
 
   const handleSort = (key: string) => {
-    let direction: "ascending" | "descending" | null = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    } else if (
-      sortConfig.key === key &&
-      sortConfig.direction === "descending"
-    ) {
-      direction = null;
-    }
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
     setSortConfig({ key, direction });
   };
 
-  const sortedOrders = React.useMemo(() => {
-    if (sortConfig.key && sortConfig.direction) {
-      return [...orderMockData].sort((a, b) => {
-        const aValue = a[sortConfig.key] as string | number;
-        const bValue = b[sortConfig.key] as string | number;
-
-        if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return orderMockData;
-  }, [orderMockData, sortConfig]);
-
-  const renderSortIcon = (key: string) => {
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "ascending") {
-        return <ArrowUpwardIcon />;
-      } else if (sortConfig.direction === "descending") {
-        return <ArrowDownwardIcon />;
-      }
-    }
-    return (
-      <div className="flex flex-col gap-0">
-        <SwapVertIcon />
-      </div>
-    );
-  };
+  const sortedOrders = useSortableData(orderMockData, sortConfig);
 
   const columns = [
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Order ID</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("orderId")}
-          >
-            {renderSortIcon("orderId")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Order ID"
+          columnKey="orderId"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "orderId",
       render: (item: Order) => (
@@ -119,15 +85,12 @@ const OrderPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Username</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("username")}
-          >
-            {renderSortIcon("username")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Username"
+          columnKey="username"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "username",
       render: (item: Order) => (
@@ -136,15 +99,12 @@ const OrderPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Amount</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("amount")}
-          >
-            {renderSortIcon("amount")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Amount"
+          columnKey="amount"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "amount",
       render: (item: Order) => (
@@ -153,15 +113,12 @@ const OrderPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Date</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("date")}
-          >
-            {renderSortIcon("date")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Date"
+          columnKey="date"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "date",
       render: (item: Order) => (
@@ -172,15 +129,12 @@ const OrderPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Payment Status</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("paymentStatus")}
-          >
-            {renderSortIcon("paymentStatus")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Payment Status"
+          columnKey="paymentStatus"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "paymentStatus",
       render: (item: Order) => (
@@ -189,15 +143,12 @@ const OrderPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Order Status</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("orderStatus")}
-          >
-            {renderSortIcon("orderStatus")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Order Status"
+          columnKey="orderStatus"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "orderStatus",
       render: (item: Order) => (
@@ -230,7 +181,6 @@ const OrderPage: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Use the SearchBar component */}
             <SearchBar
               searchValue={searchValue}
               onSearchChange={setSearchValue}
@@ -277,7 +227,7 @@ const OrderPage: React.FC = () => {
             .filter((order) =>
               order.orderId.toLowerCase().includes(searchValue.toLowerCase())
             )}
-          // @ts-expect-error non fix error
+          
           columns={columns}
           idKey="orderId"
           itemsPerPage={15}

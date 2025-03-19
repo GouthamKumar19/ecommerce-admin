@@ -6,11 +6,14 @@ import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { useQuery } from "@tanstack/react-query";
-
+import SortableHeader, {
+  SortConfig,
+} from "../../components/common/SortableHeader";
+import {
+  useSortableData,
+  getNextSortDirection,
+} from "../../components/common/SortUtils";
 
 const fetchCollections = async (): Promise<Collection[]> => {
   return new Promise((resolve) => {
@@ -28,10 +31,10 @@ const CollectionsPage: React.FC = () => {
   );
   const [collections, setCollections] =
     useState<Collection[]>(collectionMockData);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending" | null;
-  }>({ key: "", direction: null });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "",
+    direction: null,
+  });
 
   const navigate = useNavigate();
 
@@ -40,7 +43,6 @@ const CollectionsPage: React.FC = () => {
     queryFn: fetchCollections,
   });
 
-  // Initialize table data when collections are fetched
   useEffect(() => {
     if (fetchedCollections.length > 0) {
       setCollections(fetchedCollections);
@@ -50,8 +52,6 @@ const CollectionsPage: React.FC = () => {
   const handleAddNewCollection = () => {
     navigate("/collection/:id");
   };
-
- 
 
   const handleDeleteCollection = (item: Collection) => {
     setCurrentCollection(item);
@@ -71,7 +71,6 @@ const CollectionsPage: React.FC = () => {
   const handleDialogClose = (confirm: boolean) => {
     if (confirm && currentCollection) {
       if (dialogTitle === "Delete Collection") {
-        // Delete the collection from the local state
         setCollections((prevData) =>
           prevData.filter(
             (collection) => collection.id !== currentCollection.id
@@ -79,7 +78,6 @@ const CollectionsPage: React.FC = () => {
         );
         console.log(`Deleting collection with ID: ${currentCollection.id}`);
       } else {
-        // Toggle the collection's enabled/disabled status
         setCollections((prev) => {
           if (prev.includes(currentCollection)) {
             return prev.filter(
@@ -95,71 +93,34 @@ const CollectionsPage: React.FC = () => {
     setCurrentCollection(null);
   };
 
-  // Filter collections based on search input
   const filteredCollections = collections.filter((collection) =>
     collection.name.toLowerCase().includes(searchValue.toLowerCase())
   );
- const actionRenderer = (item: Collection) => (
-   <div className="flex justify-center items-center gap-2">
-     <Edit
-       sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-       onClick={() => handleEditCollection(item)}
-     />
-     <Delete
-       sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-       onClick={() => handleDeleteCollection(item)}
-     />
-   </div>
- );
 
-  // Handle sorting
+  const actionRenderer = (item: Collection) => (
+    <div className="flex justify-center items-center gap-2">
+      <Edit
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => handleEditCollection(item)}
+      />
+      <Delete
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => handleDeleteCollection(item)}
+      />
+    </div>
+  );
+
   const handleSort = (key: string) => {
-    let direction: "ascending" | "descending" | null = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    } else if (
-      sortConfig.key === key &&
-      sortConfig.direction === "descending"
-    ) {
-      direction = null;
-    }
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
     setSortConfig({ key, direction });
   };
 
-  const sortedCollections = React.useMemo(() => {
-    if (sortConfig.key && sortConfig.direction) {
-      return [...filteredCollections].sort((a, b) => {
-        const aValue = a[sortConfig.key] as string | number;
-        const bValue = b[sortConfig.key] as string | number;
+  const sortedCollections = useSortableData(filteredCollections, sortConfig);
 
-        if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return filteredCollections;
-  }, [filteredCollections, sortConfig]);
-
-  const renderSortIcon = (key: string) => {
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "ascending") {
-        return <ArrowUpwardIcon />;
-      } else if (sortConfig.direction === "descending") {
-        return <ArrowDownwardIcon />;
-      }
-    }
-    return (
-      <div className="flex flex-col gap-0">
-        <SwapVertIcon />
-      </div>
-    );
-  };
-
-  // Define columns for collections table
   const columns = [
     {
       header: "BannerImage",
@@ -177,15 +138,12 @@ const CollectionsPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Banner Name</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("name")}
-          >
-            {renderSortIcon("name")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Banner Name"
+          columnKey="name"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "name",
       render: (item: Collection) => (
@@ -197,26 +155,21 @@ const CollectionsPage: React.FC = () => {
       ),
     },
     {
-      header: "Actions",
+      header: <span>Actions</span>,
       key: "actions",
       render: actionRenderer,
     },
   ];
 
- 
   return (
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* StoreFront UI inspired search bar */}
-            <div className="flex justify-center w-full md:w-auto flex-grow">
-              {/* Use the SearchBar component */}
-              <SearchBar
-                searchValue={searchValue}
-                onSearchChange={setSearchValue}
-              />
-            </div>
+            <SearchBar
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+            />
           </div>
 
           <div className="flex ml-auto">
@@ -231,11 +184,10 @@ const CollectionsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Collections Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
           items={sortedCollections}
-          // @ts-expect-error non fix error
+          
           columns={columns}
           idKey="id"
           itemsPerPage={15}
@@ -245,7 +197,6 @@ const CollectionsPage: React.FC = () => {
         />
       </div>
 
-      {/* Confirmation Dialog */}
       <ConfirmationDialog
         open={dialogOpen}
         title={dialogTitle}

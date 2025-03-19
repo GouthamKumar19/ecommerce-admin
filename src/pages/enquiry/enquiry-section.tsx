@@ -1,19 +1,31 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+
 import DataTable from "../../components/common/DataTable";
-import { enquiries } from "../../config/mock/enquiriesTable";
+import { enquiries } from "../../config/mock/enquiriesTable"; // Keep this as mock data if needed
 import { Visibility, Close } from "@mui/icons-material";
 import { Enquiry } from "../../types/enquiry.types";
 import SearchBar from "../../components/common/SearchBar";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import SortableHeader, {
+  SortConfig,
+} from "../../components/common/SortableHeader";
+import {
+  useSortableData,
+  getNextSortDirection,
+} from "../../components/common/SortUtils";
+import { getAllEnquiry } from "../../api/enquiry"; // Import your API function
 
-const fetchEnquiry = async (): Promise<Enquiry[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(enquiries), 1000);
-  });
-};
+// Add this interface to match what DataTable expects
+interface TableColumn<T> {
+  header: React.ReactNode;
+  key: string;
+  render?: (item: T) => React.ReactNode;
+}
+
+// const fetchEnquiry = async (): Promise<Enquiry[]> => {
+//   return new Promise((resolve) => {
+//     setTimeout(() => resolve(enquiries), 1000);
+//   });
+// };
 
 const CustomModal: React.FC<{
   isOpen: boolean;
@@ -27,7 +39,6 @@ const CustomModal: React.FC<{
     let timeoutId: ReturnType<typeof setTimeout>;
 
     if (isOpen) {
-      // Delay before starting the animation
       timeoutId = setTimeout(() => {
         setAnimateIn(true);
       }, 50);
@@ -93,12 +104,10 @@ const EnquiryPopup: React.FC<{
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
         {Object.entries(data).map(([key, value]) => {
-          // Skip rendering the id key or any internal keys that start with underscore
           if (key === "id" || key.startsWith("_") || key === "actions") {
             return null;
           }
 
-          // Format the key for display
           const formattedKey = key
             .replace(/([A-Z])/g, " $1")
             .trim()
@@ -106,7 +115,6 @@ const EnquiryPopup: React.FC<{
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ");
 
-          // Special handling for message fields to make them full width and centered
           if (
             key === "message" ||
             key.includes("Message") ||
@@ -152,127 +160,105 @@ const EnquirySection: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Enquiry | null>(null);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending" | null;
-  }>({ key: "", direction: null });
-
-  const { data: enquiries = [], isLoading } = useQuery({
-    queryKey: ["enquiries"],
-    queryFn: fetchEnquiry,
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "",
+    direction: null,
   });
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const payload = {
+    options: {
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: ["createdAt"], // Adjust sort parameters as needed
+      sortDesc: [true],
+    },
+  };
+
+  useEffect(() => {
+    const fetchEnquiriesData = async () => {
+      setIsLoading(true); // Start loading
+      setError(null); // Reset error
+
+      try {
+        const response = await getAllEnquiry(payload); // Call the API with payload
+        setEnquiries(response); // Update state with fetched data
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch enquiries");
+      } finally {
+        setIsLoading(false); // Stop loading
+      }
+    };
+
+    fetchEnquiriesData();
+  }, []);
 
   const handleViewEnquiry = (id: string) => {
-    setSelectedItem(enquiries.find((enquiry) => enquiry.id === id) || null);
+    setSelectedItem(enquiries.find((enquiry) => enquiry._id === id) || null); // Update how you identify items here
     setOpenDialog(true);
   };
 
   const handleSort = (key: string) => {
-    let direction: "ascending" | "descending" | null = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    } else if (
-      sortConfig.key === key &&
-      sortConfig.direction === "descending"
-    ) {
-      direction = null;
-    }
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
     setSortConfig({ key, direction });
   };
 
-  const sortedEnquiries = React.useMemo(() => {
-    if (sortConfig.key && sortConfig.direction) {
-      return [...enquiries].sort((a, b) => {
-        const aValue = a[sortConfig.key] as string | number;
-        const bValue = b[sortConfig.key] as string | number;
-
-        if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return enquiries;
-  }, [enquiries, sortConfig]);
-
-  const renderSortIcon = (key: string) => {
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "ascending") {
-        return <ArrowUpwardIcon />;
-      } else if (sortConfig.direction === "descending") {
-        return <ArrowDownwardIcon />;
-      }
-    }
-    return (
-      <div className="flex flex-col gap-0">
-        <SwapVertIcon />
-      </div>
-    );
-  };
+  const sortedEnquiries = useSortableData(enquiries, sortConfig);
 
   const actionRenderer = (item: Enquiry) => (
     <div className="flex justify-center items-center gap-2">
       <Visibility
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleViewEnquiry(item.id.toString())}
+        onClick={() => handleViewEnquiry(item._id)} // Using _id now
       />
     </div>
   );
 
-  // Define columns for enquiry table
-  const columns = [
+  // Updated columns with proper typing
+  const columns: TableColumn<Enquiry>[] = [
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Name</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("name")}
-          >
-            {renderSortIcon("name")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Name"
+          columnKey="name"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "name",
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Email</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("email")}
-          >
-            {renderSortIcon("email")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Email"
+          columnKey="email"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "email",
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Message</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("message")}
-          >
-            {renderSortIcon("message")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Message"
+          columnKey="message"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "message",
     },
     {
-      header: (
-        <div className="flex items-center justify-center">
-          <span>Actions</span>
-        </div>
-      ),
+      header: <span>Actions</span>,
       key: "actions",
+      render: actionRenderer,
     },
   ];
 
@@ -286,7 +272,6 @@ const EnquirySection: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Replaced custom search bar with SearchBar component */}
             <SearchBar
               searchValue={searchValue}
               onSearchChange={setSearchValue}
@@ -297,11 +282,9 @@ const EnquirySection: React.FC = () => {
         </div>
       </div>
 
-      {/* Enquiries Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
           items={sortedEnquiries}
-          // @ts-expect-error non fix error
           columns={columns}
           idKey="id"
           itemsPerPage={15}
@@ -311,7 +294,6 @@ const EnquirySection: React.FC = () => {
         />
       </div>
 
-      {/* Enhanced Custom Modal */}
       {openDialog && (
         <CustomModal
           isOpen={openDialog}

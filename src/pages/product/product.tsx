@@ -1,58 +1,77 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit, Delete} from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 import DataTable from "../../components/common/DataTable";
-import { productMockData } from "../../config/mock/productTable";
+import { getAllProducts } from "../../api/product"; // Import your API fetching function
 import type { Product } from "../../types/product.types";
 import ConfirmationDialog from "../../components/common/Dialog";
-import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-
-const fetchProducts = async (): Promise<Product[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(productMockData), 1000);
-  });
-};
+import SearchBar from "../../components/common/SearchBar";
+import SortableHeader, {
+  SortConfig,
+} from "../../components/common/SortableHeader";
+import {
+  useSortableData,
+  getNextSortDirection,
+} from "../../components/common/SortUtils";
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending" | null;
-  }>({ key: "", direction: null });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "",
+    direction: null,
+  });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
   const handleAddNewProduct = () => {
-    // Navigate to the product details page for creating a new product
     navigate("/product/new?action=add");
   };
 
-  const {
-    data: products = [],
-    isLoading,
-    refetch,
-  } = useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
-  });
+  // Payload for API fetching
+  const payload = {
+    options: {
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: ["createdAt"],
+      sortDesc: [true],
+    },
+  };
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true); // Set loading state to true
+      setError(null); // Reset error state
+
+      try {
+        const response = await getAllProducts(payload); // Send the payload
+        setProducts(response); // Assuming response is already an array of products
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch products");
+      } finally {
+        setIsLoading(false); // Loading is finished
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleDeleteProduct = (productId: string | number) => {
     setSelectedProduct(
-      products.find((product) => product.id === productId) || null
+      products.find((product) => product._id === productId) || null // Update ID checking based on your Product type
     );
     setDialogOpen(true);
   };
 
   const confirmDeleteProduct = () => {
     if (selectedProduct) {
-      console.log(`Deleting product with ID: ${selectedProduct.id}`);
-      refetch(); // Refetch after deletion (or update cache)
+      console.log(`Deleting product with ID: ${selectedProduct._id}`);
+      // Implement your delete logic here
+      // You can call a delete API method here and re-fetch the products after successful deletion
     }
     setDialogOpen(false);
     setSelectedProduct(null);
@@ -62,80 +81,42 @@ const ProductPage: React.FC = () => {
     <div className="flex justify-center items-center gap-4">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate(`/product/${item.id}?action=edit`)}
+        onClick={() => navigate(`/product/${item._id}?action=edit`)} // Use _id for editing
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleDeleteProduct(item.id)}
+        onClick={() => handleDeleteProduct(item._id)} // Use _id for deletion
       />
     </div>
   );
 
   const handleSort = (key: string) => {
-    let direction: "ascending" | "descending" | null = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    } else if (
-      sortConfig.key === key &&
-      sortConfig.direction === "descending"
-    ) {
-      direction = null;
-    }
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
     setSortConfig({ key, direction });
   };
 
-  const sortedProducts = React.useMemo(() => {
-    if (sortConfig.key && sortConfig.direction) {
-      return [...products].sort((a, b) => {
-        const aValue = a[sortConfig.key] as string | number;
-        const bValue = b[sortConfig.key] as string | number;
-
-        if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return products;
-  }, [products, sortConfig]);
-
-  const renderSortIcon = (key: string) => {
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "ascending") {
-        return <ArrowUpwardIcon />;
-      } else if (sortConfig.direction === "descending") {
-        return <ArrowDownwardIcon />;
-      }
-    }
-    return (
-      <div className="flex flex-col gap-0">
-        <SwapVertIcon />
-      </div>
-    );
-  };
+  const sortedProducts = useSortableData(products, sortConfig);
 
   const columns = [
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Featured</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("featured")}
-          >
-            {renderSortIcon("featured")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Featured"
+          columnKey="isFeatured"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
-      key: "featured",
+      key: "isFeatured",
       render: (item: Product) => (
         <div className="flex justify-center">
           <input
             type="checkbox"
-            checked={item.featured}
+            checked={item.isFeatured}
             className="form-checkbox h-5 w-5 checkbox-green"
             readOnly
           />
@@ -144,22 +125,19 @@ const ProductPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Image</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("productImage")}
-          >
-            
-          </div>
-        </div>
+        <SortableHeader
+          label="Image"
+          columnKey="imageUrl"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
-      key: "productImage",
+      key: "imageUrl",
       render: (item: Product) => (
         <div className="text-center flex-shrink-0 h-10 w-10">
           <img
             className="h-10 w-10 rounded-full"
-            src={item.imageUrl}
+            src={item.thumbnailImage} // Use appropriate image field
             alt={item.name}
           />
         </div>
@@ -167,15 +145,12 @@ const ProductPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Product Name</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("name")}
-          >
-            {renderSortIcon("name")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Product Name"
+          columnKey="name"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "name",
       render: (item: Product) => (
@@ -188,15 +163,12 @@ const ProductPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Description</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("description")}
-          >
-            {renderSortIcon("description")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Description"
+          columnKey="description"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "description",
       render: (item: Product) => (
@@ -207,15 +179,12 @@ const ProductPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Price</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("price")}
-          >
-            {renderSortIcon("price")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Price"
+          columnKey="price"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "price",
       render: (item: Product) => (
@@ -223,9 +192,9 @@ const ProductPage: React.FC = () => {
           <span className="text-sm font-medium text-gray-900">
             ${item.price.toFixed(2)}
           </span>
-          {item.discountPrice && (
+          {item.slashedPrice && (
             <span className="ml-2 text-sm text-gray-500 line-through">
-              ${item.discountPrice.toFixed(2)}
+              ${item.slashedPrice.toFixed(2)}
             </span>
           )}
         </div>
@@ -233,15 +202,12 @@ const ProductPage: React.FC = () => {
     },
     {
       header: (
-        <div className="flex items-center justify-center">
-          <span>Quantity</span>
-          <div
-            className="flex flex-col ml-1 cursor-pointer"
-            onClick={() => handleSort("quantity")}
-          >
-            {renderSortIcon("quantity")}
-          </div>
-        </div>
+        <SortableHeader
+          label="Quantity"
+          columnKey="quantity"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
       ),
       key: "quantity",
       render: (item: Product) => (
@@ -260,7 +226,6 @@ const ProductPage: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Use the SearchBar component */}
             <SearchBar
               searchValue={searchValue}
               onSearchChange={setSearchValue}
@@ -279,21 +244,24 @@ const ProductPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Products Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={sortedProducts}
-          // @ts-expect-error non fix error
-          columns={columns}
-          idKey="id"
-          itemsPerPage={15}
-          tableType="product"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : error ? (
+          <div>Error: {error}</div>
+        ) : (
+          <DataTable
+            items={sortedProducts}
+            columns={columns}
+            idKey="_id" // Use _id based on your Product type structure
+            itemsPerPage={15}
+            tableType="product"
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+          />
+        )}
       </div>
 
-      {/* Confirmation Dialog */}
       <ConfirmationDialog
         open={dialogOpen}
         title="Delete Product"

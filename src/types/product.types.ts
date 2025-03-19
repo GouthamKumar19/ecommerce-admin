@@ -15,39 +15,29 @@ export interface BaseRecord {
   [key: string]: RecordValue; // More specific index signature
 }
 
+// Revised Product interface based on the provided JSON structure
 export interface Product extends BaseRecord {
-  id: string | number;
+  _id: string; // Changed id to _id to match the JSON structure
   name: string;
   description: string;
   price: number;
-  discountPrice?: number;
+  slashedPrice?: number; // Changed discountPrice to slashedPrice
   quantity: number;
-  featured: boolean;
-  imageUrl: string;
-  category?: string;
-  sku?: string;
-  brand?: string;
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
-  status?: "in-stock" | "out-of-stock" | "low-stock";
-  tags?: string[];
-  rating?: number;
-  reviews?: {
-    userId: string | number;
-    rating: number;
-    comment: string;
-    date: string | Date;
-  }[];
-  specifications?: {
-    [key: string]: string | number | boolean;
+  isFeatured: boolean; // Changed featured to isFeatured
+  categoryId: string; // Required category ID
+  subCategoryId: string; // Required sub-category ID
+  images: string[]; // Array for multiple images
+  thumbnailImage?: string; // Optional thumbnail image
+  createdAt: string | Date; // Date of creation
+  updatedAt: string | Date; // Date of last update
+}
+
+// Example response structure reflecting the overall API response
+export interface ApiResponse {
+  status: number;
+  message: string;
+  data: {
+    totalCount: number;
+    tableData: Product[]; // Array of Product objects
   };
-  variants?: {
-    id: string | number;
-    name: string;
-    price?: number;
-    quantity?: number;
-    attributes?: {
-      [key: string]: string | number;
-    };
-  }[];
 }

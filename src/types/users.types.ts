@@ -1,4 +1,4 @@
-// Define possible value types that can be stored in the record
+// Define the possible value types that can be stored in a record
 type RecordValue =
   | string
   | number
@@ -11,25 +11,26 @@ type RecordValue =
     }
   | RecordValue[];
 
+// Base interface for records
 export interface BaseRecord {
   [key: string]: RecordValue; // More specific index signature
 }
 
+// User interface according to the provided JSON structure
 export interface User extends BaseRecord {
-  id: string | number;
+  _id: string; // Unique identifier for the user
   name: string;
   email: string;
   phone: string;
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
-  status?: "active" | "inactive";
-  role?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    country?: string;
+  isEnabled: boolean; // Indicates if the user is enabled
+}
+
+// Interface for the API response
+export interface ApiResponse {
+  status: number; // Status code of the response
+  message: string; // Message indicating the success or failure of the request
+  data: {
+    totalCount: number; // Total number of records available
+    tableData: User[]; // Array of user records
   };
-  // Add any other specific fields your user type needs
 }
