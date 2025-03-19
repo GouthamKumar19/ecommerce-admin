@@ -7,7 +7,7 @@ import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
 import BackArrow from "../../components/common/BackArrow";
-import SearchBar from "../../components/common/SearchBar"; // Import SearchBar
+import SearchBar from "../../components/common/SearchBar";
 
 // Mock fetch function
 const fetchProducts = async (): Promise<Product[]> => {
@@ -17,10 +17,10 @@ const fetchProducts = async (): Promise<Product[]> => {
 };
 
 const CollectionAddPage: React.FC = () => {
-  const [checkedProducts, setCheckedProducts] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [searchValue, setSearchValue] = useState<string>(""); // Add searchValue state
+  const [checkedProducts, setCheckedProducts] = useState<
+    Record<string, boolean>
+  >({});
+  const [searchValue, setSearchValue] = useState<string>("");
   const navigate = useNavigate();
 
   // Use React Query for data fetching with loading state
@@ -30,7 +30,7 @@ const CollectionAddPage: React.FC = () => {
   });
 
   // Function to handle checkbox change
-  const handleCheckboxChange = (productId: string | number) => {
+  const handleCheckboxChange = (productId: string) => {
     setCheckedProducts((prev) => ({
       ...prev,
       [productId]: !prev[productId],
@@ -44,7 +44,10 @@ const CollectionAddPage: React.FC = () => {
 
   // Function to handle add button click
   const handleAdd = () => {
-    console.log("Selected products:", checkedProducts);
+    const selectedProducts = Object.entries(checkedProducts)
+      .filter(([ isChecked]) => isChecked)
+      .map(([productId]) => productId);
+    console.log("Selected products:", selectedProducts);
     navigate(-1);
   };
 
@@ -65,10 +68,9 @@ const CollectionAddPage: React.FC = () => {
           ) : (
             <input
               type="checkbox"
-              // @ts-ignore
-              checked={checkedProducts[item.id] || false}
+              checked={checkedProducts[item._id || ""] || false}
               className="form-checkbox h-5 w-5 custom-checkbox"
-              onChange={() => handleCheckboxChange(item._id)}
+              onChange={() => handleCheckboxChange(item._id || "")}
             />
           )}
         </div>
@@ -84,8 +86,7 @@ const CollectionAddPage: React.FC = () => {
           ) : (
             <img
               className="h-10 w-10 rounded-full"
-              // @ts-ignore
-              src={item.imageUrl}
+              // src={item.imageUrl}
               alt={item.name}
             />
           )}
@@ -136,7 +137,7 @@ const CollectionAddPage: React.FC = () => {
               </span>
               {item.discountPrice && (
                 <span className="ml-2 text-sm text-gray-500 line-through">
-                  {/* @ts-ignore */}
+                 {/* @ts-ignore */}
                   ${item.discountPrice.toFixed(2)}
                 </span>
               )}
@@ -159,7 +160,7 @@ const CollectionAddPage: React.FC = () => {
   // Generate skeleton rows when loading
   const skeletonData = isLoading
     ? Array(5).fill({
-        id: "skeleton",
+        _id: "skeleton",
         name: "",
         description: "",
         price: 0,
@@ -172,7 +173,7 @@ const CollectionAddPage: React.FC = () => {
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
-          <BackArrow /> {/* Add ArrowBack component here */}
+          <BackArrow />
           <div className="flex justify-center w-full md:w-auto ml-40">
             <SearchBar
               searchValue={searchValue}
@@ -209,7 +210,12 @@ const CollectionAddPage: React.FC = () => {
                 },
               }}
               onClick={handleAdd}
-              disabled={isLoading || Object.keys(checkedProducts).length === 0}
+              disabled={
+                isLoading ||
+                Object.keys(checkedProducts).filter(
+                  (key) => checkedProducts[key]
+                ).length === 0
+              }
             >
               ADD
             </Button>
@@ -217,12 +223,11 @@ const CollectionAddPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Products Table with Skeleton */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={isLoading ? skeletonData : filteredProducts} // Use filteredProducts
+          items={isLoading ? skeletonData : filteredProducts}
           columns={columns}
-          idKey="id"
+          idKey="_id"
           itemsPerPage={15}
           tableType="product"
           loading={isLoading}
