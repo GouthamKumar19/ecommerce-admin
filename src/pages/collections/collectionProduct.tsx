@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
-import { productMockData } from "../../config/mock/productTable";
-import type { Product } from "../../types/product.types";
+import { productMockData } from "../../config/mock/productCollectionTable";
+import type { Product } from "../../types/collectionProduct.types";
 import { useNavigate } from "react-router-dom";
-import { Edit, Delete } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
@@ -73,12 +73,6 @@ const ProductAddPage: React.FC = () => {
     setDialogOpen(true);
   };
 
-  const handleEditUser = (item: Product) => {
-    navigate("/collection/collection-product/:id", {
-      state: { Product: item },
-    });
-  };
-
   const handleDialogClose = (confirm: boolean) => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
@@ -86,14 +80,14 @@ const ProductAddPage: React.FC = () => {
           prevData.filter((product) => product.id !== currentProduct.id)
         );
         console.log(`Deleting product with ID: ${currentProduct.id}`);
-      } else {
-        setDisabledProducts((prev) => {
-          if (prev.includes(String(currentProduct.id))) {
-            return prev.filter((id) => id !== String(currentProduct.id));
-          } else {
-            return [...prev, String(currentProduct.id)];
-          }
-        });
+      } else if (dialogTitle === "Disable Product") {
+        // Add the current product ID to disabled products
+        setDisabledProducts((prev) => [...prev, String(currentProduct.id)]);
+      } else if (dialogTitle === "Enable Product") {
+        // Remove the current product ID from disabled products
+        setDisabledProducts((prev) =>
+          prev.filter((id) => id !== String(currentProduct.id))
+        );
       }
     }
     setDialogOpen(false);
@@ -132,14 +126,7 @@ const ProductAddPage: React.FC = () => {
             },
           }}
         />
-        <Edit
-          sx={{
-            fontSize: 22,
-            cursor: "pointer",
-            color: isDisabled ? "#7B9B8D" : "#0d7f3f",
-          }}
-          onClick={() => handleEditUser(item)}
-        />
+
         <Delete
           sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
           onClick={() => handleDeleteProduct(item)}
