@@ -30,3 +30,33 @@ export const getAllOrders = async (): Promise<ApiResponse<Order[]>> => {
     throw error;
   }
 };
+
+// Get an order by ID
+export const getOrderById = async (id: string): Promise<ApiResponse<Order>> => {
+  try {
+    console.log("[API] Fetching order with ID:", id);
+
+    // Uncomment when API is ready
+    // const response = await axiosInstance.get(`/admin/orders/getOne/${id}`);
+    // return response.data;
+
+    // Mock response using orderMockData
+    const order = orderMockData.find((o) => o._id === id || o.orderId === id);
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    const mockResponse: ApiResponse<Order> = {
+      status: 200,
+      message: "Success",
+      data: order,
+    };
+
+    console.log("[API] Mock getOne order response:", mockResponse);
+    return Promise.resolve(mockResponse);
+  } catch (error) {
+    console.error("[API] Error fetching order:", error);
+    throw error;
+  }
+};

@@ -3,12 +3,25 @@ import OrdersForm from "../../components/OrdersForm";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
 import { useEffect } from "react";
-import { getOrderById } from "../../config/mock/ordersData";
+import { mockOrders} from "../../config/mock/ordersData";
+// import { Order } from "../../types/order.types";
 
 const OrderDetails = () => {
+  // const [order, setOrder] = useState<Order | null>(null);
+
   useEffect(() => {
-    const mockOrder = getOrderById("66b3279c39c21f7342c125b4");
-    console.log("Mock order data:", mockOrder);
+    const fetchOrder = async () => {
+      try {
+        // const response = await getOrderById("66b3279c39c21f7342c125b4");
+        // setOrder(response.data);
+        // setOrder(response.data);
+        console.log("Order fetched:", mockOrders);
+      } catch (error) {
+        console.error("Error fetching order:", error);
+      }
+    };
+
+    fetchOrder();
   }, []);
 
   return (
@@ -48,7 +61,7 @@ const OrderDetails = () => {
           },
         }}
       >
-        <OrdersForm />
+        <OrdersForm  />
       </Box>
 
       {/* Bottom section - fixed with increased bottom spacing */}
