@@ -6,11 +6,19 @@ export interface OrderItem {
 }
 
 export type Order = {
+  _id: string;
   orderId: string;
-  username: string;
-  amount: number;
-  date: string;
-  paymentStatus: string;
-  orderStatus: string;
-  [key: string]: unknown; // Use 'unknown' instead of 'any'
+  customerId: string;
+  customerDetails: {
+    name: string;
+  };
+  total: number;
+  createdAt: string;
+  paymentId: string;
+  paymentDetails: {
+    status: string;
+  };
+  status: string;
+  updatedAt: string;
+  items?: OrderItem[]; // Optional property to include order items if present
 };
