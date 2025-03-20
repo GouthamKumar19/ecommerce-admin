@@ -59,7 +59,8 @@ export type OrderStatus =
   | "CANCELLED"
   | "READY_TO_SHIP";
 
-export interface Order {
+export interface OrderNew {
+  // Changed from Order to OrderNew
   _id: string;
   orderId: string;
   customerId: string;

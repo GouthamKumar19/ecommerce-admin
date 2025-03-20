@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { Order, PaymentStatus, OrderStatus } from "../types/orders.types";
-import {
-  getOrderById,
-  paymentStatuses,
-  orderStatuses,
-} from "../config/mock/ordersData";
+import { OrderNew, PaymentStatus, OrderStatus } from "../types/orders.types";
+import { paymentStatuses, orderStatuses } from "../config/mock/ordersData";
 
-const OrdersForm = () => {
+interface OrdersFormProps {
+  order?: OrderNew;
+}
+
+const OrdersForm = ({ order: initialOrder }: OrdersFormProps) => {
   // State to hold the current order
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderNew | null>(null);
 
   // States for dropdown controls
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("PENDING");
@@ -45,18 +45,15 @@ const OrdersForm = () => {
     };
   }, []);
 
-  // Fetch order data on component mount
+  // Use initialOrder if provided, otherwise fetch from mock data
   useEffect(() => {
-    const mockOrder = getOrderById("P123");
-
-    if (mockOrder) {
-      setOrder(mockOrder);
-      setPaymentStatus(mockOrder.paymentDetails.status);
-      setOrderStatus(mockOrder.status);
+    if (initialOrder) {
+      console.log("Received order data:", initialOrder);
+      setOrder(initialOrder);
+      setPaymentStatus(initialOrder.paymentDetails.status);
+      setOrderStatus(initialOrder.status);
     }
-
-    // console.log(orders, "orders from");
-  }, []);
+  }, [initialOrder]);
 
   const handlePaymentStatusChange = (status: PaymentStatus) => {
     setPaymentStatus(status);
@@ -68,7 +65,7 @@ const OrdersForm = () => {
     setShowOrderDropdown(false);
   };
 
-  const formatAddress = (address: Order["shippingAddressDetails"]) => {
+  const formatAddress = (address: OrderNew["shippingAddressDetails"]) => {
     return [
       address.line1,
       address.line2,

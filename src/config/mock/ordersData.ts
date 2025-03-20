@@ -1,6 +1,6 @@
-import { Order, PaymentStatus, OrderStatus } from "../../types/orders.types";
+import { OrderNew, PaymentStatus, OrderStatus } from "../../types/orders.types";
 
-export const mockOrders: Order[] = [
+export const mockOrders: OrderNew[] = [
   {
     _id: "66b3279c39c21f7342c125b4",
     orderId: "P123",
@@ -89,6 +89,6 @@ export const orderStatuses: OrderStatus[] = [
   "READY_TO_SHIP",
 ];
 
-export const getOrderById = (orderId: string): Order | undefined => {
+export const getOrderById = (orderId: string): OrderNew | undefined => {
   return mockOrders.find((order) => order.orderId === orderId);
 };

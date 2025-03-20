@@ -1,21 +1,8 @@
 // import axiosInstance from "./axios";
+import { OrderNew } from "../types/orders.types";
 import { Order } from "../types/order.types";
 import { orderMockData } from "../config/mock/orderNew";
-import {  } from "../config/mock/ordersData";
-// interface OrderFormData {
-//   _id?: string;
-//   orderId: string;
-//   customerId: string;
-//   customerDetails: {
-//     name: string;
-//   };
-//   total: number;
-//   paymentId: string;
-//   paymentDetails: {
-//     status: string;
-//   };
-//   status: string;
-// }
+import { mockOrders } from "../config/mock/ordersData";
 
 interface ApiResponse<T> {
   status: number;
@@ -51,29 +38,25 @@ export const getAllOrders = async (): Promise<ApiResponse<Order>> => {
 };
 
 // Get an order by ID
-export const getOrderById = async (id: string): Promise<ApiResponse<Order>> => {
+export const getOrderById = async (id: string): Promise<ApiResponse<OrderNew>> => {
   try {
     console.log("[API] Fetching order with ID:", id);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.get(`/admin/orders/getOne/${id}`);
-    // return response.data;
-
-    // Mock response using orders data
-    const order = orderMockData.data.tableData.find(
-      (t) => t._id === id || t.orderId === id
+    // Find order from the mockOrders array you provided
+    const order = mockOrders.find(
+      (order) => order._id === id || order.orderId === id
     );
 
     if (!order) {
       throw new Error("Order not found");
     }
 
-    const mockResponse: ApiResponse<Order> = {
+    const mockResponse: ApiResponse<OrderNew> = {
       status: 200,
       message: "Success",
       data: {
         totalCount: 1,
-        tableData: [order],
+         tableData: [order],
       },
     };
 
@@ -89,7 +72,7 @@ export const getOrderById = async (id: string): Promise<ApiResponse<Order>> => {
 export const updateOrderStatus = async (
   orderId: string,
   status: string
-): Promise<ApiResponse<Order>> => {
+): Promise<ApiResponse<OrderNew>> => {
   try {
     console.log("[API] Updating order status:", { orderId, status });
 
@@ -110,11 +93,12 @@ export const updateOrderStatus = async (
       updatedAt: new Date().toISOString(),
     };
 
-    const mockResponse: ApiResponse<Order> = {
+    const mockResponse: ApiResponse<OrderNew> = {
       status: 200,
       message: "Order status updated successfully",
       data: {
         totalCount: 1,
+        // @ts-ignore
         tableData: [updatedOrder],
       },
     };
@@ -131,7 +115,7 @@ export const updateOrderStatus = async (
 export const updatePaymentStatus = async (
   orderId: string,
   paymentStatus: string
-): Promise<ApiResponse<Order>> => {
+): Promise<ApiResponse<OrderNew>> => {
   try {
     console.log("[API] Updating payment status:", { orderId, paymentStatus });
 
@@ -155,11 +139,12 @@ export const updatePaymentStatus = async (
       updatedAt: new Date().toISOString(),
     };
 
-    const mockResponse: ApiResponse<Order> = {
+    const mockResponse: ApiResponse<OrderNew> = {
       status: 200,
       message: "Payment status updated successfully",
       data: {
         totalCount: 1,
+        // @ts-ignore
         tableData: [updatedOrder],
       },
     };
