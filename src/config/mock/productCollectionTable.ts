@@ -1,5 +1,5 @@
 // mock/ProductData.ts
-import { Product } from "../../types/collectionProduct.types";
+import { Product } from "../../types/product.types";
 import product1 from "/src/assets/Products/product1.png";
 
 export const productMockData: Product[] = [

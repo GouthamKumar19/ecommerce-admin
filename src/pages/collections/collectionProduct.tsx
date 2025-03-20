@@ -8,9 +8,6 @@ import { Delete } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
-import {
-  toggleProductStatus,
-} from "../../api/CollectionProduct";
 import SortableHeader, {
   SortConfig,
 } from "../../components/common/SortableHeader";
@@ -61,7 +58,7 @@ const ProductAddPage: React.FC = () => {
 
   const handleToggleProduct = (item: Product) => {
     setCurrentProduct(item);
-    if (disabledProducts.includes(String(item._id))) {
+    if (disabledProducts.includes(String(item.id))) {
       setDialogTitle("Enable Product");
       setDialogSubtitle(`Are you sure you want to enable "${item.name}"?`);
     } else {
@@ -79,69 +76,28 @@ const ProductAddPage: React.FC = () => {
     );
     setDialogOpen(true);
   };
-  const handleDialogClose = async (confirm: boolean) => {
+
+  const handleDialogClose = (confirm: boolean) => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
-        // Existing delete logic
         setTableData((prevData) =>
-          prevData.filter((product) => product._id !== currentProduct._id)
+          prevData.filter((product) => product.id !== currentProduct.id)
         );
-
-        const deletedIds = {
-          ids: [currentProduct._id],
-        };
-        console.log(JSON.stringify(deletedIds, null, 2));
-
-        try {
-          // await deleteProduct(currentProduct._id);
-        } catch (error) {
-          console.error("Error deleting product:", error);
-        }
-      } else if (
-        dialogTitle === "Disable Product" ||
-        dialogTitle === "Enable Product"
-      ) {
-        const isEnabling = dialogTitle === "Enable Product";
-        const productIds = [currentProduct._id];
-
-        // Log the toggle action in the required format
-        console.log(
-          JSON.stringify(
-            {
-              ids: productIds,
-              isEnabled: isEnabling,
-            },
-            null,
-            2
-          )
+        console.log(`Deleting product with ID: ${currentProduct.id}`);
+      } else if (dialogTitle === "Disable Product") {
+        // Add the current product ID to disabled products
+        setDisabledProducts((prev) => [...prev, String(currentProduct.id)]);
+      } else if (dialogTitle === "Enable Product") {
+        // Remove the current product ID from disabled products
+        setDisabledProducts((prev) =>
+          prev.filter((id) => id !== String(currentProduct.id))
         );
-
-        try {
-          // Call the API to toggle the product status
-          await toggleProductStatus(currentProduct._id, isEnabling);
-
-          // Update the local state
-          if (isEnabling) {
-            setDisabledProducts((prev) =>
-              prev.filter((id) => id !== String(currentProduct._id))
-            );
-          } else {
-            setDisabledProducts((prev) => [
-              ...prev,
-              String(currentProduct._id),
-            ]);
-          }
-
-          // Optionally refetch the products to get the updated data
-          // queryClient.invalidateQueries(['products']);
-        } catch (error) {
-          console.error("Error toggling product status:", error);
-        }
       }
     }
     setDialogOpen(false);
     setCurrentProduct(null);
   };
+
   const filteredProducts = tableData.filter((product) =>
     product.name.toLowerCase().includes(searchValue.toLowerCase())
   );
@@ -157,31 +113,32 @@ const ProductAddPage: React.FC = () => {
 
   const sortedProducts = useSortableData(filteredProducts, sortConfig);
 
- const actionRenderer = (item: Product) => {
-   const isDisabled = disabledProducts.includes(String(item._id));
-   return (
-     <div className="flex justify-center items-center gap-4">
-       <Switch
-         checked={!isDisabled}
-         onChange={() => handleToggleProduct(item)}
-         inputProps={{ "aria-label": "Toggle product status" }}
-         sx={{
-           "& .MuiSwitch-switchBase.Mui-checked": {
-             color: "#0d7f3f",
-           },
-           "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-             backgroundColor: "#0d7f3f",
-           },
-         }}
-       />
+  const actionRenderer = (item: Product) => {
+    const isDisabled = disabledProducts.includes(String(item.id));
+    return (
+      <div className="flex justify-center items-center gap-4">
+        <Switch
+          checked={!isDisabled}
+          onChange={() => handleToggleProduct(item)}
+          inputProps={{ "aria-label": "Toggle product status" }}
+          sx={{
+            "& .MuiSwitch-switchBase.Mui-checked": {
+              color: "#0d7f3f",
+            },
+            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+              backgroundColor: "#0d7f3f",
+            },
+          }}
+        />
 
-       <Delete
-         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-         onClick={() => handleDeleteProduct(item)}
-       />
-     </div>
-   );
- };
+        <Delete
+          sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+          onClick={() => handleDeleteProduct(item)}
+        />
+      </div>
+    );
+  };
+
   const columns = [
     {
       header: "",
