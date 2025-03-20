@@ -1,19 +1,42 @@
-// types.ts
-
 export interface Address {
+  userId: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pinCode: string;
+  isShipping: boolean;
+  isDefault: boolean;
+}
+
+export interface ProductDetails {
+  _id: string;
   name: string;
-  zipCode: string;
-  streetAddress: string;
+  description: string;
+  price: number;
+  slashedPrice: number;
+  isFeatured: boolean;
+  categoryId: string;
+  subCategoryId: string;
+  images: string[];
+  thumbnailImage: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductVariant {
+  _id: string;
+  name: string;
+  value: string;
+  variantId: string;
 }
 
 export interface Product {
-  id: string;
-  brand: string;
-  name: string;
-  image: string;
-  discount: number;
-  currentPrice: number;
-  originalPrice: number;
+  productDetails: ProductDetails;
+  productId: string;
+  price: number;
+  quantity: number;
+  variants: ProductVariant[];
 }
 
 export type PaymentStatus = "Pending" | "Complete" | "Failed";
@@ -28,12 +51,22 @@ export type OrderStatus =
   | "Ready To Ship";
 
 export interface Order {
-  id: string;
-  customerName: string;
-  shippingAddress: Address;
-  billingAddress: Address;
+  _id: string;
+  orderId: string;
+  customerId: string;
+  customerDetails: {
+    name: string;
+  };
+  shippingAddressId: string;
+  shippingAddressDetails: Address;
+  billingAddressId: string;
+  billingAddressDetails: Address;
   products: Product[];
-  paymentStatus: PaymentStatus;
-  orderStatus: OrderStatus;
-  orderDate: string;
+  status: OrderStatus;
+  paymentId: string;
+  paymentDetails: {
+    status: PaymentStatus;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
