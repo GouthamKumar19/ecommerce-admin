@@ -8,10 +8,8 @@ import {
   InputAdornment,
   Box,
   Button,
-  IconButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete"; // Ensure the correct import of DeleteIcon
 import ImageSelection from "../common/ImageSelection";
 import { VariantComponent, Variant } from "./Variant";
 import type { Product, ProductFormData } from "../../types/product.types";
@@ -31,7 +29,7 @@ interface ProductFormProps {
 const ProductForm: React.FC<ProductFormProps> = ({
   product,
   onChange,
-  onDelete,
+  
 }) => {
   const [productName, setProductName] = useState<string>(product?.name || "");
   const [description, setDescription] = useState<string>(
@@ -168,10 +166,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
               },
             }}
           />
-          {/* Delete icon */}
-          <IconButton onClick={onDelete} aria-label="delete" color="error">
-            <DeleteIcon />
-          </IconButton>
         </Grid>
       </Grid>
 
