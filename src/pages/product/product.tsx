@@ -32,28 +32,18 @@ const ProductPage: React.FC = () => {
     navigate("/product/new?action=add");
   };
 
-  // Payload for API fetching
-  const payload = {
-    options: {
-      page: 1,
-      itemsPerPage: 10,
-      sortBy: ["createdAt"],
-      sortDesc: [true],
-    },
-  };
-
   useEffect(() => {
     const fetchProducts = async () => {
-      setIsLoading(true); // Set loading state to true
-      setError(null); // Reset error state
+      setIsLoading(true);
+      setError(null);
 
       try {
-        const response = await getAllProducts(payload); // Send the payload
-        setProducts(response); // Assuming response is already an array of products
+        const response = await getAllProducts(); // Fetch all products
+        setProducts(response.data);
       } catch (err: any) {
         setError(err.message || "Failed to fetch products");
       } finally {
-        setIsLoading(false); // Loading is finished
+        setIsLoading(false);
       }
     };
 
@@ -62,7 +52,7 @@ const ProductPage: React.FC = () => {
 
   const handleDeleteProduct = (productId: string | number) => {
     setSelectedProduct(
-      products.find((product) => product._id === productId) || null // Update ID checking based on your Product type
+      products.find((product) => product._id === productId) || null
     );
     setDialogOpen(true);
   };
@@ -81,11 +71,11 @@ const ProductPage: React.FC = () => {
     <div className="flex justify-center items-center gap-4">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate(`/product/${item._id}?action=edit`)} // Use _id for editing
+        onClick={() => navigate(`/product/${item._id}?action=edit`)}
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleDeleteProduct(item._id)} // Use _id for deletion
+        onClick={() => handleDeleteProduct(item._id)}
       />
     </div>
   );
@@ -116,7 +106,7 @@ const ProductPage: React.FC = () => {
         <div className="flex justify-center">
           <input
             type="checkbox"
-            checked={item.isFeatured}
+            checked={!!item.featured}
             className="form-checkbox h-5 w-5 checkbox-green"
             readOnly
           />
@@ -137,7 +127,7 @@ const ProductPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-10 w-10">
           <img
             className="h-10 w-10 rounded-full"
-            src={item.thumbnailImage} // Use appropriate image field
+            src={item.thumbnailImage}
             alt={item.name}
           />
         </div>
@@ -210,9 +200,7 @@ const ProductPage: React.FC = () => {
         />
       ),
       key: "quantity",
-      render: (item: Product) => (
-        <div className="text-sm text-gray-900">{item.quantity}</div>
-      ),
+      render: () => <div className="text-sm text-gray-900"></div>,
     },
     {
       header: <span>Actions</span>,
@@ -253,7 +241,7 @@ const ProductPage: React.FC = () => {
           <DataTable
             items={sortedProducts}
             columns={columns}
-            idKey="_id" // Use _id based on your Product type structure
+            idKey="_id"
             itemsPerPage={15}
             tableType="product"
             actionRenderer={actionRenderer}

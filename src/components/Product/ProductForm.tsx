@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   TextField,
   Typography,
@@ -8,10 +8,13 @@ import {
   InputAdornment,
   Box,
   Button,
+  IconButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete"; // Ensure the correct import of DeleteIcon
 import ImageSelection from "../common/ImageSelection";
 import { VariantComponent, Variant } from "./Variant";
+import type { Product, ProductFormData } from "../../types/product.types";
 
 interface ProductImage {
   id: number;
@@ -19,15 +22,39 @@ interface ProductImage {
   selected: boolean;
 }
 
-const ProductForm: React.FC = () => {
-  // const [productName, setProductName] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [price, setPrice] = useState<string>("");
-  const [slashedPrice, setSlashedPrice] = useState<string>("");
-  const [category, setCategory] = useState<string | null>(null);
-  const [subCategory, setSubCategory] = useState<string | null>(null);
-  const [featured, setFeatured] = useState<boolean>(false);
-  const [images, setImages] = useState<ProductImage[]>([]);
+interface ProductFormProps {
+  product?: Product;
+  onChange: (productData: ProductFormData) => void;
+  onDelete: () => void; // Add the onDelete prop
+}
+
+const ProductForm: React.FC<ProductFormProps> = ({
+  product,
+  onChange,
+  onDelete,
+}) => {
+  const [productName, setProductName] = useState<string>(product?.name || "");
+  const [description, setDescription] = useState<string>(
+    product?.description || ""
+  );
+  const [price, setPrice] = useState<string>(product?.price.toString() || "");
+  const [slashedPrice, setSlashedPrice] = useState<string>(
+    product?.slashedPrice?.toString() || ""
+  );
+  const [category, setCategory] = useState<string>(product?.categoryId || "");
+  const [subCategory, setSubCategory] = useState<string>(
+    product?.subCategoryId || ""
+  );
+  const [featured, setFeatured] = useState<boolean>(
+    !!product?.isFeatured || false
+  );
+  const [images, setImages] = useState<ProductImage[]>(
+    product?.images.map((url, index) => ({
+      id: index,
+      url,
+      selected: url === product.thumbnailImage,
+    })) || []
+  );
 
   // Add state for variants
   const [variants, setVariants] = useState<Variant[]>([]);
@@ -63,9 +90,36 @@ const ProductForm: React.FC = () => {
     );
   };
 
+  const handleFormChange = useCallback(() => {
+    const productData: ProductFormData = {
+      name: productName,
+      description,
+      price: parseFloat(price),
+      slashedPrice: parseFloat(slashedPrice),
+      categoryId: category,
+      subCategoryId: subCategory,
+      images: images.map((image) => image.url),
+      thumbnailImage: images.find((image) => image.selected)?.url || "",
+    };
+    onChange(productData);
+  }, [
+    productName,
+    description,
+    price,
+    slashedPrice,
+    category,
+    subCategory,
+    images,
+    featured,
+    onChange,
+  ]);
+
+  useEffect(() => {
+    handleFormChange();
+  }, [handleFormChange]); // Include the handleFormChange dependency
+
   return (
-    <div>
-      {/* Form content */}
+    <form>
       <Grid container spacing={12}>
         <Grid item xs={12} md={4}>
           <Typography variant="subtitle1" gutterBottom align="left">
@@ -74,22 +128,8 @@ const ProductForm: React.FC = () => {
           <TextField
             fullWidth
             size="small"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment
-                  position="end"
-                  style={{
-                    position: "absolute",
-                    bottom: "8px",
-                    right: "8px",
-                    color: "rgba(0, 0, 0, 0.38)",
-                    fontSize: "0.65rem",
-                  }}
-                >
-                  {`${description.length}/10`}
-                </InputAdornment>
-              ),
-            }}
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
             placeholder="Product Name"
           />
         </Grid>
@@ -128,6 +168,10 @@ const ProductForm: React.FC = () => {
               },
             }}
           />
+          {/* Delete icon */}
+          <IconButton onClick={onDelete} aria-label="delete" color="error">
+            <DeleteIcon />
+          </IconButton>
         </Grid>
       </Grid>
 
@@ -147,10 +191,8 @@ const ProductForm: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Added spacing after second row */}
       <Box sx={{ mb: 6 }} />
 
-      {/* Third section: Price, Slashed Price */}
       <Grid container spacing={12}>
         <Grid item xs={12} md={4}>
           <Typography variant="subtitle1" gutterBottom align="left">
@@ -179,10 +221,8 @@ const ProductForm: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Added spacing after third section */}
       <Box sx={{ mb: 6 }} />
 
-      {/* Fourth section: Category, Sub Category */}
       <Grid container spacing={12}>
         <Grid item xs={12} md={4}>
           <Typography variant="subtitle1" gutterBottom align="left">
@@ -191,7 +231,7 @@ const ProductForm: React.FC = () => {
           <Autocomplete
             options={categories}
             value={category}
-            onChange={(_, newValue) => setCategory(newValue)}
+            onChange={(_, newValue) => setCategory(newValue || "")}
             fullWidth
             renderInput={(params) => (
               <TextField {...params} placeholder="Category" size="small" />
@@ -205,7 +245,7 @@ const ProductForm: React.FC = () => {
           <Autocomplete
             options={subCategories}
             value={subCategory}
-            onChange={(_, newValue) => setSubCategory(newValue)}
+            onChange={(_, newValue) => setSubCategory(newValue || "")}
             fullWidth
             renderInput={(params) => (
               <TextField {...params} placeholder="Sub Category" size="small" />
@@ -214,10 +254,8 @@ const ProductForm: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Added spacing after fourth section */}
       <Box sx={{ mb: 6 }} />
 
-      {/* Fifth section: Image Selection Component */}
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom align="left">
@@ -237,17 +275,14 @@ const ProductForm: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Added spacing after fifth section */}
       <Box sx={{ mb: 4 }} />
 
-      {/* Sixth section: Variants */}
       <Grid container spacing={3} sx={{ mt: 2, mb: 12 }}>
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom align="left">
             Variants
           </Typography>
           <Box sx={{ width: "100%" }}>
-            {/* Display completed variants first */}
             {completedVariants.length > 0 && (
               <Box sx={{ mb: 3 }}>
                 {completedVariants.map((variant) => (
@@ -261,7 +296,6 @@ const ProductForm: React.FC = () => {
               </Box>
             )}
 
-            {/* Display incomplete variants */}
             {incompleteVariants.map((variant) => (
               <VariantComponent
                 key={variant.id}
@@ -271,7 +305,6 @@ const ProductForm: React.FC = () => {
               />
             ))}
 
-            {/* Add variants button now appears below all variants */}
             <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-start" }}>
               <Button
                 startIcon={<AddIcon />}
@@ -293,7 +326,7 @@ const ProductForm: React.FC = () => {
           </Box>
         </Grid>
       </Grid>
-    </div>
+    </form>
   );
 };
 

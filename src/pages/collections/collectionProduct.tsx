@@ -263,6 +263,7 @@ const ProductAddPage: React.FC = () => {
               : "text-gray-900"
           }`}
         >
+          {/* @ts-expect-error non fix type */}
           {item.quantity}
         </div>
       ),
