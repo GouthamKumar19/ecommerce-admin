@@ -58,6 +58,7 @@ src/
 - TypeScript
 - React Router DOM
 - Tailwind CSS
+-
 
 ## Extending the Project
 
