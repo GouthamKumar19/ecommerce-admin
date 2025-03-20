@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
-import { useQuery } from "@tanstack/react-query";
+
 import SortableHeader, {
   SortConfig,
 } from "../../components/common/SortableHeader";
@@ -12,7 +12,7 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-import { getAllCollection } from "../../api/collections";// Import the API function
+import { getAllCollection, deleteCollection } from "../../api/collections"; // Updated import to include deleteCollection
 import type { Collection } from "../../types/collections.types";
 
 const CollectionsPage: React.FC = () => {
@@ -39,17 +39,16 @@ const CollectionsPage: React.FC = () => {
       setIsLoading(true); // Start loading
       setError(null); // Reset error
       setTimeout(async () => {
-
-      try {
-        const response = await getAllCollection(payload); // Call the API
-        setCollections(response.data); // Set the fetched collections
-        console.log("Fetched Collections:", response.data);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch collections"); // Handle any errors
-      } finally {
-        setIsLoading(false); // End loading
-      }
-    },500);
+        try {
+          const response = await getAllCollection(payload); // Call the API
+          setCollections(response.data); // Set the fetched collections
+          console.log("Fetched Collections:", response.data);
+        } catch (err: any) {
+          setError(err.message || "Failed to fetch collections"); // Handle any errors
+        } finally {
+          setIsLoading(false); // End loading
+        }
+      }, 500);
     };
 
     fetchCollections(); // Execute fetching function
@@ -69,20 +68,36 @@ const CollectionsPage: React.FC = () => {
   };
 
   const handleEditCollection = (item: Collection) => {
-    navigate("/collection/:id", {
-      state: { Collection: item },
-    });
+    navigate(`/collection/${item._id}`, { state: { Collection: item } });
   };
 
-  const handleDialogClose = (confirm: boolean) => {
+  const handleDialogClose = async (confirm: boolean) => {
     if (confirm && currentCollection) {
       if (dialogTitle === "Delete Collection") {
-        setCollections((prevData) =>
-          prevData.filter(
-            (collection) => collection._id !== currentCollection._id
-          )
-        );
-        console.log(`Deleting collection with ID: ${currentCollection._id}`);
+        setIsLoading(true);
+        try {
+          // Call the deleteCollection API function
+          const response = await deleteCollection(currentCollection._id);
+
+          if (response.status === 200) {
+            // If successful, remove the collection from the state
+            setCollections((prevData) =>
+              prevData.filter(
+                (collection) => collection._id !== currentCollection._id
+              )
+            );
+            console.log(
+              `Collection deleted successfully: ${currentCollection._id}`
+            );
+          } else {
+            throw new Error("Failed to delete collection");
+          }
+        } catch (err: any) {
+          setError(err.message || "Failed to delete collection");
+          console.error("Error deleting collection:", err);
+        } finally {
+          setIsLoading(false);
+        }
       }
     }
     setDialogOpen(false);

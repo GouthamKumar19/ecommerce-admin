@@ -62,12 +62,13 @@ const BackArrow = () => {
 
     if (path.includes("/collection/")) {
       // Check if we have order data in state (viewing or editing)
-      if (state && state.collection) {
+      if (state && state.Collection) {
         return "Edit Collection";
       } else {
         return "Add Collection";
       }
     }
+
     if (path.includes("/profile")) {
       return "Profile";
     }
