@@ -20,7 +20,7 @@ interface OrderFilterDialogProps {
   onApply: (filters: {
     paymentStatus: string[];
     orderStatus: string[];
-    date: string ;
+    date: string;
   }) => void;
 }
 

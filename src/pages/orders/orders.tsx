@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
 import { useQuery } from "@tanstack/react-query";
-import { orderMockData } from "../../config/mock/orderMockData";
-import type { Order } from "../../types/order.types";
 import { useNavigate } from "react-router-dom";
 import { Visibility, FilterList } from "@mui/icons-material";
 import { Button } from "@mui/material";
@@ -15,21 +13,19 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-
-const fetchOrders = async (): Promise<Order[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(orderMockData), 1000);
-  });
-};
+import { getAllOrders } from "../../api/orders";
+import type { Order } from "../../types/order.types";
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [filters, setFilters] = useState<{
-    paymentStatus: string;
-    orderStatus: string;
+    paymentStatus: string[];
+    orderStatus: string[];
+    date: string;
   }>({
-    paymentStatus: "",
-    orderStatus: "",
+    paymentStatus: [],
+    orderStatus: [],
+    date: "",
   });
 
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
@@ -52,9 +48,12 @@ const OrderPage: React.FC = () => {
     </div>
   );
 
-  const { data: orderMockData = [], isLoading } = useQuery({
+  const { data: ordersData = [], isLoading } = useQuery({
     queryKey: ["orderMockData"],
-    queryFn: fetchOrders,
+    queryFn: async () => {
+      const response = await getAllOrders();
+      return response.data;
+    },
   });
 
   const handleSort = (key: string) => {
@@ -66,7 +65,7 @@ const OrderPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const sortedOrders = useSortableData(orderMockData, sortConfig);
+  const sortedOrders = useSortableData(ordersData, sortConfig);
 
   const columns = [
     {
@@ -164,6 +163,7 @@ const OrderPage: React.FC = () => {
         </div>
       ),
       key: "actions",
+      render: actionRenderer,
     },
   ];
 
@@ -172,10 +172,12 @@ const OrderPage: React.FC = () => {
   };
 
   const applyFilters = (newFilters: {
-    paymentStatus: string;
-    orderStatus: string;
+    paymentStatus: string[];
+    orderStatus: string[];
+    date: string;
   }) => {
     setFilters(newFilters);
+    setOpenFilterDialog(false); // Close the dialog after applying filters
   };
 
   return (
@@ -209,7 +211,6 @@ const OrderPage: React.FC = () => {
       <OrderFilterDialog
         open={openFilterDialog}
         onClose={() => setOpenFilterDialog(false)}
-        // @ts-expect-error non fix error
         onApply={applyFilters}
       />
 
@@ -218,12 +219,13 @@ const OrderPage: React.FC = () => {
           items={sortedOrders
             .filter(
               (order) =>
-                !filters.paymentStatus ||
-                order.paymentDetails.status === filters.paymentStatus
+                filters.paymentStatus.length === 0 ||
+                filters.paymentStatus.includes(order.paymentDetails.status)
             )
             .filter(
               (order) =>
-                !filters.orderStatus || order.status === filters.orderStatus
+                filters.orderStatus.length === 0 ||
+                filters.orderStatus.includes(order.status)
             )
             .filter((order) =>
               order.orderId.toLowerCase().includes(searchValue.toLowerCase())
