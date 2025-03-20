@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Typography, Grid, Box, Button, IconButton } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { createSubCategory } from "../../api/category"; // Adjust the import path as necessary
 
 // Use the same interface as your CategoryForm
 interface ProductImage {
@@ -17,7 +18,6 @@ interface Subcategory {
 }
 
 const SubcategoryForm: React.FC = () => {
-  // Instead of a single images state, we'll track current subcategory images
   const [currentSubcategoryId, setCurrentSubcategoryId] = useState<number>(1);
   const [currentImages, setCurrentImages] = useState<ProductImage[]>([]);
 
@@ -25,7 +25,6 @@ const SubcategoryForm: React.FC = () => {
     { id: 1, name: "", images: [] },
   ]);
 
-  // Update subcategory images when current images change
   const updateSubcategoryImages = () => {
     setSubcategories(
       subcategories.map((sc) =>
@@ -34,9 +33,7 @@ const SubcategoryForm: React.FC = () => {
     );
   };
 
-  // Handle adding a new subcategory
   const handleAddSubcategory = () => {
-    // Save current images to the current subcategory first
     updateSubcategoryImages();
 
     const newId =
@@ -44,20 +41,15 @@ const SubcategoryForm: React.FC = () => {
         ? Math.max(...subcategories.map((sc) => sc.id)) + 1
         : 1;
 
-    // Add the new subcategory with empty images
     setSubcategories([...subcategories, { id: newId, name: "", images: [] }]);
-
-    // Set the current subcategory to the new one and reset images
     setCurrentSubcategoryId(newId);
     setCurrentImages([]);
   };
 
-  // Handle removing a subcategory
   const handleRemoveSubcategory = (id: number) => {
     if (subcategories.length > 1) {
       setSubcategories(subcategories.filter((sc) => sc.id !== id));
 
-      // If we're removing the current subcategory, switch to the first remaining one
       if (id === currentSubcategoryId) {
         const firstRemainingId =
           subcategories.find((sc) => sc.id !== id)?.id || 1;
@@ -69,25 +61,50 @@ const SubcategoryForm: React.FC = () => {
     }
   };
 
-  // Handle changing subcategory name
   const handleNameChange = (id: number, name: string) => {
     setSubcategories(
       subcategories.map((sc) => (sc.id === id ? { ...sc, name } : sc))
     );
   };
 
-  // Handle selecting a subcategory to edit
   const handleSelectSubcategory = (id: number) => {
-    // Save current images to the current subcategory first
     updateSubcategoryImages();
 
-    // Switch to the selected subcategory
     setCurrentSubcategoryId(id);
-
-    // Load the selected subcategory's images
     const subcategory = subcategories.find((sc) => sc.id === id);
     setCurrentImages(subcategory?.images || []);
   };
+
+  // useEffect to create subcategory on changes to subcategories state
+  useEffect(() => {
+    const handleCreateSubCategory = async () => {
+      const payload = subcategories.map((subcategory) => {
+        const { name, images } = subcategory;
+        const selectedImage = images.find((img) => img.selected)?.url || "";
+
+        return {
+          name: name || "Default Subcategory Name", // Provide a default name if undefined
+          categoryId: "67cbd3f910f8a7e83ac9e3a0", // Replace with the appropriate category ID
+          image: selectedImage,
+        };
+      });
+
+      console.log("Payload to create subcategories:", payload); // Log the entire payload
+
+      try {
+        // Map through the payload to call the API
+        for (const subcategoryData of payload) {
+          const response = await createSubCategory(subcategoryData);
+          console.log("Create Subcategory API Response:", response);
+        }
+      } catch (error) {
+        console.error("Error creating subcategory:", error);
+      }
+    };
+
+    // This will trigger the creation logic
+    handleCreateSubCategory();
+  }, [subcategories]); // Call on changes to subcategories
 
   return (
     <div className="subcategories-container">
@@ -102,7 +119,6 @@ const SubcategoryForm: React.FC = () => {
         <Typography variant="h6">Subcategories</Typography>
         <Button
           variant="contained"
-         
           onClick={handleAddSubcategory}
           sx={{
             backgroundColor: "#0d7f3f",
@@ -189,9 +205,12 @@ const SubcategoryForm: React.FC = () => {
                     images={currentImages}
                     setImages={(newImages) => {
                       setCurrentImages(newImages);
-                      // Also update the subcategory immediately
                       setSubcategories(
-                        subcategories.map((sc) => sc.id === currentSubcategoryId ? { ...sc, images: newImages as ProductImage[] } : sc)
+                        subcategories.map((sc) =>
+                          sc.id === currentSubcategoryId
+                            ? { ...sc, images: newImages as ProductImage[] }
+                            : sc
+                        )
                       );
                     }}
                   />
