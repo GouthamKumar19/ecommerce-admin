@@ -4,7 +4,7 @@ import {
   getOrderById,
   paymentStatuses,
   orderStatuses,
-} from "../config/mock/ordersData";
+} from "../config/mock/ordersData"; //mock file is orderData.ts
 
 const OrdersForm = () => {
   const [order, setOrder] = useState<Order | null>(null);

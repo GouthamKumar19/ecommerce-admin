@@ -2,8 +2,15 @@ import { Box } from "@mui/material";
 import OrdersForm from "../../components/OrdersForm";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
+import { useEffect } from "react";
+import { getOrderById } from "../../config/mock/ordersData";
 
 const OrderDetails = () => {
+  useEffect(() => {
+    const mockOrder = getOrderById("66b3279c39c21f7342c125b4");
+    console.log("Mock order data:", mockOrder);
+  }, []);
+
   return (
     <Box
       sx={{
