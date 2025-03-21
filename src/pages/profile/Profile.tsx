@@ -1,14 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Box } from "@mui/material";
 
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
+import { ActionContext } from "../../context/ActionContext";
 
 const Profile: React.FC = () => {
-  
   const [name, setName] = useState("");
   const [email] = useState("abc@gmail.com");
   const [showEmailAlert, setShowEmailAlert] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { setActionHandlers } = useContext(ActionContext);
+
+  // Set up the action handlers for the ActionBox component
+  useEffect(() => {
+    setActionHandlers({
+      onConfirm: handleSaveProfile,
+      onCancel: handleCancel,
+    });
+
+    return () => {
+      setActionHandlers({
+        onConfirm: () => console.warn("onConfirm is not implemented"),
+        onCancel: () => console.warn("onCancel is not implemented"),
+      });
+    };
+  }, [setActionHandlers]);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
@@ -22,7 +39,22 @@ const Profile: React.FC = () => {
     setShowEmailAlert(false);
   };
 
-  
+  const handleSaveProfile = async () => {
+    setIsLoading(true);
+    // Mock API call for saving profile
+    console.log("Saving profile with name:", name);
+
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      // Could add a success message here
+    }, 1000);
+  };
+
+  const handleCancel = () => {
+    console.log("Profile update cancelled");
+    // Could add navigation back or reset form here
+  };
 
   return (
     <Box
@@ -105,8 +137,8 @@ const Profile: React.FC = () => {
       {/* Bottom section - fixed with increased bottom spacing */}
       <Box
         sx={{
-          padding: 3, // Increased padding
-          paddingBottom: 4, // Extra bottom padding
+          padding: 3,
+          paddingBottom: 4,
           boxShadow: "0px -2px 4px rgba(0,0,0,0.05)",
           position: "sticky",
           bottom: 0,
@@ -114,7 +146,11 @@ const Profile: React.FC = () => {
           bgcolor: "white",
         }}
       >
-        <ActionBox />
+        <ActionBox
+          confirmText="Save"
+          cancelText="Cancel"
+          isLoading={isLoading}
+        />
       </Box>
     </Box>
   );
