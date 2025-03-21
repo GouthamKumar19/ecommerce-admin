@@ -13,7 +13,8 @@ import AddIcon from "@mui/icons-material/Add";
 import ImageSelection from "../common/ImageSelection";
 import { VariantComponent, Variant } from "./Variant";
 import { ActionContext } from "../../context/ActionContext";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, } from "react-router-dom";
+import { getProductById } from "../../api/product";
 
 interface ProductImage {
   id: number;
@@ -41,7 +42,7 @@ const ProductForm: React.FC = () => {
   // Context and routing hooks
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
-  const location = useLocation();
+
 
   // Check if we're in edit mode
   useEffect(() => {
@@ -49,11 +50,16 @@ const ProductForm: React.FC = () => {
     if (id && id !== "new") {
       setIsEditMode(true);
       setProductId(id);
+      fetchProduct(id);
+    }
+  }, [params.id]);
 
-      // Here you would fetch product data based on ID
-      // For demonstration purposes, let's assume we have the data from location state
-      if (location.state?.product) {
-        const product = location.state.product;
+  const fetchProduct = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const response = await getProductById(id);
+      if (response && response.data) {
+        const product = response.data;
         setProductName(product.name || "");
         setDescription(product.description || "");
         setPrice(product.price?.toString() || "");
@@ -63,8 +69,12 @@ const ProductForm: React.FC = () => {
         setFeatured(product.isFeatured || false);
         // Setup images and variants here too
       }
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [params.id, location.state]);
+  };
 
   // Set up action handlers for the parent component
   useEffect(() => {
