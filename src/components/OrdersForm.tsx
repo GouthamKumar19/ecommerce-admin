@@ -4,17 +4,19 @@ import { paymentStatuses, orderStatuses } from "../config/mock/ordersData";
 
 interface OrdersFormProps {
   order?: OrderNew;
+  setOrderStatus: (status: OrderStatus) => void;
+  setPaymentStatus: (status: PaymentStatus) => void;
 }
 
-const OrdersForm = ({ order: initialOrder }: OrdersFormProps) => {
+const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: OrdersFormProps) => {
   // State to hold the current order
   const [order, setOrder] = useState<OrderNew | null>(null);
 
   // States for dropdown controls
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("PENDING");
+  const [paymentStatus, setLocalPaymentStatus] = useState<PaymentStatus>();
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
 
-  const [orderStatus, setOrderStatus] = useState<OrderStatus>("ORDER_PLACED");
+  const [orderStatus, setLocalOrderStatus] = useState<OrderStatus>();
   const [showOrderDropdown, setShowOrderDropdown] = useState(false);
 
   // Refs for dropdown containers
@@ -50,17 +52,19 @@ const OrdersForm = ({ order: initialOrder }: OrdersFormProps) => {
     if (initialOrder) {
       console.log("Received order data:", initialOrder);
       setOrder(initialOrder);
-      setPaymentStatus(initialOrder.paymentDetails.status);
-      setOrderStatus(initialOrder.status);
+      setLocalPaymentStatus(initialOrder.paymentDetails.status);
+      setLocalOrderStatus(initialOrder.status);
     }
   }, [initialOrder]);
 
   const handlePaymentStatusChange = (status: PaymentStatus) => {
+    setLocalPaymentStatus(status);
     setPaymentStatus(status);
     setShowPaymentDropdown(false);
   };
 
   const handleOrderStatusChange = (status: OrderStatus) => {
+    setLocalOrderStatus(status);
     setOrderStatus(status);
     setShowOrderDropdown(false);
   };

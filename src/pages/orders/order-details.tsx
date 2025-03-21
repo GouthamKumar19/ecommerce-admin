@@ -7,6 +7,7 @@ import ActionBox from "../../components/common/ActionModel";
 import { getOrderById } from "../../api/orders"; // Import your API function
 import { OrderNew } from "../../types/orders.types";
 import { ActionContext } from "../../context/ActionContext";
+import { toast } from "react-toastify";
 
 const OrderDetails = () => {
   const { setActionHandlers } = useContext(ActionContext);
@@ -17,6 +18,8 @@ const OrderDetails = () => {
   const [order, setOrder] = useState<OrderNew | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [orderStatus, setOrderStatus] = useState<string>();
+  const [paymentStatus, setPaymentStatus] = useState<string>();
 
   useEffect(() => {
     // Check if we're in edit mode
@@ -39,7 +42,7 @@ const OrderDetails = () => {
         onCancel: () => console.warn("onCancel is not implemented"),
       });
     };
-  }, [setActionHandlers]);
+  }, [setActionHandlers, orderStatus, paymentStatus]);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -48,6 +51,8 @@ const OrderDetails = () => {
           const response = await getOrderById(id);
           console.log("Order details:", response.data.tableData[0]);
           setOrder(response.data.tableData[0]);
+          setOrderStatus(response.data.tableData[0].status);
+          setPaymentStatus(response.data.tableData[0].paymentDetails.status);
         }
       } catch (err) {
         console.error("Failed to fetch order details:", err);
@@ -62,15 +67,24 @@ const OrderDetails = () => {
 
   const handleSave = async () => {
     setIsLoading(true);
+    try {
+      console.log("Form submitted with:", {
+        orderId: id,
+        orderStatus,
+        paymentStatus,
+      });
 
-    // The actual save logic is handled in the OrdersForm component
-    // This is just a proxy function to communicate with the form
-
-    // Simulate successful operation
-    setTimeout(() => {
+      // Simulate successful operation
+      setTimeout(() => {
+        setIsLoading(false);
+        toast.success("Order updated successfully");
+        navigate("/orders");
+      }, 500);
+    } catch (error) {
+      console.error("Failed to update order:", error);
+      toast.error("Failed to update order");
       setIsLoading(false);
-      navigate("/orders");
-    }, 500);
+    }
   };
 
   const handleCancel = () => {
@@ -119,7 +133,7 @@ const OrderDetails = () => {
         ) : error ? (
           <div className="p-4 text-red-500">{error}</div>
         ) : order ? (
-          <OrdersForm order={order} />
+          <OrdersForm order={order} setOrderStatus={setOrderStatus} setPaymentStatus={setPaymentStatus} />
         ) : (
           <div className="p-4">Order not found</div>
         )}
