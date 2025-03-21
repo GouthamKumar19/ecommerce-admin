@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 import DataTable from "../../components/common/DataTable";
 import { useQuery } from "@tanstack/react-query";
-// import { orderMockData } from "../../config/mock/orderNew";
-import type {
-  Order,
-  OrderFilters,
-  // OrderResponse,
-} from "../../types/order.types";
+import type { Order, OrderFilters } from "../../types/order.types";
 import { useNavigate } from "react-router-dom";
 import { Visibility, FilterList } from "@mui/icons-material";
 import { Button } from "@mui/material";
@@ -21,12 +16,6 @@ import {
 } from "../../components/common/SortUtils";
 import { getAllOrders } from "../../api/orders";
 
-// const fetchOrders = async (): Promise<Order[]> => {
-//   return new Promise((resolve) => {
-//     setTimeout(() => resolve(orderMockData.data.tableData), 1000);
-//   });
-// };
-
 const fetchOrders = async (): Promise<Order[]> => {
   try {
     const response = await getAllOrders();
@@ -36,6 +25,7 @@ const fetchOrders = async (): Promise<Order[]> => {
     return [];
   }
 };
+
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [filters, setFilters] = useState<OrderFilters>({
@@ -51,15 +41,15 @@ const OrderPage: React.FC = () => {
   });
   const navigate = useNavigate();
 
+  const handleViewOrder = (item: Order) => {
+    navigate(`/orders/${item._id}`, { state: { order: item } });
+  };
+
   const actionRenderer = (item: Order) => (
     <div className="flex justify-center items-center gap-4">
       <Visibility
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() =>
-          navigate(`/orders/${item.orderId}?action=edit`, {
-            state: { order: item },
-          })
-        }
+        onClick={() => handleViewOrder(item)}
       />
     </div>
   );
@@ -176,6 +166,7 @@ const OrderPage: React.FC = () => {
         </div>
       ),
       key: "actions",
+      render: (item: Order) => actionRenderer(item),
     },
   ];
 

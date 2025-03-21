@@ -38,6 +38,7 @@ export const orderMockData: OrderResponse = {
         status: "SHIPPED",
         updatedAt: "2025-02-06T12:30:00Z",
       },
+      
     ],
   },
 };
