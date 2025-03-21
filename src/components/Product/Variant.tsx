@@ -9,9 +9,12 @@ import {
   Chip,
   IconButton,
   InputAdornment,
+  Alert,
+  Collapse,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
 
 // Export the Variant interface so it can be imported in ProductForm
 export interface Variant {
@@ -130,10 +133,18 @@ const VariantComponent: React.FC<{
   );
   const [currentValue, setCurrentValue] = useState<string>("");
   const [isComplete, setIsComplete] = useState<boolean>(variant.isComplete);
+  const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && currentValue.trim() !== "") {
+      addCurrentValue();
+    }
+  };
+
+  const addCurrentValue = () => {
+    if (currentValue.trim() !== "") {
       setOptionValues([...optionValues, currentValue.trim()]);
       setCurrentValue("");
 
@@ -147,7 +158,37 @@ const VariantComponent: React.FC<{
   };
 
   const handleComplete = () => {
-    if (optionName.trim() !== "" && optionValues.length > 0) {
+    // First add the current value if it exists
+    if (currentValue.trim() !== "") {
+      const updatedValues = [...optionValues, currentValue.trim()];
+      setOptionValues(updatedValues);
+
+      if (optionName.trim() === "") {
+        setAlertMessage("Please enter an Option Name");
+        setShowAlert(true);
+      } else {
+        // Complete with the updated values that include the current input
+        const updatedVariant = {
+          ...variant,
+          optionName,
+          optionValues: updatedValues,
+          isComplete: true,
+        };
+        setIsComplete(true);
+        setShowAlert(false);
+        onComplete(updatedVariant);
+      }
+    } else if (optionName.trim() === "" && optionValues.length === 0) {
+      setAlertMessage("Please enter both Option Name and Option Values");
+      setShowAlert(true);
+    } else if (optionName.trim() === "") {
+      setAlertMessage("Please enter an Option Name");
+      setShowAlert(true);
+    } else if (optionValues.length === 0) {
+      setAlertMessage("Please add at least one Option Value");
+      setShowAlert(true);
+    } else {
+      // Valid input - proceed with completion
       const updatedVariant = {
         ...variant,
         optionName,
@@ -155,6 +196,7 @@ const VariantComponent: React.FC<{
         isComplete: true,
       };
       setIsComplete(true);
+      setShowAlert(false);
       onComplete(updatedVariant);
     }
   };
@@ -165,10 +207,37 @@ const VariantComponent: React.FC<{
     setOptionValues(newValues);
   };
 
+  // Determine if the Done button should be enabled
+  const isDoneButtonEnabled = () => {
+    return (
+      optionName.trim() !== "" &&
+      (optionValues.length > 0 || currentValue.trim() !== "")
+    );
+  };
+
   return (
     <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
       {!isComplete ? (
         <>
+          <Collapse in={showAlert}>
+            <Alert
+              severity="error"
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={() => setShowAlert(false)}
+                >
+                  <CloseIcon fontSize="inherit" />
+                </IconButton>
+              }
+              sx={{ mb: 2 }}
+            >
+              {alertMessage}
+            </Alert>
+          </Collapse>
+
           <Typography variant="subtitle1" gutterBottom align="left">
             Option Name
           </Typography>
@@ -180,6 +249,7 @@ const VariantComponent: React.FC<{
             placeholder="Size"
             sx={{ mb: 2 }}
             disabled={isComplete}
+            error={showAlert && optionName.trim() === ""}
           />
 
           <Typography variant="subtitle1" gutterBottom align="left">
@@ -196,7 +266,6 @@ const VariantComponent: React.FC<{
                   newValues[index] = e.target.value;
                   setOptionValues(newValues);
                 }}
-                onKeyDown={handleKeyDown}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -213,17 +282,38 @@ const VariantComponent: React.FC<{
               />
             </Box>
           ))}
-          <TextField
-            fullWidth
-            size="small"
-            value={currentValue}
-            onChange={(e) => setCurrentValue(e.target.value)}
-            placeholder="Add Value"
-            inputRef={inputRef}
-            onKeyDown={handleKeyDown}
-            helperText="Press Enter after each value"
-            sx={{ mb: 2 }}
-          />
+          <Box sx={{ display: "flex", mb: 2 }}>
+            <TextField
+              fullWidth
+              size="small"
+              value={currentValue}
+              onChange={(e) => setCurrentValue(e.target.value)}
+              placeholder="Add Value"
+              inputRef={inputRef}
+              onKeyDown={handleKeyDown}
+              error={
+                showAlert &&
+                optionValues.length === 0 &&
+                currentValue.trim() === ""
+              }
+              sx={{ mr: 1 }}
+            />
+            <Button
+              variant="outlined"
+              onClick={addCurrentValue}
+              disabled={currentValue.trim() === ""}
+              sx={{
+                minWidth: "80px",
+                color: "var(--secondary-color)",
+                borderColor: "var(--secondary-color)",
+              }}
+            >
+              Add
+            </Button>
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            Press Enter after typing a value or click Add
+          </Typography>
 
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
             <Button
@@ -241,7 +331,7 @@ const VariantComponent: React.FC<{
             <Button
               variant="contained"
               onClick={handleComplete}
-              disabled={optionName.trim() === "" || optionValues.length === 0}
+              disabled={!isDoneButtonEnabled()}
               sx={{
                 backgroundColor: "var(--secondary-color)",
                 "&:hover": {

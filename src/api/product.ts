@@ -1,4 +1,4 @@
-
+import axios from "axios";
 import { Product } from "../types/product.types";
 import { productMockData } from "../config/mock/productTable"; // Adjust the import path to where your mock data is located
 
@@ -8,6 +8,15 @@ interface ApiResponse<T> {
   data: T;
 }
 
+const axiosInstance = axios.create({
+  baseURL: "http://localhost:7004/v1",
+  headers: {
+    Authorization: "Bearer 123",
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  },
+});
+
 // Get all products
 export const getAllProducts = async (): Promise<ApiResponse<Product[]>> => {
   try {
@@ -15,7 +24,7 @@ export const getAllProducts = async (): Promise<ApiResponse<Product[]>> => {
 
     // Uncomment when API is ready
     // const response = await axiosInstance.post(
-    //   'http://localhost:7004/v1/admin/products/getAll',
+    //   '/admin/products/getAll',
     //   {
     //     project: {
     //       _id: 1,
@@ -29,13 +38,6 @@ export const getAllProducts = async (): Promise<ApiResponse<Product[]>> => {
     //       images: 1,
     //       createdAt: 1,
     //       updatedAt: 1
-    //     }
-    //   },
-    //   {
-    //     headers: {
-    //       'Authorization': 'Bearer 123',
-    //       'Accept': 'application/json',
-    //       'Content-Type': 'application/json'
     //     }
     //   }
     // );
@@ -65,7 +67,7 @@ export const getProductById = async (
 
     // Uncomment when API is ready
     // const response = await axiosInstance.post(
-    //   `http://localhost:7004/v1/admin/products/getOne/${id}`,
+    //   `/admin/products/getOne/${id}`,
     //   {
     //     projection: {
     //       name: 1,
@@ -78,13 +80,6 @@ export const getProductById = async (
     //       thumbnailImage: 1,
     //       createdAt: 1,
     //       updatedAt: 1
-    //     }
-    //   },
-    //   {
-    //     headers: {
-    //       'Authorization': 'Bearer 123',
-    //       'Accept': 'application/json',
-    //       'Content-Type': 'application/json'
     //     }
     //   }
     // );
@@ -126,15 +121,8 @@ export const updateProduct = async (
 
     // Uncomment when API is ready
     // const response = await axiosInstance.put(
-    //   `http://localhost:7004/v1/admin/products/${id}`,
-    //   productData,
-    //   {
-    //     headers: {
-    //       'Authorization': 'Bearer 123',
-    //       'Accept': 'application/json',
-    //       'Content-Type': 'application/json'
-    //     }
-    //   }
+    //   `/admin/products/${id}`,
+    //   productData
     // );
     // return response.data;
 
@@ -162,15 +150,8 @@ export const addProduct = async (
 
     // Uncomment when API is ready
     // const response = await axiosInstance.post(
-    //   'http://localhost:7004/v1/admin/products/add',
-    //   productData,
-    //   {
-    //     headers: {
-    //       'Authorization': 'Bearer 123',
-    //       'Accept': 'application/json',
-    //       'Content-Type': 'application/json'
-    //     }
-    //   }
+    //   '/admin/products/add',
+    //   productData
     // );
     // return response.data;
 
@@ -200,15 +181,7 @@ export const deleteProduct = async (
 
     // Uncomment when API is ready
     // const response = await axiosInstance.post(
-    //   `http://localhost:7004/v1/admin/products/delete/${id}`,
-    //   {},
-    //   {
-    //     headers: {
-    //       'Authorization': 'Bearer 123',
-    //       'Accept': 'application/json',
-    //       'Content-Type': 'application/json'
-    //     }
-    //   }
+    //   `/admin/products/delete/${id}`
     // );
     // return response.data;
 
@@ -223,6 +196,24 @@ export const deleteProduct = async (
     return Promise.resolve(mockResponse);
   } catch (error) {
     console.error("[API] Error deleting product:", error);
+    throw error;
+  }
+};
+
+// Add multiple product variants
+export const addProductVariants = async (
+  variants: { productId: string; name: string; value: string }[]
+): Promise<ApiResponse<{ _id: string }[]>> => {
+  try {
+    console.log("[API] Adding product variants with data:", variants);
+
+    const response = await axiosInstance.post(
+      "/admin/productVariants/add",
+      variants
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[API] Error adding product variants:", error);
     throw error;
   }
 };

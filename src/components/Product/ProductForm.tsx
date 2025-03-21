@@ -13,8 +13,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ImageSelection from "../common/ImageSelection";
 import { VariantComponent, Variant } from "./Variant";
 import { ActionContext } from "../../context/ActionContext";
-import { useParams} from "react-router-dom";
-import { getProductById, updateProduct, addProduct } from "../../api/product";
+import { useParams, useLocation } from "react-router-dom";
 
 interface ProductImage {
   id: number;
@@ -42,7 +41,7 @@ const ProductForm: React.FC = () => {
   // Context and routing hooks
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
- 
+  const location = useLocation();
 
   // Check if we're in edit mode
   useEffect(() => {
@@ -50,31 +49,22 @@ const ProductForm: React.FC = () => {
     if (id && id !== "new") {
       setIsEditMode(true);
       setProductId(id);
-      fetchProduct(id);
-    }
-  }, [params.id]);
 
-  const fetchProduct = async (id: string) => {
-    setIsLoading(true);
-    try {
-      const response = await getProductById(id);
-      if (response && response.data) {
-        const product = response.data;
+      // Here you would fetch product data based on ID
+      // For demonstration purposes, let's assume we have the data from location state
+      if (location.state?.product) {
+        const product = location.state.product;
         setProductName(product.name || "");
         setDescription(product.description || "");
         setPrice(product.price?.toString() || "");
         setSlashedPrice(product.slashedPrice?.toString() || "");
-        setCategory(product.categoryId || null);
-        setSubCategory(product.subCategoryId || null);
-        setFeatured(product.isFeatured || false);
+        setCategory(product.category || null);
+        setSubCategory(product.subCategory || null);
+        setFeatured(product.featured || false);
         // Setup images and variants here too
       }
-    } catch (error) {
-      console.error("Error fetching product:", error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [params.id, location.state]);
 
   // Set up action handlers for the parent component
   useEffect(() => {
@@ -132,50 +122,28 @@ const ProductForm: React.FC = () => {
   const handleSaveProduct = async () => {
     setIsLoading(true);
     console.log(isLoading);
+    // Create the product data object
+    const productData = {
+      id: productId,
+      name: productName,
+      description,
+      price: parseFloat(price) || 0,
+      slashedPrice: parseFloat(slashedPrice) || 0,
+      category,
+      subCategory,
+      featured,
+      images: images.filter((img) => img.selected).map((img) => img.url),
+      variants: completedVariants,
+    };
 
-    try {
-      if (isEditMode && productId) {
-        // Update existing product
-        const productData = {
-          name: productName,
-          description,
-          price: parseFloat(price) || 0,
-          slashedPrice: parseFloat(slashedPrice) || 0,
-          categoryId: category ?? undefined,
-          subCategoryId: subCategory ?? undefined,
-          isFeatured: featured,
-          images: images.filter((img) => img.selected).map((img) => img.url),
-        };
+    console.log("Saving product:", productData);
 
-        const response = await updateProduct(productId, productData);
-        console.log("Product updated successfully:", response);
-      } else {
-        // Add new product
-        const productData = {
-          name: productName,
-          description,
-          price: parseFloat(price) || 0,
-          slashedPrice: parseFloat(slashedPrice) || 0,
-          categoryId: category ?? "",
-          subCategoryId: subCategory ?? "",
-          isFeatured: featured,
-          images: images.filter((img) => img.selected).map((img) => img.url),
-          thumbnailImage: images.find((img) => img.selected)?.url || "",
-        };
-
-        const response = await addProduct(productData);
-        console.log("Product added successfully:", response);
-      }
-
-      // Simulate successful operation
-      setTimeout(() => {
-        setIsLoading(false);
-        // Success would be handled by the parent
-      }, 1000);
-    } catch (error) {
-      console.error("Error saving product:", error);
+    // Here you would make the API call to save/update the product
+    // For now, we'll just simulate success
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      // Success would be handled by the parent
+    }, 1000);
   };
 
   // Sample category and subcategory data
@@ -197,8 +165,22 @@ const ProductForm: React.FC = () => {
           <TextField
             fullWidth
             size="small"
-            value={productName}
-            onChange={(e) => setProductName(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment
+                  position="end"
+                  style={{
+                    position: "absolute",
+                    bottom: "8px",
+                    right: "8px",
+                    color: "rgba(0, 0, 0, 0.38)",
+                    fontSize: "0.65rem",
+                  }}
+                >
+                  {`${description.length}/10`}
+                </InputAdornment>
+              ),
+            }}
             placeholder="Product Name"
           />
         </Grid>
