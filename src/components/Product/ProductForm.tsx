@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   TextField,
   Typography,
@@ -12,6 +12,8 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import ImageSelection from "../common/ImageSelection";
 import { VariantComponent, Variant } from "./Variant";
+import { ActionContext } from "../../context/ActionContext";
+import { useParams, useLocation } from "react-router-dom";
 
 interface ProductImage {
   id: number;
@@ -20,7 +22,8 @@ interface ProductImage {
 }
 
 const ProductForm: React.FC = () => {
-  // const [productName, setProductName] = useState<string>("");
+  // Form state variables
+  const [productName, setProductName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [price, setPrice] = useState<string>("");
   const [slashedPrice, setSlashedPrice] = useState<string>("");
@@ -28,17 +31,70 @@ const ProductForm: React.FC = () => {
   const [subCategory, setSubCategory] = useState<string | null>(null);
   const [featured, setFeatured] = useState<boolean>(false);
   const [images, setImages] = useState<ProductImage[]>([]);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [productId, setProductId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Add state for variants
   const [variants, setVariants] = useState<Variant[]>([]);
 
-  // Sample category and subcategory data
-  const categories = ["Footwear", "Clothing", "Accessories"];
-  const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
+  // Context and routing hooks
+  const { setActionHandlers } = useContext(ActionContext);
+  const params = useParams();
+  const location = useLocation();
 
-  // Group variants by completion status
-  const completedVariants = variants.filter((v) => v.isComplete);
-  const incompleteVariants = variants.filter((v) => !v.isComplete);
+  // Check if we're in edit mode
+  useEffect(() => {
+    const id = params.id;
+    if (id && id !== "new") {
+      setIsEditMode(true);
+      setProductId(id);
+
+      // Here you would fetch product data based on ID
+      // For demonstration purposes, let's assume we have the data from location state
+      if (location.state?.product) {
+        const product = location.state.product;
+        setProductName(product.name || "");
+        setDescription(product.description || "");
+        setPrice(product.price?.toString() || "");
+        setSlashedPrice(product.slashedPrice?.toString() || "");
+        setCategory(product.category || null);
+        setSubCategory(product.subCategory || null);
+        setFeatured(product.featured || false);
+        // Setup images and variants here too
+      }
+    }
+  }, [params.id, location.state]);
+
+  // Set up action handlers for the parent component
+  useEffect(() => {
+    setActionHandlers({
+      onConfirm: handleSaveProduct,
+      onCancel: () => {
+        console.log("Product form cancelled");
+      },
+    });
+
+    return () => {
+      // Reset action handlers when component unmounts
+      setActionHandlers({
+        onConfirm: () => console.warn("onConfirm is not implemented"),
+        onCancel: () => console.warn("onCancel is not implemented"),
+      });
+    };
+  }, [
+    productName,
+    description,
+    price,
+    slashedPrice,
+    category,
+    subCategory,
+    featured,
+    images,
+    variants,
+    isEditMode,
+    setActionHandlers,
+  ]);
 
   // Functions to handle variants
   const addVariant = () => {
@@ -62,6 +118,41 @@ const ProductForm: React.FC = () => {
       )
     );
   };
+
+  const handleSaveProduct = async () => {
+    setIsLoading(true);
+    console.log(isLoading);
+    // Create the product data object
+    const productData = {
+      id: productId,
+      name: productName,
+      description,
+      price: parseFloat(price) || 0,
+      slashedPrice: parseFloat(slashedPrice) || 0,
+      category,
+      subCategory,
+      featured,
+      images: images.filter((img) => img.selected).map((img) => img.url),
+      variants: completedVariants,
+    };
+
+    console.log("Saving product:", productData);
+
+    // Here you would make the API call to save/update the product
+    // For now, we'll just simulate success
+    setTimeout(() => {
+      setIsLoading(false);
+      // Success would be handled by the parent
+    }, 1000);
+  };
+
+  // Sample category and subcategory data
+  const categories = ["Footwear", "Clothing", "Accessories"];
+  const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
+
+  // Group variants by completion status
+  const completedVariants = variants.filter((v) => v.isComplete);
+  const incompleteVariants = variants.filter((v) => !v.isComplete);
 
   return (
     <div>
