@@ -44,13 +44,15 @@ const UserDetailsForm: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddress, setShowAddress] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<AddressData | null>(null);
+  const [editingAddress, setEditingAddress] = useState<AddressData | null>(
+    null
+  );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   // Get URL parameters and location state
   const params = useParams();
   const location = useLocation();
-  
+
   // Use context to communicate with ActionBox
   const { setActionHandlers } = useContext(ActionContext);
 
@@ -70,55 +72,53 @@ const UserDetailsForm: React.FC = () => {
   // Fetch user data when component mounts or when userId changes
   useEffect(() => {
     const fetchUserData = async () => {
-      // Check if we have a user ID in the URL params
+      // Handle ID from URL params (if edit mode)
       const id = params.id;
-      
-      // Check if we have user data in location state
-      const userFromState = location.state?.user;
-      
       if (id && id !== "new") {
+        setIsLoading(true);
         setIsEditMode(true);
         setUserId(id);
-        
-        // If we have user data in state, use it directly
-        if (userFromState) {
-          populateFormWithUserData(userFromState);
-        } else {
-          // Otherwise fetch from API
-          try {
-            setIsLoading(true);
-            const response = await getUserById(id);
-            if (response.status === 200) {
-              populateFormWithUserData(response.data);
-            }
-          } catch (error) {
-            console.error("Error fetching user:", error);
-            // Handle error notification here
-          } finally {
-            setIsLoading(false);
+
+        try {
+          const response = await getUserById(id);
+          if (response && response.data) {
+            populateFormWithUserData(response.data);
           }
+        } catch (error) {
+          console.error("Error fetching user:", error);
+        } finally {
+          setIsLoading(false);
         }
+      } else if (location.state?.user) {
+        // Handle data passed via location state
+        const user = location.state.user;
+        setIsEditMode(true);
+        setUserId(String(user.id || user._id));
+        populateFormWithUserData(user);
       }
     };
 
     fetchUserData();
   }, [params.id, location.state]);
 
-  // Set up action handlers when component mounts or when formData changes
+  // Set up action handlers for the parent component
   useEffect(() => {
     setActionHandlers({
       onConfirm: handleConfirm,
-      onCancel: () => console.log("Action cancelled"),
+      onCancel: () => {
+        // Can be handled by parent or here
+        console.log("Cancel action triggered");
+      },
     });
 
-    // Cleanup when component unmounts
     return () => {
+      // Reset action handlers when component unmounts
       setActionHandlers({
-        onConfirm: () => {},
-        onCancel: () => {},
+        onConfirm: () => console.warn("onConfirm is not implemented"),
+        onCancel: () => console.warn("onCancel is not implemented"),
       });
     };
-  }, [formData, isEditMode, userId]);
+  }, [formData, isEditMode, setActionHandlers]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -175,7 +175,7 @@ const UserDetailsForm: React.FC = () => {
     };
 
     console.log("Form data being submitted:", userData);
-    
+
     try {
       if (isEditMode && userId) {
         // Update existing user (API call to be implemented)
