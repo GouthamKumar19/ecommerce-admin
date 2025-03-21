@@ -1,48 +1,56 @@
-// api/product.ts
-import axios from 'axios';
-import { Product } from '../types/product.types';
-import { productMockData } from '../config/mock/productTable'; // Adjust the import path to where your mock data is located
+import { Product } from "../types/product.types";
+import { productMockData } from "../config/mock/productTable"; // Adjust the import path to where your mock data is located
 
-let currentController: AbortController;
+interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data: T;
+}
 
-export const getAllProducts = async (payload: any): Promise<Product[]> => { // Accept the payload parameter
-  console.log("Payload received:", payload); // Log the payload for debugging
-  
+// Get all products
+export const getAllProducts = async (): Promise<ApiResponse<Product[]>> => {
   try {
-    if (currentController) {
-      currentController.abort();
-    }
-    currentController = new AbortController();
+    console.log("[API] Fetching all products");
 
-    // Uncomment the following lines if you're using an actual API call:
-    /*
-    const response = await axiosInstance.post(
-      '/admin/products/getAll',
-      payload, // Sending the payload for sorting and pagination
-      {
-        signal: currentController.signal,
-      }
-    );
-    */
+    // Uncomment when API is ready
+    // const response = await axiosInstance.post(
+    //   '/admin/products/getAll',
+    //   {
+    //     project: {
+    //       _id: 1,
+    //       name: 1,
+    //       description: 1,
+    //       price: 1,
+    //       slashedPrice: 1,
+    //       categoryId: 1,
+    //       subCategoryId: 1,
+    //       thumbnailImage: 1,
+    //       images: 1,
+    //       createdAt: 1,
+    //       updatedAt: 1
+    //     }
+    //   },
+    //   {
+    //     headers: {
+    //       'Authorization': 'Bearer 123',
+    //       'Accept': 'application/json',
+    //       'Content-Type': 'application/json'
+    //     }
+    //   }
+    // );
+    // return response.data;
 
-    // Simulate API call with imported mock data
-    const response = {
+    // Mock response
+    const mockResponse: ApiResponse<Product[]> = {
       status: 200,
-      data: {
-        totalCount: productMockData.length, // Use the length of your mock data
-        tableData: productMockData, // Assuming productMockData is an array of products
-      },
+      message: "Success",
+      data: productMockData,
     };
 
-    if (response?.status === 200) {
-      return response?.data?.tableData;
-    } else {
-      throw new Error('Failed to fetch products');
-    }
-  } catch (error: any) {
-    if (axios.isCancel(error)) {
-      console.log("Request canceled:", error.message);
-    }
+    console.log("[API] Mock getAll response:", mockResponse);
+    return Promise.resolve(mockResponse);
+  } catch (error) {
+    console.error("[API] Error fetching products:", error);
     throw error;
   }
 };

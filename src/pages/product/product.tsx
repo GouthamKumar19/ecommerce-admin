@@ -34,14 +34,7 @@ const ProductPage: React.FC = () => {
   };
 
   // Payload for API fetching
-  const payload = {
-    options: {
-      page: 1,
-      itemsPerPage: 10,
-      sortBy: ["createdAt"],
-      sortDesc: [true],
-    },
-  };
+ 
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -49,9 +42,9 @@ const ProductPage: React.FC = () => {
       setError(null); // Reset error state
       setTimeout(async () => {
         try {
-          const response = await getAllProducts(payload); // Sending the payload to fetch data
+          const response = await getAllProducts(); // Fetching data without payload
           console.log(error);
-          setProducts(response); // Assuming response is already an array of products
+          setProducts(response.data); // Assuming response.data is an array of products
         } catch (err: any) {
           setError(err.message || "Failed to fetch products");
         } finally {

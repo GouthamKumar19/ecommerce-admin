@@ -58,9 +58,9 @@ const ProductForm: React.FC = () => {
         setDescription(product.description || "");
         setPrice(product.price?.toString() || "");
         setSlashedPrice(product.slashedPrice?.toString() || "");
-        setCategory(product.category || null);
-        setSubCategory(product.subCategory || null);
-        setFeatured(product.featured || false);
+        setCategory(product.categoryId || null);
+        setSubCategory(product.subCategoryId || null);
+        setFeatured(product.isFeatured || false);
         // Setup images and variants here too
       }
     }
@@ -129,9 +129,9 @@ const ProductForm: React.FC = () => {
       description,
       price: parseFloat(price) || 0,
       slashedPrice: parseFloat(slashedPrice) || 0,
-      category,
-      subCategory,
-      featured,
+      categoryId: category,
+      subCategoryId: subCategory,
+      isFeatured: featured,
       images: images.filter((img) => img.selected).map((img) => img.url),
       variants: completedVariants,
     };
@@ -165,22 +165,8 @@ const ProductForm: React.FC = () => {
           <TextField
             fullWidth
             size="small"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment
-                  position="end"
-                  style={{
-                    position: "absolute",
-                    bottom: "8px",
-                    right: "8px",
-                    color: "rgba(0, 0, 0, 0.38)",
-                    fontSize: "0.65rem",
-                  }}
-                >
-                  {`${description.length}/10`}
-                </InputAdornment>
-              ),
-            }}
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
             placeholder="Product Name"
           />
         </Grid>
