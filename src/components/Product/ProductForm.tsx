@@ -13,8 +13,8 @@ import AddIcon from "@mui/icons-material/Add";
 import ImageSelection from "../common/ImageSelection";
 import { VariantComponent, Variant } from "./Variant";
 import { ActionContext } from "../../context/ActionContext";
-import { useParams } from "react-router-dom";
-import { getProductById, updateProduct } from "../../api/product";
+import { useParams} from "react-router-dom";
+import { getProductById, updateProduct, addProduct } from "../../api/product";
 
 interface ProductImage {
   id: number;
@@ -42,7 +42,7 @@ const ProductForm: React.FC = () => {
   // Context and routing hooks
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
-
+ 
 
   // Check if we're in edit mode
   useEffect(() => {
@@ -150,7 +150,21 @@ const ProductForm: React.FC = () => {
         const response = await updateProduct(productId, productData);
         console.log("Product updated successfully:", response);
       } else {
-        // Create new product logic (not implemented here)
+        // Add new product
+        const productData = {
+          name: productName,
+          description,
+          price: parseFloat(price) || 0,
+          slashedPrice: parseFloat(slashedPrice) || 0,
+          categoryId: category ?? "",
+          subCategoryId: subCategory ?? "",
+          isFeatured: featured,
+          images: images.filter((img) => img.selected).map((img) => img.url),
+          thumbnailImage: images.find((img) => img.selected)?.url || "",
+        };
+
+        const response = await addProduct(productData);
+        console.log("Product added successfully:", response);
       }
 
       // Simulate successful operation

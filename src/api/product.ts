@@ -152,3 +152,41 @@ export const updateProduct = async (
     throw error;
   }
 };
+
+// Add a product
+export const addProduct = async (
+  productData: Omit<Product, "_id">
+): Promise<ApiResponse<{ _id: string }>> => {
+  try {
+    console.log("[API] Adding product with data:", productData);
+
+    // Uncomment when API is ready
+    // const response = await axiosInstance.post(
+    //   'http://localhost:7004/v1/admin/products/add',
+    //   productData,
+    //   {
+    //     headers: {
+    //       'Authorization': 'Bearer 123',
+    //       'Accept': 'application/json',
+    //       'Content-Type': 'application/json'
+    //     }
+    //   }
+    // );
+    // return response.data;
+
+    // Mock response
+    const mockResponse: ApiResponse<{ _id: string }> = {
+      status: 200,
+      message: "Success",
+      data: {
+        _id: "65a7b8c9d4e5f6a7b8c9d4e5",
+      },
+    };
+
+    console.log("[API] Mock add response:", mockResponse);
+    return Promise.resolve(mockResponse);
+  } catch (error) {
+    console.error("[API] Error adding product:", error);
+    throw error;
+  }
+};
