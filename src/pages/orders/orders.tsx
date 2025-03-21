@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "../../components/common/DataTable";
-import { useQuery } from "@tanstack/react-query";
 import type { Order, OrderFilters } from "../../types/order.types";
 import { useNavigate } from "react-router-dom";
 import { Visibility, FilterList } from "@mui/icons-material";
@@ -14,17 +13,8 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import Skeleton Loader
 import { getAllOrders } from "../../api/orders";
-
-const fetchOrders = async (): Promise<Order[]> => {
-  try {
-    const response = await getAllOrders();
-    return response.data.tableData;
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    return [];
-  }
-};
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -39,6 +29,9 @@ const OrderPage: React.FC = () => {
     key: "",
     direction: null,
   });
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleViewOrder = (item: Order) => {
@@ -54,10 +47,28 @@ const OrderPage: React.FC = () => {
     </div>
   );
 
-  const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["orders"],
-    queryFn: fetchOrders,
-  });
+  
+  useEffect(() => {
+    const fetchOrderData = async () => {
+      setIsLoading(true); // Start loading
+      setError(null); // Reset error
+
+      setTimeout(async () => {
+        try {
+          const response = await getAllOrders();
+          setOrders(response.data.tableData);
+          console.log(error);
+          console.log("Order Details:", response.data.tableData);
+        } catch (err: any) {
+          setError(err.message || "Failed to fetch orders");
+        } finally {
+          setIsLoading(false);
+        }
+      }, 500); // Simulating network delay
+    };
+
+    fetchOrderData();
+  }, []); // Empty dependency array means this runs once on component mount
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -228,15 +239,19 @@ const OrderPage: React.FC = () => {
       />
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable<Order>
-          items={filterOrders(sortedOrders)}
-          columns={columns}
-          idKey="_id"
-          itemsPerPage={15}
-          tableType="order"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <TableSkeletonLoader columns={7} rows={10} /> // Show the skeleton loader while loading
+        ) : (
+          <DataTable<Order>
+            items={filterOrders(sortedOrders)}
+            columns={columns}
+            idKey="_id"
+            itemsPerPage={15}
+            tableType="order"
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+          />
+        )}
       </div>
     </div>
   );
