@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { Box } from "@mui/material";
+import { Box, TextField, Typography } from "@mui/material";
 
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
@@ -11,6 +11,10 @@ const Profile: React.FC = () => {
   const [showEmailAlert, setShowEmailAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { setActionHandlers } = useContext(ActionContext);
+
+  const [errors, setErrors] = useState<{ [key: string]: boolean }>({
+    name: false,
+  });
 
   // Set up the action handlers for the ActionBox component
   useEffect(() => {
@@ -29,6 +33,7 @@ const Profile: React.FC = () => {
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
+    setErrors((prev) => ({ ...prev, name: false }));
   };
 
   const handleMouseEnter = () => {
@@ -40,6 +45,11 @@ const Profile: React.FC = () => {
   };
 
   const handleSaveProfile = async () => {
+    if (!name) {
+      setErrors((prev) => ({ ...prev, name: true }));
+      return;
+    }
+
     setIsLoading(true);
     // Mock API call for saving profile
     console.log("Saving profile with name:", name);
@@ -99,15 +109,17 @@ const Profile: React.FC = () => {
           </h2>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-lg font-medium mb-2 text-left">
-              Name
-            </label>
-            <input
-              type="text"
+            <TextField
+              id="name"
+              label="Name"
               value={name}
               onChange={handleNameChange}
               placeholder="Name"
-              className="shadow border rounded w-full py-3 px-3 text-gray-700 focus:outline-none focus:shadow-outline"
+              fullWidth
+              variant="outlined"
+              margin="normal"
+              error={errors.name}
+              helperText={errors.name ? "Name is required" : ""}
             />
           </div>
 
@@ -116,19 +128,27 @@ const Profile: React.FC = () => {
               Email
             </label>
             <div className="relative flex items-center">
-              <input
+              <TextField
                 type="email"
                 value={email}
-                readOnly
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                InputProps={{
+                  readOnly: true,
+                }}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className="shadow border rounded w-full py-3 px-3 text-gray-500 bg-gray-100 cursor-not-allowed"
+                helperText={
+                  showEmailAlert ? (
+                    <Typography color="error">
+                      Cannot edit this field
+                    </Typography>
+                  ) : (
+                    ""
+                  )
+                }
               />
-              {showEmailAlert && (
-                <div className="absolute right-0 transform translate-x-full ml-10 bg-red-100 text-red-700 px-3 py-1 rounded shadow-md text-sm">
-                  Cannot edit this field
-                </div>
-              )}
             </div>
           </div>
         </div>
