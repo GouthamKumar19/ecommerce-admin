@@ -110,3 +110,45 @@ export const getProductById = async (
     throw error;
   }
 };
+
+// Update a product
+export const updateProduct = async (
+  id: string,
+  productData: Partial<Product>
+): Promise<ApiResponse<string>> => {
+  try {
+    console.log(
+      "[API] Updating product with ID:",
+      id,
+      "and data:",
+      productData
+    );
+
+    // Uncomment when API is ready
+    // const response = await axiosInstance.put(
+    //   `http://localhost:7004/v1/admin/products/${id}`,
+    //   productData,
+    //   {
+    //     headers: {
+    //       'Authorization': 'Bearer 123',
+    //       'Accept': 'application/json',
+    //       'Content-Type': 'application/json'
+    //     }
+    //   }
+    // );
+    // return response.data;
+
+    // Mock response
+    const mockResponse: ApiResponse<string> = {
+      status: 200,
+      message: "Success",
+      data: "Product updated successfully",
+    };
+
+    console.log("[API] Mock update response:", mockResponse);
+    return Promise.resolve(mockResponse);
+  } catch (error) {
+    console.error("[API] Error updating product:", error);
+    throw error;
+  }
+};

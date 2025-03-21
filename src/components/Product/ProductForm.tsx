@@ -13,8 +13,8 @@ import AddIcon from "@mui/icons-material/Add";
 import ImageSelection from "../common/ImageSelection";
 import { VariantComponent, Variant } from "./Variant";
 import { ActionContext } from "../../context/ActionContext";
-import { useParams, } from "react-router-dom";
-import { getProductById } from "../../api/product";
+import { useParams } from "react-router-dom";
+import { getProductById, updateProduct } from "../../api/product";
 
 interface ProductImage {
   id: number;
@@ -132,28 +132,36 @@ const ProductForm: React.FC = () => {
   const handleSaveProduct = async () => {
     setIsLoading(true);
     console.log(isLoading);
-    // Create the product data object
-    const productData = {
-      id: productId,
-      name: productName,
-      description,
-      price: parseFloat(price) || 0,
-      slashedPrice: parseFloat(slashedPrice) || 0,
-      categoryId: category,
-      subCategoryId: subCategory,
-      isFeatured: featured,
-      images: images.filter((img) => img.selected).map((img) => img.url),
-      variants: completedVariants,
-    };
 
-    console.log("Saving product:", productData);
+    try {
+      if (isEditMode && productId) {
+        // Update existing product
+        const productData = {
+          name: productName,
+          description,
+          price: parseFloat(price) || 0,
+          slashedPrice: parseFloat(slashedPrice) || 0,
+          categoryId: category ?? undefined,
+          subCategoryId: subCategory ?? undefined,
+          isFeatured: featured,
+          images: images.filter((img) => img.selected).map((img) => img.url),
+        };
 
-    // Here you would make the API call to save/update the product
-    // For now, we'll just simulate success
-    setTimeout(() => {
+        const response = await updateProduct(productId, productData);
+        console.log("Product updated successfully:", response);
+      } else {
+        // Create new product logic (not implemented here)
+      }
+
+      // Simulate successful operation
+      setTimeout(() => {
+        setIsLoading(false);
+        // Success would be handled by the parent
+      }, 1000);
+    } catch (error) {
+      console.error("Error saving product:", error);
       setIsLoading(false);
-      // Success would be handled by the parent
-    }, 1000);
+    }
   };
 
   // Sample category and subcategory data
