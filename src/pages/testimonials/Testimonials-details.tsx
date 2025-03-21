@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Rating from "@mui/material/Rating";
 import Box from "@mui/material/Box";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import BackArrow from "../../components/common/BackArrow";
+import ActionBox from "../../components/common/ActionModel";
+import { ActionContext } from "../../context/ActionContext";
 import {
   createTestimonial,
   updateTestimonial,
@@ -24,12 +26,12 @@ const TestimonialsDetails = () => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const { setActionHandlers } = useContext(ActionContext);
 
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
 
-  
   // Fetch testimonial data if editing
   useEffect(() => {
     const fetchTestimonial = async () => {
@@ -70,6 +72,22 @@ const TestimonialsDetails = () => {
     fetchTestimonial();
   }, [id, location.state]);
 
+  // Set up action handlers for the ActionBox component
+  useEffect(() => {
+    setActionHandlers({
+      onConfirm: handleSubmit,
+      onCancel: handleBack,
+    });
+
+    // Cleanup function to reset handlers when component unmounts
+    return () => {
+      setActionHandlers({
+        onConfirm: () => console.warn("onConfirm is not implemented"),
+        onCancel: () => console.warn("onCancel is not implemented"),
+      });
+    };
+  }, [formData, isEdit, isLoading, setActionHandlers]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -84,8 +102,8 @@ const TestimonialsDetails = () => {
     setFormData((prev) => ({ ...prev, ratings: newValue || 0 }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsLoading(true);
 
     try {
@@ -220,11 +238,11 @@ const TestimonialsDetails = () => {
         </form>
       </Box>
 
-      {/* Bottom section - fixed with increased bottom spacing */}
+      {/* Bottom section with ActionBox component */}
       <Box
         sx={{
-          padding: 3, // Increased padding
-          paddingBottom: 4, // Extra bottom padding
+          padding: 3,
+          paddingBottom: 4,
           boxShadow: "0px -2px 4px rgba(0,0,0,0.05)",
           position: "sticky",
           bottom: 0,
@@ -232,24 +250,11 @@ const TestimonialsDetails = () => {
           bgcolor: "white",
         }}
       >
-        <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            className="bg-gray-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-gray-600 transition-colors focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-            onClick={handleBack}
-            disabled={isLoading}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white w-24 py-2 rounded uppercase text-sm hover:bg-blue-600 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            onClick={handleSubmit}
-            disabled={isLoading}
-          >
-            {isEdit ? "Update" : "Add"}
-          </button>
-        </div>
+        <ActionBox
+          cancelText="Cancel"
+          confirmText={isEdit ? "Update" : "Add"}
+          isLoading={isLoading}
+        />
       </Box>
     </Box>
   );
