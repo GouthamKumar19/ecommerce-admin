@@ -49,6 +49,7 @@ const UsersPage: React.FC = () => {
         try {
           const response = await getAllUser(payload);
           setUsers(response.data);
+          console.log(error)
           console.log("User Details:",response.data)
         } catch (err: any) {
           setError(err.message || "Failed to fetch users");
