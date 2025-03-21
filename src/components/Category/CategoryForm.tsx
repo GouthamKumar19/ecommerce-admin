@@ -1,112 +1,166 @@
-import React, { useEffect, useState } from "react";
-import { Typography, Grid, Box } from "@mui/material";
+import React, { useEffect, useState, useContext } from "react";
+import { Typography, Box } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import SubcategoryForm from "./SubcategoryForm"; // Import the SubcategoryForm component
-import { createCategory } from "../../api/category"; // Adjust the import path as necessary
+import {
+  createCategory,
+  getCategoryById,
+  updateCategory,
+} from "../../api/category"; // Now all these functions are properly exported
+import { ActionContext } from "../../context/ActionContext";
+import { useParams, useLocation } from "react-router-dom";
 
 // Define interface matching what ImageSelection expects
-interface CollectionForm {
+interface CategoryImage {
   id: number;
   url: string;
   selected: boolean;
 }
 
-const CollectionForm: React.FC = () => {
-  const [categoryName, setCollectionName] = useState("");
-  const [images, setImages] = useState<CollectionForm[]>([]);
+const CategoryForm: React.FC = () => {
+  const [categoryName, setCategoryName] = useState("");
+  const [images, setImages] = useState<CategoryImage[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // useEffect to handle the category creation logic
+  // Context and routing hooks
+  const { setActionHandlers } = useContext(ActionContext);
+  const params = useParams();
+  const location = useLocation();
+
+  // Check if we're in edit mode and load data if needed
   useEffect(() => {
-    if (categoryName.trim() !== "" || images.length > 0) {
-      // Get the selected image URL or use empty string if none selected
-      //const selectedImage = images.find((img) => img.selected)?.url || "";
+    const fetchCategoryData = async () => {
+      const id = params.id;
+      if (id && id !== "new") {
+        setIsLoading(true);
+        setIsEditMode(true);
+        setCategoryId(id);
 
-      // Prepare the payload
-      const payload = {
-        name: categoryName,
-        images: "/ecommerce/categories/1.png",
-      };
+        console.log("id", isLoading);
 
-      const handleCreateCategory = async () => {
-        console.log("Creating category with data:", payload);
         try {
-          const response = await createCategory(payload);
-          console.log("Create Category API Response:", response);
-          // Handle success logic
+          // You would fetch category data here
+          const response = await getCategoryById(id);
+          if (response && response.data) {
+            setCategoryName(response.data.name || "");
+            // Set images if available in the response
+          }
         } catch (error) {
-          console.error("Error creating category:", error);
-          // Handle error logic
+          console.error("Error fetching category:", error);
+        } finally {
+          setIsLoading(false);
         }
-      };
+      } else if (location.state?.category) {
+        // Handle data passed via location state
+        const category = location.state.category;
+        setIsEditMode(true);
+        setCategoryId(String(category.id || category._id));
+        setCategoryName(category.name || "");
+        // Set images if available
+      }
+    };
 
-      // Call the function to create the category
-      handleCreateCategory();
+    fetchCategoryData();
+  }, [params.id, location.state]);
+
+  // Set up action handlers for the parent component
+  useEffect(() => {
+    setActionHandlers({
+      onConfirm: handleSaveCategory,
+      onCancel: () => {
+        console.log("Category form cancelled");
+      },
+    });
+
+    return () => {
+      setActionHandlers({
+        onConfirm: () => console.warn("onConfirm is not implemented"),
+        onCancel: () => console.warn("onCancel is not implemented"),
+      });
+    };
+  }, [categoryName, images, isEditMode, setActionHandlers]);
+
+  const handleSaveCategory = async () => {
+    if (categoryName.trim() === "") {
+      console.error("Category name is required");
+      return;
     }
-  }, [categoryName, images]); // Dependency array to call when collectionName or images change
+
+    setIsLoading(true);
+
+    // Get the selected image URL or use empty string if none selected
+    const selectedImage =
+      images.find((img) => img.selected)?.url || "/ecommerce/categories/1.png";
+
+    // Prepare the payload
+    const payload = {
+      name: categoryName,
+      images: selectedImage,
+    };
+
+    try {
+      let response;
+      if (isEditMode && categoryId) {
+        // Update existing category
+        response = await updateCategory(categoryId, payload);
+        console.log("Update Category API Response:", response);
+      } else {
+        // Create new category
+        response = await createCategory(payload);
+        console.log("Create Category API Response:", response);
+      }
+      // Success would be handled by the parent component
+    } catch (error) {
+      console.error(
+        `Error ${isEditMode ? "updating" : "creating"} category:`,
+        error
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="ml-8 mr-8 mb-6">
-      {/* Fixed Back Button Section */}
-
       {/* Main Form Content */}
-      <div
-        className="collection-form-content mb-4 space-y-8 mx-auto overflow-hidden"
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-        }} // Prevent overlap
-      >
-        <div className="form-group text-left ">
+      <div className="space-y-6">
+        <div>
           <Typography variant="subtitle1" gutterBottom align="left">
-            CATEGORY NAME
+            Name
           </Typography>
           <input
             type="text"
-            id="collectionName"
-            placeholder="Enter Category Name"
             value={categoryName}
-            onChange={(e) => setCollectionName(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px",
-              boxSizing: "border-box",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              marginBottom: "16px",
-            }}
+            onChange={(e) => setCategoryName(e.target.value)}
+            placeholder="Category Name"
+            className="w-full md:w-2/3 p-2 border rounded-md input-box"
           />
         </div>
 
-        <Grid
-          container
-          spacing={3}
-          justifyContent="flex-start"
-          style={{ flex: 1 }}
-        >
-          <Grid item xs={12} style={{ height: "100%" }}>
-            <Typography variant="subtitle1" gutterBottom align="left">
-              PRODUCT IMAGES
-            </Typography>
-            <Box
-              sx={{
-                bgcolor: "white",
-                borderRadius: "6px",
+        <div>
+          <Typography variant="subtitle1" gutterBottom align="left">
+            Banner Image
+          </Typography>
+          <Box
+            sx={{
+              bgcolor: "white",
+              borderRadius: "6px",
+              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+              p: 4,
+              width: "100%",
+            }}
+          >
+            <ImageSelection images={images} setImages={setImages} />
+          </Box>
+        </div>
 
-                p: 4,
-                width: "100%",
-              }}
-            >
-              <ImageSelection images={images} setImages={setImages} />
-            </Box>
-          </Grid>
-        </Grid>
-
-        {/* Include SubcategoryForm here */}
+        {/* Subcategory Form */}
         <SubcategoryForm />
       </div>
     </div>
   );
 };
 
-export default CollectionForm;
+export default CategoryForm;

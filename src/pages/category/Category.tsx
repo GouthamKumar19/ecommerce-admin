@@ -65,7 +65,7 @@ const CategoryPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleAddNewCategory = () => {
-    navigate("/category/:id");
+    navigate("/category/new");
   };
 
   useEffect(() => {
@@ -114,7 +114,7 @@ const CategoryPage: React.FC = () => {
   };
 
   const handleEditUser = (item: Category) => {
-    navigate("/category/:id", {
+    navigate(`/category/${item._id}`, {
       state: { Category: item },
     });
   };

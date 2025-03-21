@@ -1,10 +1,58 @@
-
+import  { useState, useEffect, useContext } from "react";
 import { Box } from "@mui/material";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
 import CategoryForm from "../../components/Category/CategoryForm";
+import { ActionContext } from "../../context/ActionContext";
+import { useParams, useNavigate } from "react-router-dom";
 
 export const CategoryDetails = () => {
+  const { setActionHandlers } = useContext(ActionContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    // Check if we're in edit mode
+    if (id && id !== "new") {
+      setIsEdit(true);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    // Set up action handlers for the ActionBox component
+    setActionHandlers({
+      onConfirm: handleSave,
+      onCancel: handleCancel,
+    });
+
+    // Cleanup function to reset handlers when component unmounts
+    return () => {
+      setActionHandlers({
+        onConfirm: () => console.warn("onConfirm is not implemented"),
+        onCancel: () => console.warn("onCancel is not implemented"),
+      });
+    };
+  }, [setActionHandlers]);
+
+  const handleSave = async () => {
+    setIsLoading(true);
+
+    // The actual save logic is handled in the CategoryForm component
+    // This is just a proxy function to communicate with the form
+
+    // Simulate successful operation
+    setTimeout(() => {
+      setIsLoading(false);
+      navigate("/categories");
+    }, 500);
+  };
+
+  const handleCancel = () => {
+    navigate("/categories");
+  };
+
   return (
     <Box
       sx={{
@@ -45,11 +93,11 @@ export const CategoryDetails = () => {
         <CategoryForm />
       </Box>
 
-      {/* Bottom section - fixed with increased bottom spacing */}
+      {/* Bottom section with ActionBox component */}
       <Box
         sx={{
-          padding: 3, // Increased padding
-          paddingBottom: 4, // Extra bottom padding
+          padding: 3,
+          paddingBottom: 4,
           boxShadow: "0px -2px 4px rgba(0,0,0,0.05)",
           position: "sticky",
           bottom: 0,
@@ -57,7 +105,11 @@ export const CategoryDetails = () => {
           bgcolor: "white",
         }}
       >
-        <ActionBox />
+        <ActionBox
+          cancelText="Cancel"
+          confirmText={isEdit ? "Update" : "Add"}
+          isLoading={isLoading}
+        />
       </Box>
     </Box>
   );
