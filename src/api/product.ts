@@ -190,3 +190,39 @@ export const addProduct = async (
     throw error;
   }
 };
+
+// Delete a product
+export const deleteProduct = async (
+  id: string
+): Promise<ApiResponse<string>> => {
+  try {
+    console.log("[API] Deleting product with ID:", id);
+
+    // Uncomment when API is ready
+    // const response = await axiosInstance.post(
+    //   `http://localhost:7004/v1/admin/products/delete/${id}`,
+    //   {},
+    //   {
+    //     headers: {
+    //       'Authorization': 'Bearer 123',
+    //       'Accept': 'application/json',
+    //       'Content-Type': 'application/json'
+    //     }
+    //   }
+    // );
+    // return response.data;
+
+    // Mock response
+    const mockResponse: ApiResponse<string> = {
+      status: 200,
+      message: "Success",
+      data: "Product deleted successfully",
+    };
+
+    console.log("[API] Mock delete response:", mockResponse);
+    return Promise.resolve(mockResponse);
+  } catch (error) {
+    console.error("[API] Error deleting product:", error);
+    throw error;
+  }
+};
