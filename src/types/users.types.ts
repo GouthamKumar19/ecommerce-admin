@@ -9,7 +9,8 @@ type RecordValue =
   | {
       [key: string]: RecordValue;
     }
-  | RecordValue[];
+  | RecordValue[]
+  | AddressData[];
 
 // Base interface for records
 export interface BaseRecord {
@@ -23,8 +24,16 @@ export interface User extends BaseRecord {
   email: string;
   phone: string;
   isEnabled: boolean; // Indicates if the user is enabled
+  addresses: AddressData[]; // Array of AddressData
 }
 
+export interface AddressData {
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pinCode: string;
+}
 // Interface for the API response
 export interface ApiResponse {
   status: number; // Status code of the response

@@ -88,6 +88,7 @@ export const createUser = async (
         gender: UserData.gender,
         phone: UserData.phone,
         isEnabled: true, // Default to true; adjust as necessary for your application
+        addresses:[],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -127,6 +128,7 @@ export const getUserById = async (
         email: user.email,
         password: user.password,
         gender: user.gender,
+        addresses: user.addresses,
         phone: user.phone,
         isEnabled: user.isEnabled,
         createdAt: user.createdAt || new Date().toISOString(),

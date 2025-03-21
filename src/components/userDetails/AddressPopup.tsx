@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@mui/material";
+import {
+  Button,
+  TextField,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
 
 interface AddressPopupProps {
   onClose?: () => void;
@@ -32,6 +38,15 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     pinCode: "",
   });
 
+  const [errors, setErrors] = useState({
+    addressLine1: false,
+    city: false,
+    state: false,
+    pinCode: false,
+  });
+
+  const [pinCodeError, setPinCodeError] = useState<string | null>(null);
+
   useEffect(() => {
     if (initialData) {
       setAddressData(initialData);
@@ -39,92 +54,116 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
   }, [initialData]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setAddressData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    if (name === "pinCode") {
+      setPinCodeError(
+        /^\d{5}$/.test(value) ? null : "PIN Code must be 5 digits"
+      );
+    }
+  };
+
+  const validateFields = () => {
+    const newErrors = {
+      addressLine1: !addressData.addressLine1,
+      city: !addressData.city,
+      state: !addressData.state,
+      pinCode: !addressData.pinCode,
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(Boolean);
   };
 
   const handleSave = () => {
-    onSave?.(addressData);
+    if (validateFields() && !pinCodeError) {
+      onSave?.(addressData);
+    }
   };
 
   return (
     <div className="p-4 w-full text-left bg-white">
       <div className="flex space-x-4 mb-2">
         <div className="w-1/2">
-          <label className="block text-sm mb-1">Address Line 1</label>
-          <input
-            type="text"
+          <TextField
+            label="Address Line 1"
             name="addressLine1"
             value={addressData.addressLine1}
             onChange={handleInputChange}
-            className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
+            fullWidth
+            variant="outlined"
+            helperText="Street address or P.O. Box"
+            error={errors.addressLine1}
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Street address or P.O. Box
-          </p>
         </div>
         <div className="w-1/2">
-          <label className="block text-sm mb-1">Address Line 2</label>
-          <input
-            type="text"
+          <TextField
+            label="Address Line 2"
             name="addressLine2"
             value={addressData.addressLine2}
             onChange={handleInputChange}
-            className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
+            fullWidth
+            variant="outlined"
+            helperText="Optional"
           />
-          <p className="text-xs text-gray-500 mt-1">Optional</p>
         </div>
       </div>
 
       <div className="mb-2">
-        <label className="block text-sm mb-1">City</label>
-        <input
-          type="text"
+        <TextField
+          label="City"
           name="city"
           value={addressData.city}
           onChange={handleInputChange}
-          className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
+          fullWidth
+          variant="outlined"
+          error={errors.city}
         />
       </div>
 
       <div className="flex space-x-4 mb-2">
         <div className="w-1/2">
-          <label className="block text-sm mb-1">State</label>
-          <select
+          <TextField
+            label="State"
             name="state"
             value={addressData.state}
             onChange={handleInputChange}
-            className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
+            fullWidth
+            variant="outlined"
+            select
+            error={errors.state}
           >
-            <option value="">-- Select --</option>
-            <option value="CA">California</option>
-            <option value="NY">New York</option>
-          </select>
+            <MenuItem value="">-- Select --</MenuItem>
+            <MenuItem value="CA">California</MenuItem>
+            <MenuItem value="NY">New York</MenuItem>
+          </TextField>
         </div>
-
         <div className="w-1/2">
-          <label className="block text-sm mb-1">PIN Code</label>
-          <input
-            type="text"
+          <TextField
+            label="PIN Code"
             name="pinCode"
             placeholder="eg. 12345"
             value={addressData.pinCode}
             onChange={handleInputChange}
-            className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
+            fullWidth
+            variant="outlined"
+            error={errors.pinCode || !!pinCodeError}
+            helperText={pinCodeError}
           />
         </div>
       </div>
 
       <div className="mb-4">
-        <input type="checkbox" id="useAsShipping" className="mr-2" />
-        <label htmlFor="useAsShipping" className="text-sm">
-          Use as shipping address
-        </label>
+        <FormControlLabel
+          control={<Checkbox id="useAsShipping" />}
+          label="Use as shipping address"
+        />
       </div>
 
       <div className="text-right">

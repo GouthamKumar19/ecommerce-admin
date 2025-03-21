@@ -11,6 +11,8 @@ import { ActionContext } from "../../context/ActionContext";
 import { createUser, getUserById } from "../../api/user";
 import { useLocation, useParams } from "react-router-dom";
 import { User } from "../../types/users.types";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
 
 interface UserFormData {
   name: string;
@@ -35,7 +37,7 @@ const UserDetailsForm: React.FC = () => {
     email: "",
     password: "",
     gender: "",
-    phoneNumber: "+91",
+    phoneNumber: "",
     countryCode: "",
     addresses: [] as AddressData[],
   });
@@ -48,6 +50,9 @@ const UserDetailsForm: React.FC = () => {
     null
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // Get URL parameters and location state
   const params = useParams();
@@ -120,12 +125,34 @@ const UserDetailsForm: React.FC = () => {
     };
   }, [formData, isEditMode, setActionHandlers]);
 
+  const isValidEmail = (email: string): boolean => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    return emailPattern.test(email);
+  };
+
+  const isValidPhoneNumber = (phoneNumber: string): boolean => {
+    const phonePattern = /^\d{10}$/;
+    return phonePattern.test(phoneNumber);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    if (name === "email") {
+      setEmailError(
+        isValidEmail(value) ? null : "Email must end with @gmail.com"
+      );
+    }
+    if (name === "phoneNumber") {
+      setPhoneError(
+        isValidPhoneNumber(value)
+          ? null
+          : "Only numbers are allowed and must be 10 digits"
+      );
+    }
   };
 
   const handleAddAddress = (addressData: AddressData) => {
@@ -222,61 +249,44 @@ const UserDetailsForm: React.FC = () => {
         </div>
       ) : (
         <div className={`${showAddress ? "filter pointer-events-none" : ""}`}>
-          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-            <input
-              type="text"
+          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 p-4">
+            <TextField
+              label="Name"
               name="name"
-              placeholder="Name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
+              fullWidth
+              variant="outlined"
+              style={{ marginBottom: "16px", padding: "8px" }} // Added margin and padding
             />
-            <input
-              type="email"
+            <TextField
+              label="Email"
               name="email"
-              placeholder="Email"
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
+              fullWidth
+              variant="outlined"
+              error={!!emailError}
+              helperText={emailError}
+              style={{ marginBottom: "16px", padding: "8px" }} // Added margin and padding
             />
-            {/* <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
+            <TextField
+              label="Phone Number"
+              name="phoneNumber"
+              value={formData.phoneNumber}
               onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
+              fullWidth
+              variant="outlined"
+              error={!!phoneError}
+              helperText={phoneError}
+              style={{ marginBottom: "16px", padding: "8px" }} // Added margin and padding
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">+91</InputAdornment>
+                ),
+                inputProps: { maxLength: 10, pattern: "[0-9]*" },
+              }}
             />
-            <input
-              type="text"
-              name="gender"
-              placeholder="Gender"
-              value={formData.gender}
-              onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
-            /> */}
-            <div className="relative w-full md:w-1/3">
-              <input
-                type="tel"
-                name="phoneNumber"
-                placeholder="Phone Number"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                maxLength={10}
-                className="w-full border rounded-md input-box py-2 px-3"
-              />
-              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
-                {formData.phoneNumber.length}/10
-              </span>
-            </div>
-            {/* <input
-              type="text"
-              name="countryCode"
-              placeholder="Country Code"
-              value={formData.countryCode}
-              onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
-            /> */}
           </div>
 
           <button
@@ -306,12 +316,13 @@ const UserDetailsForm: React.FC = () => {
               <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-2">
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">Address Line 1</label>
-                  <input
-                    type="text"
+                  <TextField
                     name="addressLine1"
                     value={address.addressLine1}
-                    readOnly
-                    className="w-full border rounded px-2 py-2 text-sm input-box"
+                    InputProps={{ readOnly: true }}
+                    fullWidth
+                    variant="outlined"
+                    style={{ marginBottom: "16px", padding: "8px" }} // Added margin and padding
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Street address or P.O. Box
@@ -319,12 +330,13 @@ const UserDetailsForm: React.FC = () => {
                 </div>
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">Address Line 2</label>
-                  <input
-                    type="text"
+                  <TextField
                     name="addressLine2"
                     value={address.addressLine2}
-                    readOnly
-                    className="w-full border rounded px-2 py-2 text-sm input-box"
+                    InputProps={{ readOnly: true }}
+                    fullWidth
+                    variant="outlined"
+                    style={{ marginBottom: "16px", padding: "8px" }} // Added margin and padding
                   />
                   <p className="text-xs text-gray-500 mt-1">Optional</p>
                 </div>
@@ -332,35 +344,38 @@ const UserDetailsForm: React.FC = () => {
 
               <div className="mb-2">
                 <label className="block text-sm mb-1">City</label>
-                <input
-                  type="text"
+                <TextField
                   name="city"
                   value={address.city}
-                  readOnly
-                  className="w-full border rounded px-2 py-2 text-sm input-box"
+                  InputProps={{ readOnly: true }}
+                  fullWidth
+                  variant="outlined"
+                  style={{ marginBottom: "16px", padding: "8px" }} // Added margin and padding
                 />
               </div>
 
               <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-2">
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">State</label>
-                  <input
-                    type="text"
+                  <TextField
                     name="state"
                     value={address.state}
-                    readOnly
-                    className="w-full border rounded px-2 py-2 text-sm input-box"
+                    InputProps={{ readOnly: true }}
+                    fullWidth
+                    variant="outlined"
+                    style={{ marginBottom: "16px", padding: "8px" }} // Added margin and padding
                   />
                 </div>
 
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">PIN Code</label>
-                  <input
-                    type="text"
+                  <TextField
                     name="pinCode"
                     value={address.pinCode}
-                    readOnly
-                    className="w-full border rounded px-2 py-2 text-sm input-box"
+                    InputProps={{ readOnly: true }}
+                    fullWidth
+                    variant="outlined"
+                    style={{ marginBottom: "16px", padding: "8px" }} // Added margin and padding
                   />
                 </div>
               </div>
