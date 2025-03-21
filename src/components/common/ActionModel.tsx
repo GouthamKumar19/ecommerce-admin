@@ -1,7 +1,18 @@
 import React, { useContext } from "react";
 import { Box, Button } from "@mui/material";
 import { ActionContext } from "../../context/ActionContext";
-const ActionBox: React.FC = () => {
+
+interface ActionBoxProps {
+  cancelText?: string;
+  confirmText?: string;
+  isLoading?: boolean;
+}
+
+const ActionBox: React.FC<ActionBoxProps> = ({
+  cancelText = "Cancel",
+  confirmText = "Confirm",
+  isLoading = false,
+}) => {
   const { actionHandlers } = useContext(ActionContext);
 
   return (
@@ -14,22 +25,28 @@ const ActionBox: React.FC = () => {
     >
       <Button
         variant="outlined"
+        disabled={isLoading}
         sx={{
-          color: "var(--secondary-color)", // Use the CSS variable for text color
-          borderColor: "var(--secondary-color)", // Use the CSS variable for border color
+          color: "var(--secondary-color)",
+          borderColor: "var(--secondary-color)",
+          textTransform: "uppercase",
+          minWidth: "96px",
         }}
         onClick={actionHandlers.onCancel}
       >
-        Cancel
+        {cancelText}
       </Button>
       <Button
         variant="contained"
+        disabled={isLoading}
         sx={{
-          bgcolor: "var(--secondary-color)", // Use the CSS variable for border color
+          bgcolor: "var(--secondary-color)",
+          textTransform: "uppercase",
+          minWidth: "96px",
         }}
         onClick={actionHandlers.onConfirm}
       >
-        Confirm
+        {confirmText}
       </Button>
     </Box>
   );
