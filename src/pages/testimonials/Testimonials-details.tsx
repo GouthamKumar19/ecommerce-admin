@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import Rating from "@mui/material/Rating";
 import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
@@ -26,6 +27,10 @@ const TestimonialsDetails = () => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [errors, setErrors] = useState<{ [key: string]: boolean }>({
+    name: false,
+    description: false,
+  });
   const { setActionHandlers } = useContext(ActionContext);
 
   const navigate = useNavigate();
@@ -93,6 +98,7 @@ const TestimonialsDetails = () => {
   ) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+    setErrors((prev) => ({ ...prev, [id]: false }));
   };
 
   const handleRatingChange = (
@@ -104,6 +110,18 @@ const TestimonialsDetails = () => {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+
+    // Validation check
+    const newErrors: { [key: string]: boolean } = {};
+    newErrors.name = !formData.name;
+    newErrors.description =
+      !formData.description || formData.description.length > 100;
+
+    if (newErrors.name || newErrors.description) {
+      setErrors(newErrors);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -181,20 +199,18 @@ const TestimonialsDetails = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Name Section */}
             <div>
-              <label
-                htmlFor="name"
-                className="block mb-1 font-medium text-gray-700"
-              >
-                NAME <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
+              <TextField
                 id="name"
+                label="Name"
                 placeholder="Name"
-                className="w-full h-11 text-border input-box px-3 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 value={formData.name}
                 onChange={handleInputChange}
                 required
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                error={errors.name}
+                helperText={errors.name ? "Name is required" : ""}
               />
             </div>
 
@@ -204,7 +220,7 @@ const TestimonialsDetails = () => {
                 htmlFor="ratings"
                 className="block mb-1 font-medium text-gray-700"
               >
-                RATINGS <span className="text-red-500">*</span>
+                Ratings <span className="text-red-500">*</span>
               </label>
               <Box className="h-11 px-3 border input-box rounded bg-white flex items-center">
                 <Rating
@@ -220,19 +236,25 @@ const TestimonialsDetails = () => {
 
           {/* Description Section with Textarea */}
           <div className="mt-4">
-            <label
-              htmlFor="description"
-              className="block mb-1 font-medium text-gray-700"
-            >
-              DESCRIPTION <span className="text-red-500">*</span>
-            </label>
-            <textarea
+            <TextField
               id="description"
+              label="Description"
               placeholder="Description"
-              className="w-full px-3 py-2 input-box border rounded min-h-[100px] resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               value={formData.description}
               onChange={handleInputChange}
               required
+              fullWidth
+              variant="outlined"
+              margin="normal"
+              multiline
+              rows={4}
+              inputProps={{ maxLength: 100 }}
+              error={errors.description}
+              helperText={
+                errors.description
+                  ? "Description is required and must be less than 100 characters"
+                  : `${formData.description.length}/100`
+              }
             />
           </div>
         </form>
