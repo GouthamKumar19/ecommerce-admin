@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Typography, Grid, Box } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import SubcategoryForm from "./SubcategoryForm"; // Import the SubcategoryForm component
-// Adjust the import path as necessary
+import { createCategory } from "../../api/category"; // Adjust the import path as necessary
 
 // Define interface matching what ImageSelection expects
 interface CollectionForm {
@@ -12,8 +12,37 @@ interface CollectionForm {
 }
 
 const CollectionForm: React.FC = () => {
-  const [collectionName, setCollectionName] = useState("");
+  const [categoryName, setCollectionName] = useState("");
   const [images, setImages] = useState<CollectionForm[]>([]);
+
+  // useEffect to handle the category creation logic
+  useEffect(() => {
+    if (categoryName.trim() !== "" || images.length > 0) {
+      // Get the selected image URL or use empty string if none selected
+      //const selectedImage = images.find((img) => img.selected)?.url || "";
+
+      // Prepare the payload
+      const payload = {
+        name: categoryName,
+        images: "/ecommerce/categories/1.png",
+      };
+
+      const handleCreateCategory = async () => {
+        console.log("Creating category with data:", payload);
+        try {
+          const response = await createCategory(payload);
+          console.log("Create Category API Response:", response);
+          // Handle success logic
+        } catch (error) {
+          console.error("Error creating category:", error);
+          // Handle error logic
+        }
+      };
+
+      // Call the function to create the category
+      handleCreateCategory();
+    }
+  }, [categoryName, images]); // Dependency array to call when collectionName or images change
 
   return (
     <div className="ml-8 mr-8 mb-6">
@@ -36,7 +65,7 @@ const CollectionForm: React.FC = () => {
             type="text"
             id="collectionName"
             placeholder="Enter Category Name"
-            value={collectionName}
+            value={categoryName}
             onChange={(e) => setCollectionName(e.target.value)}
             style={{
               width: "100%",

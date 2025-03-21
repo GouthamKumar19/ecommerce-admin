@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
-import { items } from "../../config/mock/userTable"; // Assuming this provides mock data
 import { Edit } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
@@ -11,12 +9,8 @@ import SearchBar from "../../components/common/SearchBar"; // Import the SearchB
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-
-const fetchUsers = async (): Promise<User[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(items), 1000); // Simulating fetch delay
-  });
-};
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import Skeleton Loader
+import { getAllUser } from "../../api/user"; // Import the API function for fetching users
 
 const UsersPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -30,16 +24,42 @@ const UsersPage: React.FC = () => {
     direction: "ascending" | "descending" | null;
   }>({ key: "", direction: null });
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-  });
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
+
+  const payload = {
+    options: {
+      page: 1,
+      itemsPerPage: 15,
+      sortBy: ["name"], // Example sort, adjust as needed
+      sortDesc: [false], // Example sort, adjust as needed
+    },
+  };
+
   useEffect(() => {
-    // Optional: If you need to perform any actions when the component mounts
-  }, []);
+    const fetchUserData = async () => {
+      setIsLoading(true); // Start loading
+      setError(null); // Reset error
+
+      setTimeout(async () => {
+        try {
+          const response = await getAllUser(payload);
+          setUsers(response.data);
+          console.log("User Details:",response.data)
+        } catch (err: any) {
+          setError(err.message || "Failed to fetch users");
+        } finally {
+          setIsLoading(false);
+        }
+      }, 500); // Simulating network delay
+    };
+
+    fetchUserData();
+  }, []); // Empty dependency array means this runs once on component mount
 
   const renderSortIcon = (key: string) => {
     if (sortConfig.key === key) {
@@ -116,7 +136,6 @@ const UsersPage: React.FC = () => {
   ];
 
   const handleAddNewUser = () => {
-    // Navigate to the user details page for creating a new user
     navigate("/users/new");
   };
 
@@ -133,7 +152,7 @@ const UsersPage: React.FC = () => {
   };
 
   const handleEditUser = (item: User) => {
-    navigate(`/users/${item._id}`, { state: { user: item } }); // Updated to use _id
+    navigate(`/users/${item._id}`, { state: { user: item } });
   };
 
   const handleDialogClose = (confirm: boolean) => {
@@ -164,25 +183,24 @@ const UsersPage: React.FC = () => {
   };
 
   const sortedUsers = React.useMemo(() => {
-    if (sortConfig.key && sortConfig.direction) {
-      return [...users].sort((a, b) => {
-        const aValue = a[sortConfig.key] as string | number;
-        const bValue = b[sortConfig.key] as string | number;
+    return sortConfig.key && sortConfig.direction
+      ? [...users].sort((a, b) => {
+          const aValue = a[sortConfig.key] as string | number;
+          const bValue = b[sortConfig.key] as string | number;
 
-        if (aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return users;
+          if (aValue < bValue) {
+            return sortConfig.direction === "ascending" ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return sortConfig.direction === "ascending" ? 1 : -1;
+          }
+          return 0;
+        })
+      : users;
   }, [users, sortConfig]);
 
   const actionRenderer = (item: User) => {
-    const isDisabled = disabledRows.includes(String(item._id)); // Updated to _id
+    const isDisabled = disabledRows.includes(String(item._id));
     return (
       <div className="flex justify-center items-center gap-4">
         <Edit
@@ -212,7 +230,6 @@ const UsersPage: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
-            {/* Use the SearchBar component */}
             <SearchBar
               searchValue={searchValue}
               onSearchChange={setSearchValue}
@@ -230,15 +247,19 @@ const UsersPage: React.FC = () => {
 
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={sortedUsers}
-          columns={columns}
-          idKey="_id" // Updated to use _id
-          itemsPerPage={15}
-          actionRenderer={actionRenderer}
-          disabledRows={disabledRows}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+        ) : (
+          <DataTable
+            items={sortedUsers}
+            columns={columns}
+            idKey="_id" // Updated to use _id
+            itemsPerPage={15}
+            actionRenderer={actionRenderer}
+            disabledRows={disabledRows}
+            loading={isLoading}
+          />
+        )}
       </div>
 
       {/* Confirmation Dialog */}

@@ -1,14 +1,8 @@
-
+import React, { useContext } from "react";
 import { Box, Button } from "@mui/material";
-
-const ActionBox = () => {
-  const handleCancel = () => {
-    console.log("Form cancelled");
-  };
-
-  const handleSubmit = () => {
-    console.log("Form submitted");
-  };
+import { ActionContext } from "../../context/ActionContext";
+const ActionBox: React.FC = () => {
+  const { actionHandlers } = useContext(ActionContext);
 
   return (
     <Box
@@ -16,34 +10,24 @@ const ActionBox = () => {
         display: "flex",
         justifyContent: "flex-end",
         gap: 2,
-        width: "100%",
       }}
     >
       <Button
         variant="outlined"
-        onClick={handleCancel}
         sx={{
-          borderColor: "grey.500",
-          color: "grey.700",
-          "&:hover": {
-            borderColor: "grey.700",
-            backgroundColor: "grey.50",
-          },
+          color: "var(--secondary-color)", // Use the CSS variable for text color
+          borderColor: "var(--secondary-color)", // Use the CSS variable for border color
         }}
+        onClick={actionHandlers.onCancel}
       >
         Cancel
       </Button>
-
       <Button
         variant="contained"
-        onClick={handleSubmit}
         sx={{
-          bgcolor: "var(--secondary-color, #4CAF50)",
-          color: "white",
-          "&:hover": {
-            bgcolor: "var(--secondary-dark-color, #388E3C)",
-          },
+          bgcolor: "var(--secondary-color)", // Use the CSS variable for border color
         }}
+        onClick={actionHandlers.onConfirm}
       >
         Confirm
       </Button>

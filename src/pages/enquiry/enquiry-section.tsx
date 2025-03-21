@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 import DataTable from "../../components/common/DataTable";
-// import { enquiries } from "../../config/mock/enquiriesTable"; // Keep this as mock data if needed
+
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import { Visibility, Close } from "@mui/icons-material";
 import { Enquiry } from "../../types/enquiry.types";
 import SearchBar from "../../components/common/SearchBar";
@@ -20,12 +21,6 @@ interface TableColumn<T> {
   key: string;
   render?: (item: T) => React.ReactNode;
 }
-
-// const fetchEnquiry = async (): Promise<Enquiry[]> => {
-//   return new Promise((resolve) => {
-//     setTimeout(() => resolve(enquiries), 1000);
-//   });
-// };
 
 const CustomModal: React.FC<{
   isOpen: boolean;
@@ -181,17 +176,18 @@ const EnquirySection: React.FC = () => {
     const fetchEnquiriesData = async () => {
       setIsLoading(true); // Start loading
       setError(null); // Reset error
-      console.log(error);
-      try {
-        const response = await getAllEnquiry(payload); // Call the API with payload
-        setEnquiries(response); // Update state with fetched data
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch enquiries");
-      } finally {
-        setIsLoading(false); // Stop loading
-      }
-    };
 
+      setTimeout(async () => {
+        try {
+          const response = await getAllEnquiry(payload);
+          setEnquiries(response);
+        } catch (err: any) {
+          setError(err.message || "Failed to fetch enquiries");
+        } finally {
+          setIsLoading(false);
+        }
+      }, 500);
+    };
     fetchEnquiriesData();
   }, []);
 
@@ -283,15 +279,19 @@ const EnquirySection: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={sortedEnquiries}
-          columns={columns}
-          idKey="id"
-          itemsPerPage={15}
-          tableType="Enquiry"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <TableSkeletonLoader columns={4} rows={10} />
+        ) : (
+          <DataTable
+            items={sortedEnquiries}
+            columns={columns}
+            idKey="id"
+            itemsPerPage={15}
+            tableType="Enquiry"
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+          />
+        )}
       </div>
 
       {openDialog && (

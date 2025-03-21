@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "../../components/common/DataTable";
-import { collectionMockData } from "../../config/mock/collections";
-import type { Collection } from "../../types/collections.types";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
-import { useQuery } from "@tanstack/react-query";
+
 import SortableHeader, {
   SortConfig,
 } from "../../components/common/SortableHeader";
@@ -14,12 +12,8 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-
-const fetchCollections = async (): Promise<Collection[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(collectionMockData), 1000);
-  });
-};
+import { getAllCollection, deleteCollection } from "../../api/collections"; // Updated import to include deleteCollection
+import type { Collection } from "../../types/collections.types";
 
 const CollectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -29,25 +23,36 @@ const CollectionsPage: React.FC = () => {
   const [currentCollection, setCurrentCollection] = useState<Collection | null>(
     null
   );
-  const [collections, setCollections] =
-    useState<Collection[]>(collectionMockData);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "",
     direction: null,
   });
-
+  const [isLoading, setIsLoading] = useState(false); // New state for loading
+  const [error, setError] = useState<string | null>(null); // New state for error
   const navigate = useNavigate();
 
-  const { data: fetchedCollections = [], isLoading } = useQuery({
-    queryKey: ["collections"],
-    queryFn: fetchCollections,
-  });
+  const payload = {}; // Define your payload here if needed
 
   useEffect(() => {
-    if (fetchedCollections.length > 0) {
-      setCollections(fetchedCollections);
-    }
-  }, [fetchedCollections]);
+    const fetchCollections = async () => {
+      setIsLoading(true); // Start loading
+      setError(null); // Reset error
+      setTimeout(async () => {
+        try {
+          const response = await getAllCollection(payload); // Call the API
+          setCollections(response.data); // Set the fetched collections
+          console.log("Fetched Collections:", response.data);
+        } catch (err: any) {
+          setError(err.message || "Failed to fetch collections"); // Handle any errors
+        } finally {
+          setIsLoading(false); // End loading
+        }
+      }, 500);
+    };
+
+    fetchCollections(); // Execute fetching function
+  }, []); // Empty dependency array to run once on mount
 
   const handleAddNewCollection = () => {
     navigate("/collection/:id");
@@ -63,30 +68,36 @@ const CollectionsPage: React.FC = () => {
   };
 
   const handleEditCollection = (item: Collection) => {
-    navigate("/collection/:id", {
-      state: { Collection: item },
-    });
+    navigate(`/collection/${item._id}`, { state: { Collection: item } });
   };
 
-  const handleDialogClose = (confirm: boolean) => {
+  const handleDialogClose = async (confirm: boolean) => {
     if (confirm && currentCollection) {
       if (dialogTitle === "Delete Collection") {
-        setCollections((prevData) =>
-          prevData.filter(
-            (collection) => collection.id !== currentCollection.id
-          )
-        );
-        console.log(`Deleting collection with ID: ${currentCollection.id}`);
-      } else {
-        setCollections((prev) => {
-          if (prev.includes(currentCollection)) {
-            return prev.filter(
-              (collection) => collection.id !== currentCollection.id
+        setIsLoading(true);
+        try {
+          // Call the deleteCollection API function
+          const response = await deleteCollection(currentCollection._id);
+
+          if (response.status === 200) {
+            // If successful, remove the collection from the state
+            setCollections((prevData) =>
+              prevData.filter(
+                (collection) => collection._id !== currentCollection._id
+              )
+            );
+            console.log(
+              `Collection deleted successfully: ${currentCollection._id}`
             );
           } else {
-            return [...prev, currentCollection];
+            throw new Error("Failed to delete collection");
           }
-        });
+        } catch (err: any) {
+          setError(err.message || "Failed to delete collection");
+          console.error("Error deleting collection:", err);
+        } finally {
+          setIsLoading(false);
+        }
       }
     }
     setDialogOpen(false);
@@ -129,7 +140,7 @@ const CollectionsPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-16 w-24">
           <img
             className="h-16 w-24 object-cover rounded cursor-pointer"
-            src={item.imageUrl}
+            src={item.bannerImage} // Changed imageUrl to bannerImage
             alt={item.name}
             onClick={() => navigate(`/collections/collection-product`)}
           />
@@ -176,27 +187,26 @@ const CollectionsPage: React.FC = () => {
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewCollection}
-              disabled={isLoading}
+              disabled={isLoading} // Disable button while loading
             >
               ADD COLLECTION
             </button>
           </div>
         </div>
       </div>
-
+      {isLoading && <div>Loading...</div>} {/* Loading Indicator */}
+      {error && <div>Error: {error}</div>} {/* Error Display */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
           items={sortedCollections}
-          
           columns={columns}
-          idKey="id"
+          idKey="_id"
           itemsPerPage={15}
           tableType="collection"
           actionRenderer={actionRenderer}
           loading={isLoading}
         />
       </div>
-
       <ConfirmationDialog
         open={dialogOpen}
         title={dialogTitle}

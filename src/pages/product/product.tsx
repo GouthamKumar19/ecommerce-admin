@@ -13,6 +13,7 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -23,7 +24,7 @@ const ProductPage: React.FC = () => {
     direction: null,
   });
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
@@ -46,24 +47,25 @@ const ProductPage: React.FC = () => {
     const fetchProducts = async () => {
       setIsLoading(true); // Set loading state to true
       setError(null); // Reset error state
-
+  setTimeout(async () => {
       try {
-        const response = await getAllProducts(payload); // Send the payload
+        const response = await getAllProducts(payload); // Sending the payload to fetch data
         setProducts(response); // Assuming response is already an array of products
       } catch (err: any) {
         setError(err.message || "Failed to fetch products");
       } finally {
         setIsLoading(false); // Loading is finished
       }
-    };
+    },500);
+  };
 
     fetchProducts();
-  }, []);
+  }, []); // Empty dependency array means this runs once on component mount
 
   const handleDeleteProduct = (productId: string | number) => {
     setSelectedProduct(
-      products.find((product) => product._id === productId) || null // Update ID checking based on your Product type
-    );
+      products.find((product) => product._id === productId) || null
+    ); // Update ID checking based on your Product type
     setDialogOpen(true);
   };
 
@@ -81,11 +83,11 @@ const ProductPage: React.FC = () => {
     <div className="flex justify-center items-center gap-4">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => navigate(`/product/${item._id}?action=edit`)} // Use _id for editing
+        onClick={() => navigate(`/product/${item._id}?action=edit`)}
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleDeleteProduct(item._id)} // Use _id for deletion
+        onClick={() => handleDeleteProduct(item._id)}
       />
     </div>
   );
@@ -143,6 +145,7 @@ const ProductPage: React.FC = () => {
         </div>
       ),
     },
+    // Other column definitions remain the same...
     {
       header: (
         <SortableHeader
@@ -246,9 +249,7 @@ const ProductPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <div>Loading...</div>
-        ) : error ? (
-          <div>Error: {error}</div>
+          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
         ) : (
           <DataTable
             items={sortedProducts}
