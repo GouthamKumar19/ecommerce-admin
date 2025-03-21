@@ -1,31 +1,33 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { Box } from "@mui/material";
-
+import { ActionContext } from "../../context/ActionContext"; // Import the ActionContext
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
-import { ActionContext } from "../../context/ActionContext";
+import { getProfile, updateProfile } from "../../api/profile";
 
 const Profile: React.FC = () => {
   const [name, setName] = useState("");
-  const [email] = useState("abc@gmail.com");
+  const [email, setEmail] = useState("");
   const [showEmailAlert, setShowEmailAlert] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { setActionHandlers } = useContext(ActionContext);
 
-  // Set up the action handlers for the ActionBox component
+  const { setActionHandlers } = useContext(ActionContext); // Use the ActionContext
+
   useEffect(() => {
-    setActionHandlers({
-      onConfirm: handleSaveProfile,
-      onCancel: handleCancel,
-    });
+    const fetchUserProfile = async () => {
+      try {
+        const token = "123"; // Replace with actual token
+        const response = await getProfile(token);
+        const { name, email } = response.data;
 
-    return () => {
-      setActionHandlers({
-        onConfirm: () => console.warn("onConfirm is not implemented"),
-        onCancel: () => console.warn("onCancel is not implemented"),
-      });
+        setName(name);
+        setEmail(email);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
     };
-  }, [setActionHandlers]);
+
+    fetchUserProfile();
+  }, []);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
@@ -39,22 +41,38 @@ const Profile: React.FC = () => {
     setShowEmailAlert(false);
   };
 
-  const handleSaveProfile = async () => {
-    setIsLoading(true);
-    // Mock API call for saving profile
-    console.log("Saving profile with name:", name);
+  // ✅ Use `useCallback` to prevent unnecessary re-renders
+  const handleSubmit = useCallback(async () => {
+    console.log("Form submitted"); // Add this log to confirm form submission
+    const token = "123"; // Replace with actual token
+    try {
+      const updatedProfile = {
+        _id: "6512c5f3e4b09a12d8f42b68",
+        name,
+        email,
+        role: "ADMIN",
+        createdAt: "2024-02-06T15:30:00.000Z",
+        updatedAt: new Date().toISOString(),
+      };
+      const response = await updateProfile(token, updatedProfile);
+      console.log("Profile updated successfully:", response.message);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
+  }, [name, email]); // ✅ Add dependencies properly
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Could add a success message here
-    }, 1000);
-  };
+  const handleCancel = useCallback(() => {
+    console.log("Form cancelled");
+    // Reset the form or perform any cancel actions here
+  }, []);
 
-  const handleCancel = () => {
-    console.log("Profile update cancelled");
-    // Could add navigation back or reset form here
-  };
+  // ✅ Set the action handlers only when functions change
+  useEffect(() => {
+    setActionHandlers({
+      onConfirm: handleSubmit,
+      onCancel: handleCancel,
+    });
+  }, [setActionHandlers, handleSubmit, handleCancel]);
 
   return (
     <Box
@@ -137,8 +155,8 @@ const Profile: React.FC = () => {
       {/* Bottom section - fixed with increased bottom spacing */}
       <Box
         sx={{
-          padding: 3,
-          paddingBottom: 4,
+          padding: 3, // Increased padding
+          paddingBottom: 4, // Extra bottom padding
           boxShadow: "0px -2px 4px rgba(0,0,0,0.05)",
           position: "sticky",
           bottom: 0,
@@ -146,11 +164,7 @@ const Profile: React.FC = () => {
           bgcolor: "white",
         }}
       >
-        <ActionBox
-          confirmText="Save"
-          cancelText="Cancel"
-          isLoading={isLoading}
-        />
+        <ActionBox />
       </Box>
     </Box>
   );

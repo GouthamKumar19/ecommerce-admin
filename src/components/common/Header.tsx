@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useMediaQuery, useTheme } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ConfirmationDialog from "./Dialog";
+import { logout } from "../../api/logout"; // Import the logout API function
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -74,10 +75,19 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
     setDropdownOpen(false);
   };
 
-  const confirmLogout = (confirm: boolean) => {
+  const confirmLogout = async (confirm: boolean) => {
     setShowLogoutConfirm(false);
     if (confirm) {
-      navigate("/auth/login");
+      const token = "123"; // Replace with actual token
+      const refreshToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXV2CJ9.eyJpYXQiOjE3MTg0NTYyMzEsImV4cCI6MjAzMzgxNjIzMX0.Po_Xc3MuJt4GhKWpd1B5cUcHsdZWq_4ElO138VmsU"; // Replace with actual refresh token
+      try {
+        const response = await logout(token, refreshToken);
+        console.log("Logout successful:", response.message);
+        navigate("/auth/login");
+      } catch (error) {
+        console.error("Error during logout:", error);
+      }
     }
   };
 
