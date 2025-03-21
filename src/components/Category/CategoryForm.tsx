@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Typography, Box } from "@mui/material";
+import { Typography, Box, TextField } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import SubcategoryForm from "./SubcategoryForm"; // Import the SubcategoryForm component
 import {
@@ -23,6 +23,10 @@ const CategoryForm: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: boolean }>({
+    categoryName: false,
+    images: false,
+  });
 
   // Context and routing hooks
   const { setActionHandlers } = useContext(ActionContext);
@@ -82,9 +86,33 @@ const CategoryForm: React.FC = () => {
     };
   }, [categoryName, images, isEditMode, setActionHandlers]);
 
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const regex = /^[A-Za-z\s]+$/;
+
+    if (!regex.test(value)) {
+      setErrors((prev) => ({ ...prev, categoryName: true }));
+    } else {
+      setErrors((prev) => ({ ...prev, categoryName: false }));
+    }
+    setCategoryName(value);
+  };
+
   const handleSaveCategory = async () => {
+    const errorsCopy = { ...errors };
+
     if (categoryName.trim() === "") {
-      console.error("Category name is required");
+      errorsCopy.categoryName = true;
+    }
+
+    if (images.length === 0 || !images.some((img) => img.selected)) {
+      errorsCopy.images = true;
+    }
+
+    setErrors(errorsCopy);
+
+    if (errorsCopy.categoryName || errorsCopy.images) {
+      console.error("All fields are required and must be valid");
       return;
     }
 
@@ -130,12 +158,18 @@ const CategoryForm: React.FC = () => {
           <Typography variant="subtitle1" gutterBottom align="left">
             Name
           </Typography>
-          <input
-            type="text"
+          <TextField
+            id="categoryName"
             value={categoryName}
-            onChange={(e) => setCategoryName(e.target.value)}
+            onChange={handleNameChange}
             placeholder="Category Name"
-            className="w-full md:w-2/3 p-2 border rounded-md input-box"
+            fullWidth
+            variant="outlined"
+            margin="normal"
+            error={errors.categoryName}
+            helperText={
+              errors.categoryName ? "Only letters and spaces are allowed" : ""
+            }
           />
         </div>
 
@@ -150,9 +184,16 @@ const CategoryForm: React.FC = () => {
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
               p: 4,
               width: "100%",
+              borderColor: errors.images ? "red" : "inherit", // Add red border if there's an error
+              borderWidth: errors.images ? "2px" : "1px",
             }}
           >
             <ImageSelection images={images} setImages={setImages} />
+            {errors.images && (
+              <Typography variant="body2" color="error">
+                At least one image must be selected
+              </Typography>
+            )}
           </Box>
         </div>
 
