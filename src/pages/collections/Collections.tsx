@@ -55,7 +55,7 @@ const CollectionsPage: React.FC = () => {
   }, []); // Empty dependency array to run once on mount
 
   const handleAddNewCollection = () => {
-    navigate("/collection/:id");
+    navigate("/collection/new");
   };
 
   const handleDeleteCollection = (item: Collection) => {
