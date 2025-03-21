@@ -161,7 +161,6 @@ const EnquirySection: React.FC = () => {
   });
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const payload = {
     options: {
@@ -175,14 +174,13 @@ const EnquirySection: React.FC = () => {
   useEffect(() => {
     const fetchEnquiriesData = async () => {
       setIsLoading(true); // Start loading
-      setError(null); // Reset error
 
       setTimeout(async () => {
         try {
           const response = await getAllEnquiry(payload);
           setEnquiries(response);
         } catch (err: any) {
-          setError(err.message || "Failed to fetch enquiries");
+          console.log(err)
         } finally {
           setIsLoading(false);
         }

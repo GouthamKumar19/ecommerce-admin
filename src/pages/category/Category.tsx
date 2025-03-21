@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DataTable from "../../components/common/DataTable";
-import { Category, Subcategory, ApiResponse } from "../../types/category.types"; // Ensure correct import
+import { Category, Subcategory } from "../../types/category.types"; // Ensure correct import
 import { useNavigate } from "react-router-dom";
 import { Box, Chip, CircularProgress } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";

@@ -1,7 +1,6 @@
 import { Category } from "../../types/category.types";
 
 const currentDate = "2025-03-10T07:33:23Z"; // Use ISO 8601 format for dates
-const currentUser = "AnmolSShetty";
 
 export const mockCategoryData: Category[] = [
     {

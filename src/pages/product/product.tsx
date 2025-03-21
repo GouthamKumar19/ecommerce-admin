@@ -47,17 +47,18 @@ const ProductPage: React.FC = () => {
     const fetchProducts = async () => {
       setIsLoading(true); // Set loading state to true
       setError(null); // Reset error state
-  setTimeout(async () => {
-      try {
-        const response = await getAllProducts(payload); // Sending the payload to fetch data
-        setProducts(response); // Assuming response is already an array of products
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch products");
-      } finally {
-        setIsLoading(false); // Loading is finished
-      }
-    },500);
-  };
+      setTimeout(async () => {
+        try {
+          const response = await getAllProducts(payload); // Sending the payload to fetch data
+          console.log(error);
+          setProducts(response); // Assuming response is already an array of products
+        } catch (err: any) {
+          setError(err.message || "Failed to fetch products");
+        } finally {
+          setIsLoading(false); // Loading is finished
+        }
+      }, 500);
+    };
 
     fetchProducts();
   }, []); // Empty dependency array means this runs once on component mount
