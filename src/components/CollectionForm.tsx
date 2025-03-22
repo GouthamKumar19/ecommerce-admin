@@ -258,6 +258,11 @@ const CollectionForm: React.FC = () => {
               if (value.trim() && errors.collectionName) {
                 setErrors({ ...errors, collectionName: "" });
               }
+            } else {
+              setErrors({
+                ...errors,
+                collectionName: "Only characters are allowed",
+              });
             }
           }}
           error={!!errors.collectionName}
