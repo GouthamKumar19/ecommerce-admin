@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Typography, Box, TextField } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
-import SubcategoryForm from "./SubcategoryForm"; // Import the SubcategoryForm component
+import SubcategoryForm from "./SubcategoryForm";
 import {
   createCategory,
   getCategoryById,
   updateCategory,
-} from "../../api/category"; // Now all these functions are properly exported
+} from "../../api/category";
 import { ActionContext } from "../../context/ActionContext";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 
 // Define interface matching what ImageSelection expects
 interface CategoryImage {
@@ -32,6 +32,7 @@ const CategoryForm: React.FC = () => {
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Check if we're in edit mode and load data if needed
   useEffect(() => {
@@ -73,9 +74,7 @@ const CategoryForm: React.FC = () => {
   useEffect(() => {
     setActionHandlers({
       onConfirm: handleSaveCategory,
-      onCancel: () => {
-        console.log("Category form cancelled");
-      },
+      onCancel: handleCancel,
     });
 
     return () => {
@@ -148,6 +147,11 @@ const CategoryForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    console.log("Category form cancelled");
+    navigate("/categories"); // Redirect to categories page or any other route
   };
 
   return (

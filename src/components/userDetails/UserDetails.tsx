@@ -10,9 +10,10 @@ import TextField from "@mui/material/TextField";
 import AddressPopup from "./AddressPopup";
 import { ActionContext } from "../../context/ActionContext";
 import { createUser, getUserById } from "../../api/user";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { User } from "../../types/users.types";
 import { InputAdornment } from "@mui/material";
+
 interface UserFormData {
   name: string;
   email: string;
@@ -58,6 +59,7 @@ const UserDetailsForm: React.FC = () => {
 
   const params = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { setActionHandlers } = useContext(ActionContext);
 
   const populateFormWithUserData = (user: User) => {
@@ -104,9 +106,7 @@ const UserDetailsForm: React.FC = () => {
   useEffect(() => {
     setActionHandlers({
       onConfirm: handleConfirm,
-      onCancel: () => {
-        console.log("Cancel action triggered");
-      },
+      onCancel: handleCancel,
     });
 
     return () => {
@@ -266,6 +266,12 @@ const UserDetailsForm: React.FC = () => {
       console.error("Error submitting user data:", error);
       // Handle error notification here
     }
+  };
+
+  const handleCancel = () => {
+    console.log("Cancel action triggered");
+    // Redirect to a different route, e.g., the user list page
+    navigate("/users");
   };
 
   // Calculate phone length excluding +91 prefix
