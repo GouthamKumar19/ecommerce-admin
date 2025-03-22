@@ -50,7 +50,7 @@ export const CategoryDetails = () => {
   };
 
   const handleCancel = () => {
-    navigate("/categories");
+    navigate("/category");
   };
 
   return (

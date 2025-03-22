@@ -13,7 +13,7 @@ import {
   getCollectionById,
   updateCollection,
 } from "../api/collections";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 // Define interface matching what ImageSelection expects
 interface CollectionFormProps {
@@ -39,6 +39,7 @@ const CollectionForm: React.FC = () => {
   });
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
+  const navigate = useNavigate();
 
   // Fetch collection details if we have an ID
   useEffect(() => {
@@ -213,9 +214,10 @@ const CollectionForm: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // Handle cancel action - reset form and notify parent
+    // Handle cancel action - reset form and redirect
     console.log("Form submission cancelled");
     resetForm();
+    navigate("/collections"); // Redirect to collections page or any other route
   };
 
   if (loading) {
