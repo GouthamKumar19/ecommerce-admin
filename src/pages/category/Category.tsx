@@ -142,6 +142,7 @@ const CategoryPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
+  
   const sortedCategories = useSortableData(categories, sortConfig);
   const filteredCategories = sortedCategories.filter((category) =>
     category.name.toLowerCase().includes(searchValue.toLowerCase())

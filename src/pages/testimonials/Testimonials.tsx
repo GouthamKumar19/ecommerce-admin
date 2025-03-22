@@ -53,7 +53,7 @@ const TestimonialsPage: React.FC = () => {
     const fetchTestimonials = async () => {
       setIsLoading(true);
       setError(null); // Reset error state
-
+setTimeout(async () => {
       try {
         const response = await getAllTestimonials();
         setTestimonials(response.data);
@@ -63,6 +63,7 @@ const TestimonialsPage: React.FC = () => {
       } finally {
         setIsLoading(false);
       }
+    },500); 
     };
 
     fetchTestimonials();
