@@ -72,6 +72,9 @@ const BackArrow = () => {
     if (path.includes("/profile")) {
       return "Profile";
     }
+    if (path.includes("/collections/collection-product")) {
+      return "Collection Products";
+    }
 
     // Original product logic
     if (path.includes("/product/new")) {
