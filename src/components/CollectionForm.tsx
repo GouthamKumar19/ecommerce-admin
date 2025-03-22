@@ -1,5 +1,11 @@
 import React, { useState, useContext, useEffect } from "react";
-import { Typography, Grid, Box, CircularProgress } from "@mui/material";
+import {
+  Typography,
+  Grid,
+  Box,
+  CircularProgress,
+  TextField,
+} from "@mui/material";
 import ImageSelection from "../components/common/ImageSelection";
 import { ActionContext } from "../context/ActionContext";
 import {
@@ -16,12 +22,19 @@ interface CollectionFormProps {
   selected: boolean;
 }
 
+interface FormErrors {
+  collectionName: string;
+}
+
 const CollectionForm: React.FC = () => {
   const [collectionName, setCollectionName] = useState("");
   const [images, setImages] = useState<CollectionFormProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [collectionId, setCollectionId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({
+    collectionName: "",
+  });
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
 
@@ -29,7 +42,7 @@ const CollectionForm: React.FC = () => {
   useEffect(() => {
     const fetchCollectionDetails = async () => {
       const id = params.id;
-      if (id) {
+      if (id && id !== "new") {
         setLoading(true);
         setIsEditMode(true);
         setCollectionId(id);
@@ -38,6 +51,7 @@ const CollectionForm: React.FC = () => {
           const response = await getCollectionById(id);
           if (response.status === 200 && response.data) {
             setCollectionName(response.data.name);
+            console.log("Fetched collection:", response.data);
 
             // If there's a banner image, set it as selected in the images array
             if (response.data.bannerImage) {
@@ -74,6 +88,30 @@ const CollectionForm: React.FC = () => {
     fetchCollectionDetails();
   }, [params.id]);
 
+  // Add default images if none exist
+  useEffect(() => {
+    if (images.length === 0) {
+      // Add some default placeholder images
+      setImages([
+        {
+          id: 1,
+          url: "https://via.placeholder.com/200x150?text=Image+1",
+          selected: false,
+        },
+        {
+          id: 2,
+          url: "https://via.placeholder.com/200x150?text=Image+2",
+          selected: false,
+        },
+        {
+          id: 3,
+          url: "https://via.placeholder.com/200x150?text=Image+3",
+          selected: false,
+        },
+      ]);
+    }
+  }, []);
+
   useEffect(() => {
     // Set up the action handlers for the ActionBox component
     setActionHandlers({
@@ -90,7 +128,37 @@ const CollectionForm: React.FC = () => {
     };
   }, [collectionName, images, isEditMode, collectionId, setActionHandlers]);
 
+  const validateForm = (): boolean => {
+    const newErrors = { collectionName: "" };
+    let isValid = true;
+
+    // Validate collection name
+    if (!collectionName.trim()) {
+      newErrors.collectionName = "Collection name is required";
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]*$/.test(collectionName)) {
+      newErrors.collectionName =
+        "Collection name should only contain alphabets and spaces";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const resetForm = () => {
+    setCollectionName("");
+    setImages(images.map((img) => ({ ...img, selected: false })));
+    setErrors({ collectionName: "" });
+  };
+
   const handleConfirm = async () => {
+    // Validate form
+    if (!validateForm()) {
+      console.log("Form validation failed");
+      return false;
+    }
+
     // Get the selected image URL or use empty string if none selected
     const selectedImage = images.find((img) => img.selected)?.url || "";
 
@@ -104,7 +172,9 @@ const CollectionForm: React.FC = () => {
     console.log("Collection Form Data:", formData);
 
     try {
+      setLoading(true);
       let response;
+
       if (isEditMode && collectionId) {
         // Update existing collection
         response = await updateCollection(collectionId, formData);
@@ -115,20 +185,28 @@ const CollectionForm: React.FC = () => {
         console.log("Create API Response:", response);
       }
 
-      // Here you could add success notifications or redirects
+      // If successful, you could reset the form or do other actions
+      console.log(
+        `Collection ${isEditMode ? "updated" : "created"} successfully`
+      );
+
+      return true; // Return success to the parent component
     } catch (error) {
       console.error(
         `Error ${isEditMode ? "updating" : "creating"} collection:`,
         error
       );
-      // Here you could add error handling
+
+      return false; // Return failure to the parent component
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    // Handle cancel action - could be navigation back or form reset
+    // Handle cancel action - reset form and notify parent
     console.log("Form submission cancelled");
-    // You might want to add navigation logic here
+    resetForm();
   };
 
   if (loading) {
@@ -158,20 +236,22 @@ const CollectionForm: React.FC = () => {
         <Typography variant="subtitle1" gutterBottom align="left">
           COLLECTION NAME
         </Typography>
-        <input
+        <TextField
           type="text"
           id="collectionName"
           placeholder="Enter Collection Name"
           value={collectionName}
-          onChange={(e) => setCollectionName(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            boxSizing: "border-box",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            marginBottom: "16px",
+          onChange={(e) => {
+            setCollectionName(e.target.value);
+            // Clear error when typing
+            if (e.target.value.trim() && errors.collectionName) {
+              setErrors({ ...errors, collectionName: "" });
+            }
           }}
+          error={!!errors.collectionName}
+          helperText={errors.collectionName}
+          fullWidth
+          margin="normal"
         />
       </div>
 

@@ -3,9 +3,14 @@ import axios from 'axios';
 import { Enquiry } from '../types/enquiry.types';
 import { enquiries } from '../config/mock/enquiriesTable';
 
+interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data: T;
+}
 let currentController: AbortController;
 
-export const getAllEnquiry = async (payload: any): Promise<Enquiry[]> => { // Accept the payload parameter
+export const getAllEnquiry = async (payload: any): Promise<ApiResponse<Enquiry[]>> => {
   console.log("Payload received:", payload); // Log the payload for debugging
   
   try {
@@ -14,30 +19,26 @@ export const getAllEnquiry = async (payload: any): Promise<Enquiry[]> => { // Ac
     }
     currentController = new AbortController();
 
-    // Uncomment the following lines if you're using an actual API call:
-    /*
-    const response = await axiosInstance.post(
-      '/admin/enquiries/getAll',
-      payload, // Sending the payload for sorting and pagination
-      {
-        signal: currentController.signal,
-      }
-    );
-    */
-
+    
     // Simulate API call with imported mock data
+    const totalCount = enquiries.length;
     const response = {
       status: 200,
+      message: "Success",
       data: {
-        totalCount: enquiries.length, // Use the length of your mock data
-        tableData: enquiries, // Assuming productMockData is an array of products
+        totalCount, // Send the total count of collections
+        tableData: enquiries, // Assuming items is an array of collection data
       },
     };
 
     if (response?.status === 200) {
-      return response?.data?.tableData;
+      return {
+        status: response.status,
+        message: response.message,
+        data: response.data.tableData, // Return the array of collections in the data
+      };
     } else {
-      throw new Error('Failed to fetch products');
+      throw new Error('Failed to fetch collections');
     }
   } catch (error: any) {
     if (axios.isCancel(error)) {

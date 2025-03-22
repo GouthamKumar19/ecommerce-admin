@@ -1,5 +1,5 @@
 import  { useState, useEffect, useContext } from "react";
-import { Box } from "@mui/material";
+import { Box, Snackbar, Alert } from "@mui/material";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
 import CollectionForm from "../../components/CollectionForm";
@@ -10,6 +10,15 @@ export const CollectionDetails = () => {
   const { setActionHandlers } = useContext(ActionContext);
   const [isLoading, setIsLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    type: "success",
+  });
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -39,18 +48,46 @@ export const CollectionDetails = () => {
   const handleSave = async () => {
     setIsLoading(true);
 
-    // The actual save logic is handled in the CollectionForm component
-    // This is just a proxy function to communicate with the form
+    // The actual collection save/update is handled in the CollectionForm component
+    // We will wait for the ActionContext handler to complete.
+    // Since we don't have direct access to its promise, we add a short timeout to simulate feedback
 
-    // Simulate successful operation
-    setTimeout(() => {
+    try {
+      // We're just providing UI feedback - actual form submission is handled in CollectionForm
+      console.log("Save/Update initiated from CollectionDetails");
+
+      // In the future, you could modify this to await the result from the form component
+      // For now, we just provide some feedback through loading UI
+      setTimeout(() => {
+        setNotification({
+          open: true,
+          message: `Collection ${isEdit ? "updated" : "created"} successfully!`,
+          type: "success",
+        });
+
+        // Navigate back after showing notification briefly
+        setTimeout(() => {
+          navigate("/collections");
+        }, 1500);
+      }, 500);
+    } catch (error) {
+      console.error("Error in collection operation:", error);
+      setNotification({
+        open: true,
+        message: `Failed to ${isEdit ? "update" : "create"} collection`,
+        type: "error",
+      });
       setIsLoading(false);
-      navigate("/collections");
-    }, 500);
+    }
   };
 
   const handleCancel = () => {
+    console.log("Cancel action triggered from CollectionDetails");
     navigate("/collections");
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
 
   return (
@@ -111,6 +148,22 @@ export const CollectionDetails = () => {
           isLoading={isLoading}
         />
       </Box>
+
+      {/* Notification snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.type}
+          sx={{ width: "100%" }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
