@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
-import { productMockData } from "../../config/mock/productTable";
-import type { Product } from "../../types/product.types";
+import { productMockData } from "../../config/mock/productCollectionTable";
+import type { Product } from "../../types/collectionProduct.types";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
 import BackArrow from "../../components/common/BackArrow";
-import SearchBar from "../../components/common/SearchBar"; // Import SearchBar
-
+import SearchBar from "../../components/common/SearchBar";
+import { getProductById } from "../../api/product"; // Adjust the import path as needed
 // Mock fetch function
 const fetchProducts = async (): Promise<Product[]> => {
   return new Promise((resolve) => {
@@ -17,10 +17,10 @@ const fetchProducts = async (): Promise<Product[]> => {
 };
 
 const CollectionAddPage: React.FC = () => {
-  const [checkedProducts, setCheckedProducts] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [searchValue, setSearchValue] = useState<string>(""); // Add searchValue state
+  const [checkedProducts, setCheckedProducts] = useState<
+    Record<string, boolean>
+  >({});
+  const [searchValue, setSearchValue] = useState<string>("");
   const navigate = useNavigate();
 
   // Use React Query for data fetching with loading state
@@ -30,7 +30,7 @@ const CollectionAddPage: React.FC = () => {
   });
 
   // Function to handle checkbox change
-  const handleCheckboxChange = (productId: string | number) => {
+  const handleCheckboxChange = (productId: string) => {
     setCheckedProducts((prev) => ({
       ...prev,
       [productId]: !prev[productId],
@@ -43,9 +43,38 @@ const CollectionAddPage: React.FC = () => {
   };
 
   // Function to handle add button click
-  const handleAdd = () => {
-    console.log("Selected products:", checkedProducts);
-    navigate(-1);
+  // Function to handle add button click
+  const handleAdd = async () => {
+    try {
+      const selectedProductIds = Object.entries(checkedProducts)
+        .filter(([isChecked]) => isChecked)
+        .map(([productId]) => productId);
+
+      // Fetch complete details for each selected product
+      const selectedProductsDetails = await Promise.all(
+        selectedProductIds.map(async (productId) => {
+          try {
+            const response = await getProductById(productId);
+            return response.data;
+          } catch (error) {
+            console.error(`Error fetching product ${productId}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Filter out any null values from failed requests
+      const validProducts = selectedProductsDetails.filter(
+        (product) => product !== null
+      );
+
+      // Log the complete product details
+      console.log("Selected products details:", validProducts);
+
+      navigate(-1);
+    } catch (error) {
+      console.error("Error processing selected products:", error);
+    }
   };
 
   // Filter products based on search input
@@ -65,10 +94,9 @@ const CollectionAddPage: React.FC = () => {
           ) : (
             <input
               type="checkbox"
-              // @ts-ignore
-              checked={checkedProducts[item.id] || false}
+              checked={checkedProducts[item._id || ""] || false}
               className="form-checkbox h-5 w-5 custom-checkbox"
-              onChange={() => handleCheckboxChange(item._id)}
+              onChange={() => handleCheckboxChange(item._id || "")}
             />
           )}
         </div>
@@ -84,8 +112,7 @@ const CollectionAddPage: React.FC = () => {
           ) : (
             <img
               className="h-10 w-10 rounded-full"
-              // @ts-ignore
-              src={item.imageUrl}
+              // src={item.imageUrl}
               alt={item.name}
             />
           )}
@@ -159,7 +186,7 @@ const CollectionAddPage: React.FC = () => {
   // Generate skeleton rows when loading
   const skeletonData = isLoading
     ? Array(5).fill({
-        id: "skeleton",
+        _id: "skeleton",
         name: "",
         description: "",
         price: 0,
@@ -172,7 +199,7 @@ const CollectionAddPage: React.FC = () => {
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
-          <BackArrow /> {/* Add ArrowBack component here */}
+          <BackArrow />
           <div className="flex justify-center w-full md:w-auto ml-40">
             <SearchBar
               searchValue={searchValue}
@@ -209,7 +236,12 @@ const CollectionAddPage: React.FC = () => {
                 },
               }}
               onClick={handleAdd}
-              disabled={isLoading || Object.keys(checkedProducts).length === 0}
+              disabled={
+                isLoading ||
+                Object.keys(checkedProducts).filter(
+                  (key) => checkedProducts[key]
+                ).length === 0
+              }
             >
               ADD
             </Button>
@@ -217,12 +249,11 @@ const CollectionAddPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Products Table with Skeleton */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={isLoading ? skeletonData : filteredProducts} // Use filteredProducts
+          items={isLoading ? skeletonData : filteredProducts}
           columns={columns}
-          idKey="id"
+          idKey="_id"
           itemsPerPage={15}
           tableType="product"
           loading={isLoading}
