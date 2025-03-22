@@ -38,6 +38,24 @@ const ProductForm: React.FC = () => {
   // Add state for variants
   const [variants, setVariants] = useState<Variant[]>([]);
 
+  // Validation states
+  const [isProductNameValid, setIsProductNameValid] = useState<boolean>(true);
+  const [isPriceValid, setIsPriceValid] = useState<boolean>(true);
+  const [isSlashedPriceValid, setIsSlashedPriceValid] = useState<boolean>(true);
+  const [isDescriptionValid, setIsDescriptionValid] = useState<boolean>(true);
+  const [isCategoryValid, setIsCategoryValid] = useState<boolean>(true);
+  const [isSubCategoryValid, setIsSubCategoryValid] = useState<boolean>(true);
+  const [productNameErrorMessage, setProductNameErrorMessage] =
+    useState<string>("");
+  const [priceErrorMessage, setPriceErrorMessage] = useState<string>("");
+  const [slashedPriceErrorMessage, setSlashedPriceErrorMessage] =
+    useState<string>("");
+  const [descriptionErrorMessage, setDescriptionErrorMessage] =
+    useState<string>("");
+  const [categoryErrorMessage, setCategoryErrorMessage] = useState<string>("");
+  const [subCategoryErrorMessage, setSubCategoryErrorMessage] =
+    useState<string>("");
+
   // Context and routing hooks
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
@@ -154,6 +172,12 @@ const ProductForm: React.FC = () => {
   const completedVariants = variants.filter((v) => v.isComplete);
   const incompleteVariants = variants.filter((v) => !v.isComplete);
 
+  // Validation functions
+  const validateProductName = (name: string) =>
+    /^[a-zA-Z\s]*$/.test(name) && name.length <= 10;
+  const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
+  const validateDescription = (desc: string) => desc.length <= 60;
+
   return (
     <div>
       {/* Form content */}
@@ -165,6 +189,24 @@ const ProductForm: React.FC = () => {
           <TextField
             fullWidth
             size="small"
+            value={productName}
+            onChange={(e) => {
+              const name = e.target.value;
+              if (validateProductName(name)) {
+                setProductName(name);
+                setIsProductNameValid(true);
+                setProductNameErrorMessage("");
+              } else {
+                setIsProductNameValid(false);
+                if (!/^[a-zA-Z\s]*$/.test(name)) {
+                  setProductNameErrorMessage("Only characters are allowed.");
+                } else if (name.length > 10) {
+                  setProductNameErrorMessage("Maximum 10 characters allowed.");
+                }
+              }
+            }}
+            placeholder="Product Name"
+            error={!isProductNameValid}
             InputProps={{
               endAdornment: (
                 <InputAdornment
@@ -177,12 +219,25 @@ const ProductForm: React.FC = () => {
                     fontSize: "0.65rem",
                   }}
                 >
-                  {`${description.length}/10`}
+                  {`${productName.length}/10`}
                 </InputAdornment>
               ),
+              style: {
+                borderColor: !isProductNameValid ? "red" : "inherit",
+              },
             }}
-            placeholder="Product Name"
+            sx={{
+              "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: "red",
+                },
+            }}
           />
+          {!isProductNameValid && (
+            <Typography variant="body2" color="error">
+              {productNameErrorMessage}
+            </Typography>
+          )}
         </Grid>
 
         <Grid item xs={12} md={6}>
@@ -195,8 +250,19 @@ const ProductForm: React.FC = () => {
             rows={3}
             size="small"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              const desc = e.target.value;
+              if (validateDescription(desc)) {
+                setDescription(desc);
+                setIsDescriptionValid(true);
+                setDescriptionErrorMessage("");
+              } else {
+                setIsDescriptionValid(false);
+                setDescriptionErrorMessage("Maximum 60 characters allowed.");
+              }
+            }}
             placeholder="Description"
+            error={!isDescriptionValid}
             InputProps={{
               endAdornment: (
                 <InputAdornment
@@ -212,13 +278,25 @@ const ProductForm: React.FC = () => {
                   {`${description.length}/60`}
                 </InputAdornment>
               ),
+              style: {
+                borderColor: !isDescriptionValid ? "red" : "inherit",
+              },
             }}
             sx={{
+              "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: "red",
+                },
               "& .MuiInputBase-multiline": {
                 paddingBottom: "24px",
               },
             }}
           />
+          {!isDescriptionValid && (
+            <Typography variant="body2" color="error">
+              {descriptionErrorMessage}
+            </Typography>
+          )}
         </Grid>
       </Grid>
 
@@ -251,9 +329,36 @@ const ProductForm: React.FC = () => {
             fullWidth
             size="small"
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            onChange={(e) => {
+              const priceValue = e.target.value;
+              if (validatePrice(priceValue)) {
+                setPrice(priceValue);
+                setIsPriceValid(true);
+                setPriceErrorMessage("");
+              } else {
+                setIsPriceValid(false);
+                setPriceErrorMessage("Only numbers are allowed.");
+              }
+            }}
             placeholder="Price"
+            error={!isPriceValid}
+            InputProps={{
+              style: {
+                borderColor: !isPriceValid ? "red" : "inherit",
+              },
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: "red",
+                },
+            }}
           />
+          {!isPriceValid && (
+            <Typography variant="body2" color="error">
+              {priceErrorMessage}
+            </Typography>
+          )}
         </Grid>
 
         <Grid item xs={12} md={4}>
@@ -264,9 +369,36 @@ const ProductForm: React.FC = () => {
             fullWidth
             size="small"
             value={slashedPrice}
-            onChange={(e) => setSlashedPrice(e.target.value)}
+            onChange={(e) => {
+              const slashedPriceValue = e.target.value;
+              if (validatePrice(slashedPriceValue)) {
+                setSlashedPrice(slashedPriceValue);
+                setIsSlashedPriceValid(true);
+                setSlashedPriceErrorMessage("");
+              } else {
+                setIsSlashedPriceValid(false);
+                setSlashedPriceErrorMessage("Only numbers are allowed.");
+              }
+            }}
             placeholder="Slashed out price"
+            error={!isSlashedPriceValid}
+            InputProps={{
+              style: {
+                borderColor: !isSlashedPriceValid ? "red" : "inherit",
+              },
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: "red",
+                },
+            }}
           />
+          {!isSlashedPriceValid && (
+            <Typography variant="body2" color="error">
+              {slashedPriceErrorMessage}
+            </Typography>
+          )}
         </Grid>
       </Grid>
 
@@ -282,12 +414,37 @@ const ProductForm: React.FC = () => {
           <Autocomplete
             options={categories}
             value={category}
-            onChange={(_, newValue) => setCategory(newValue)}
+            onChange={(_, newValue) => {
+              setCategory(newValue);
+              if (newValue) {
+                setIsCategoryValid(true);
+                setCategoryErrorMessage("");
+              } else {
+                setIsCategoryValid(false);
+                setCategoryErrorMessage("Category is required.");
+              }
+            }}
             fullWidth
             renderInput={(params) => (
-              <TextField {...params} placeholder="Category" size="small" />
+              <TextField
+                {...params}
+                placeholder="Category"
+                size="small"
+                error={!isCategoryValid}
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: "red",
+                    },
+                }}
+              />
             )}
           />
+          {!isCategoryValid && (
+            <Typography variant="body2" color="error">
+              {categoryErrorMessage}
+            </Typography>
+          )}
         </Grid>
         <Grid item xs={12} md={4}>
           <Typography variant="subtitle1" gutterBottom align="left">
@@ -296,12 +453,37 @@ const ProductForm: React.FC = () => {
           <Autocomplete
             options={subCategories}
             value={subCategory}
-            onChange={(_, newValue) => setSubCategory(newValue)}
+            onChange={(_, newValue) => {
+              setSubCategory(newValue);
+              if (newValue) {
+                setIsSubCategoryValid(true);
+                setSubCategoryErrorMessage("");
+              } else {
+                setIsSubCategoryValid(false);
+                setSubCategoryErrorMessage("Sub category is required.");
+              }
+            }}
             fullWidth
             renderInput={(params) => (
-              <TextField {...params} placeholder="Sub Category" size="small" />
+              <TextField
+                {...params}
+                placeholder="Sub Category"
+                size="small"
+                error={!isSubCategoryValid}
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: "red",
+                    },
+                }}
+              />
             )}
           />
+          {!isSubCategoryValid && (
+            <Typography variant="body2" color="error">
+              {subCategoryErrorMessage}
+            </Typography>
+          )}
         </Grid>
       </Grid>
 
