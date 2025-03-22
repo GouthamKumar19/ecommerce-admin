@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { Box } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import { ActionContext } from "../../context/ActionContext"; // Import the ActionContext
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
@@ -9,6 +9,9 @@ const Profile: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [showEmailAlert, setShowEmailAlert] = useState(false);
+  const [nameError, setNameError] = useState(false);
+  const [nameErrorMessage, setNameErrorMessage] = useState("");
+  //const [emailFocused, setEmailFocused] = useState(false); // State for email field focus
 
   const { setActionHandlers } = useContext(ActionContext); // Use the ActionContext
 
@@ -30,7 +33,18 @@ const Profile: React.FC = () => {
   }, []);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
+    const value = event.target.value;
+    setName(value);
+
+    // Validate the name input
+    const regex = /^[A-Za-z\s]+$/; // Only allow letters and spaces
+    if (value === "" || regex.test(value)) {
+      setNameError(false);
+      setNameErrorMessage("");
+    } else {
+      setNameError(true);
+      setNameErrorMessage("Name should only contain letters.");
+    }
   };
 
   const handleMouseEnter = () => {
@@ -43,6 +57,10 @@ const Profile: React.FC = () => {
 
   // ✅ Use `useCallback` to prevent unnecessary re-renders
   const handleSubmit = useCallback(async () => {
+    if (nameError) {
+      return; // Prevent submission if there are errors
+    }
+
     console.log("Form submitted"); // Add this log to confirm form submission
     const token = "123"; // Replace with actual token
     try {
@@ -59,7 +77,7 @@ const Profile: React.FC = () => {
     } catch (error) {
       console.error("Error updating profile:", error);
     }
-  }, [name, email]); // ✅ Add dependencies properly
+  }, [name, email, nameError]); // ✅ Add dependencies properly
 
   const handleCancel = useCallback(() => {
     console.log("Form cancelled");
@@ -84,7 +102,6 @@ const Profile: React.FC = () => {
         borderRadius: "8px",
       }}
     >
-      {/* Top section - fixed */}
       <Box
         sx={{
           padding: 2,
@@ -98,16 +115,15 @@ const Profile: React.FC = () => {
         <BackArrow />
       </Box>
 
-      {/* Middle section - scrollable with padding at bottom to prevent content overlap */}
       <Box
         sx={{
           flex: 1,
           overflowY: "auto",
           padding: 2,
-          paddingBottom: "80px", // Add extra padding at the bottom to prevent overlap
+          paddingBottom: "80px",
           scrollbarWidth: "none", // For Firefox
           "&::-webkit-scrollbar": {
-            display: "none", // For Chrome, Safari, and Opera
+            display: "none",
           },
         }}
       >
@@ -116,31 +132,43 @@ const Profile: React.FC = () => {
             Profile
           </h2>
 
-          <div className="mb-6">
-            <label className="block text-gray-700 text-lg font-medium mb-2 text-left">
+          <form noValidate autoComplete="off">
+            <label className="block text-black text-lg font-medium mb-2 text-left">
               Name
             </label>
-            <input
-              type="text"
-              value={name}
-              onChange={handleNameChange}
-              placeholder="Name"
-              className="shadow border rounded w-full py-3 px-3 text-gray-700 focus:outline-none focus:shadow-outline"
-            />
-          </div>
+            <div className="mb-6">
+              <TextField
+                variant="outlined"
+                size="small"
+                value={name}
+                onChange={handleNameChange}
+                error={nameError}
+                helperText={nameErrorMessage}
+                fullWidth
+                sx={{ height: "40px" }} // Change the height to make it smaller
+              />
+            </div>
 
-          <div className="mb-8">
-            <label className="block text-gray-700 text-lg font-medium mb-2 text-left">
-              Email
-            </label>
-            <div className="relative flex items-center">
-              <input
-                type="email"
+            <div className="mb-8 relative">
+              <label className="block text-black text-lg font-medium mb-2 text-left">
+                Email
+              </label>
+              <TextField
+                variant="outlined"
+                size="small"
                 value={email}
-                readOnly
+                InputProps={{
+                  readOnly: true, // Make the email field read-only
+                }}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className="shadow border rounded w-full py-3 px-3 text-gray-500 bg-gray-100 cursor-not-allowed"
+                //onFocus={() => setEmailFocused(true)} // Set focused state on focus
+                //onBlur={() => setEmailFocused(false)} // Reset focused state on blur
+                fullWidth
+                sx={{
+                  height: "40px",
+                  bgcolor: "#fafafa",
+                }}
               />
               {showEmailAlert && (
                 <div className="absolute right-0 transform translate-x-full ml-10 bg-red-100 text-red-700 px-3 py-1 rounded shadow-md text-sm">
@@ -148,15 +176,14 @@ const Profile: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
+          </form>
         </div>
       </Box>
 
-      {/* Bottom section - fixed with increased bottom spacing */}
       <Box
         sx={{
-          padding: 3, // Increased padding
-          paddingBottom: 4, // Extra bottom padding
+          padding: 3,
+          paddingBottom: 4,
           boxShadow: "0px -2px 4px rgba(0,0,0,0.05)",
           position: "sticky",
           bottom: 0,
