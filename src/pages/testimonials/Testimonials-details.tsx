@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
-import Rating from "@mui/material/Rating";
+import { Rating } from "@mui/material";
 import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
@@ -26,6 +28,10 @@ const TestimonialsDetails = () => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({
+    name: false,
+  });
   const { setActionHandlers } = useContext(ActionContext);
 
   const navigate = useNavigate();
@@ -40,7 +46,6 @@ const TestimonialsDetails = () => {
         setIsEdit(true);
 
         try {
-          // Use the API function to get the testimonial
           const response = await getTestimonialById(id);
 
           if (response && response.data) {
@@ -50,6 +55,8 @@ const TestimonialsDetails = () => {
               ratings: response.data.ratings || response.data.rating,
               description: response.data.description,
             });
+            // Validate name after loading
+            validateName(response.data.name);
           }
         } catch (error) {
           console.error("Error fetching testimonial:", error);
@@ -57,7 +64,6 @@ const TestimonialsDetails = () => {
           setIsLoading(false);
         }
       } else if (location.state?.testimonial) {
-        // Handle case when testimonial data is passed via location state
         const { testimonial } = location.state;
         setIsEdit(true);
         setFormData({
@@ -66,20 +72,20 @@ const TestimonialsDetails = () => {
           ratings: testimonial.ratings || testimonial.rating,
           description: testimonial.description,
         });
+        // Validate name after loading
+        validateName(testimonial.name);
       }
     };
 
     fetchTestimonial();
   }, [id, location.state]);
 
-  // Set up action handlers for the ActionBox component
   useEffect(() => {
     setActionHandlers({
       onConfirm: handleSubmit,
       onCancel: handleBack,
     });
 
-    // Cleanup function to reset handlers when component unmounts
     return () => {
       setActionHandlers({
         onConfirm: () => console.warn("onConfirm is not implemented"),
@@ -88,11 +94,46 @@ const TestimonialsDetails = () => {
     };
   }, [formData, isEdit, isLoading, setActionHandlers]);
 
+  // Separate validation function for reuse
+  const validateName = (value: string): string | null => {
+    const regex = /^[a-zA-Z. ]*$/; // Allow alphabet characters, spaces and periods
+
+    if (value.trim().length === 0) {
+      return "Name is required.";
+    } else if (!regex.test(value.trim())) {
+      return "Name can only contain letters and periods.";
+    } else if (value.trim().length < 2) {
+      return "Name must be at least 2 characters.";
+    }
+    return null;
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+
+    // Handle name validation in real-time
+    if (id === "name") {
+      setNameError(validateName(value));
+      // Mark field as touched
+      if (!touched.name) {
+        setTouched((prev) => ({ ...prev, name: true }));
+      }
+    }
+  };
+
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+
+    // Mark field as touched on blur
+    if (id === "name" && !touched.name) {
+      setTouched((prev) => ({ ...prev, name: true }));
+      setNameError(validateName(value));
+    }
   };
 
   const handleRatingChange = (
@@ -104,16 +145,27 @@ const TestimonialsDetails = () => {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+
+    // Mark name as touched to show validation errors if any
+    setTouched({ ...touched, name: true });
+
+    // Validate name before submission
+    const currentNameError = validateName(formData.name);
+    setNameError(currentNameError);
+
+    // Check if name is valid before proceeding
+    if (currentNameError) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       let response;
 
       if (isEdit) {
-        // Update existing testimonial
         response = await updateTestimonial(formData);
       } else {
-        // Create new testimonial
         response = await createTestimonial(formData);
       }
 
@@ -122,7 +174,6 @@ const TestimonialsDetails = () => {
         response
       );
 
-      // Navigate back to testimonials list
       setTimeout(() => {
         setIsLoading(false);
         navigate("/testimonials");
@@ -150,7 +201,6 @@ const TestimonialsDetails = () => {
         borderRadius: "8px",
       }}
     >
-      {/* Top section - fixed */}
       <Box
         sx={{
           padding: 2,
@@ -169,44 +219,39 @@ const TestimonialsDetails = () => {
           flex: 1,
           overflowY: "auto",
           padding: 2,
-          paddingBottom: "80px", // Add extra padding at the bottom to prevent overlap
-          scrollbarWidth: "none", // For Firefox
+          paddingBottom: "80px",
+          scrollbarWidth: "none",
           "&::-webkit-scrollbar": {
-            display: "none", // For Chrome, Safari, and Opera
+            display: "none",
           },
         }}
       >
         <form className="w-full max-w-3xl space-y-4" onSubmit={handleSubmit}>
-          {/* Grid container for name and rating */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Name Section */}
             <div>
-              <label
-                htmlFor="name"
-                className="block mb-1 font-medium text-gray-700"
-              >
-                NAME <span className="text-red-500">*</span>
+              <label className="block text-black text-small font-medium mb-2 text-left">
+                Name
               </label>
-              <input
-                type="text"
+              <TextField
                 id="name"
+                variant="outlined"
                 placeholder="Name"
-                className="w-full h-11 text-border input-box px-3 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                fullWidth
+                size="small"
                 value={formData.name}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
+                error={touched.name && Boolean(nameError)}
+                helperText={touched.name ? nameError : ""}
                 required
               />
             </div>
 
-            {/* Rating Section */}
             <div>
-              <label
-                htmlFor="ratings"
-                className="block mb-1 font-medium text-gray-700"
-              >
-                RATINGS <span className="text-red-500">*</span>
+              <label className="block text-black text-small font-medium mb-2 text-left">
+                Ratings
               </label>
-              <Box className="h-11 px-3 border input-box rounded bg-white flex items-center">
+              <Box className="h-11 px-3 border border-grey-300 rounded bg-white flex items-center">
                 <Rating
                   name="ratings"
                   value={formData.ratings}
@@ -218,27 +263,43 @@ const TestimonialsDetails = () => {
             </div>
           </div>
 
-          {/* Description Section with Textarea */}
           <div className="mt-4">
-            <label
-              htmlFor="description"
-              className="block mb-1 font-medium text-gray-700"
-            >
-              DESCRIPTION <span className="text-red-500">*</span>
+            <label className="block text-black text-small font-medium mb-2 text-left">
+              Description
             </label>
-            <textarea
+            <TextField
               id="description"
               placeholder="Description"
-              className="w-full px-3 py-2 input-box border rounded min-h-[100px] resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              variant="outlined"
+              fullWidth
+              size="small"
+              multiline
+              rows={4}
+              maxRows={4}
               value={formData.description}
               onChange={handleInputChange}
+              inputProps={{ maxLength: 120 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment
+                    position="end"
+                    style={{
+                      position: "absolute",
+                      bottom: "8px",
+                      right: "14px",
+                      margin: 0,
+                    }}
+                  >
+                    {formData.description.length}/120
+                  </InputAdornment>
+                ),
+              }}
               required
             />
           </div>
         </form>
       </Box>
 
-      {/* Bottom section with ActionBox component */}
       <Box
         sx={{
           padding: 3,
