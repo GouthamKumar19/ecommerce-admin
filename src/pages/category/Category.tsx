@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import DataTable from "../../components/common/DataTable";
-import { Category, Subcategory } from "../../types/category.types"; // Ensure correct import
+import { Category, Subcategory } from "../../types/category.types";
 import { useNavigate } from "react-router-dom";
-import { Box, Chip, CircularProgress } from "@mui/material";
+import { Box, Chip } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
@@ -14,6 +14,7 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 import { getAllCategory } from "../../api/category";
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import TableSkeletonLoader
 
 const SubcategoryCell: React.FC<{ subcategories: Subcategory[] }> = ({
   subcategories,
@@ -73,22 +74,22 @@ const CategoryPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Declare the payload with pagination options
         const payload = {
           options: {
-            page: 1, // Set to the current page you want to fetch
-            itemsPerPage: 10, // Number of items per page
+            page: 1, // Adjust for pagination if needed
+            itemsPerPage: 10,
           },
         };
 
-        // Pass the payload to the getAllCategory function
-        const response = await getAllCategory(payload);
-        setCategories(response.data); // Set the categories from fetched data
-        console.log("Fetched Categories:", response.data);
+        setTimeout(async () => {
+          const response = await getAllCategory(payload);
+          setCategories(response.data); // Set the categories from fetched data
+          console.log("Fetched Categories:", response.data);
+          setIsLoading(false); // Set loading to false after fetching
+        }, 500); // Simulating a 500ms network delay
       } catch (err: any) {
         setError(err.message || "Failed to fetch categories");
-      } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Set loading to false on error
       }
     };
 
@@ -141,6 +142,7 @@ const CategoryPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
+  
   const sortedCategories = useSortableData(categories, sortConfig);
   const filteredCategories = sortedCategories.filter((category) =>
     category.name.toLowerCase().includes(searchValue.toLowerCase())
@@ -184,60 +186,53 @@ const CategoryPage: React.FC = () => {
 
   return (
     <div>
-      {isLoading ? (
-        <div className="flex justify-center">
-          <CircularProgress />
-        </div>
-      ) : (
-        <>
-          {error && <div className="text-red-600">{error}</div>}
-
-          <div className="bg-white p-2.5 rounded-lg shadow mb-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-2 p-2">
-              <div className="flex justify-center w-full md:w-auto flex-grow">
-                <SearchBar
-                  searchValue={searchValue}
-                  onSearchChange={setSearchValue}
-                />
-              </div>
-              <div className="flex ml-auto">
-                <button
-                  className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
-                  onClick={handleAddNewCategory}
-                >
-                  Add Category
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <DataTable<Category>
-              items={filteredCategories}
-              columns={columns}
-              idKey="_id"
-              itemsPerPage={10}
-              tableType="category"
-              actionRenderer={actionRenderer}
-              loading={isLoading}
+      <div className="bg-white p-2.5 rounded-lg shadow mb-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-2 p-2">
+          <div className="flex justify-center w-full md:w-auto flex-grow">
+            <SearchBar
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
             />
           </div>
-
-          <ConfirmationDialog
-            open={dialogOpen}
-            title="Delete Category"
-            subtitle={`Are you sure you want to delete the category "${selectedCategory?.name}"?`}
-            onClose={(confirm: boolean) => {
-              if (confirm) {
-                confirmDeleteCategory();
-              } else {
-                setDialogOpen(false);
-                setSelectedCategory(null);
-              }
-            }}
+          <div className="flex ml-auto">
+            <button
+              className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
+              onClick={handleAddNewCategory}
+            >
+              Add Category
+            </button>
+          </div>
+        </div>
+      </div>
+      {error && <div className="text-red-600 text-center mb-4">{error}</div>}{" "}
+      {/* Displaying the error message */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {isLoading ? (
+          <TableSkeletonLoader columns={columns.length} rows={10} />
+        ) : (
+          <DataTable<Category>
+            items={filteredCategories}
+            columns={columns}
+            idKey="_id"
+            itemsPerPage={10}
+            tableType="category"
+            actionRenderer={actionRenderer}
           />
-        </>
-      )}
+        )}
+      </div>
+      <ConfirmationDialog
+        open={dialogOpen}
+        title="Delete Category"
+        subtitle={`Are you sure you want to delete the category "${selectedCategory?.name}"?`}
+        onClose={(confirm: boolean) => {
+          if (confirm) {
+            confirmDeleteCategory();
+          } else {
+            setDialogOpen(false);
+            setSelectedCategory(null);
+          }
+        }}
+      />
     </div>
   );
 };
