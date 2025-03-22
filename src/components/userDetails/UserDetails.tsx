@@ -1,17 +1,18 @@
 import React, { useState, useContext, useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
+
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import Button from "@mui/material/Button";
+
 import { Edit, Delete } from "@mui/icons-material";
+import TextField from "@mui/material/TextField";
 import AddressPopup from "./AddressPopup";
 import { ActionContext } from "../../context/ActionContext";
 import { createUser, getUserById } from "../../api/user";
 import { useLocation, useParams } from "react-router-dom";
 import { User } from "../../types/users.types";
-
+import { InputAdornment } from "@mui/material";
 interface UserFormData {
   name: string;
   email: string;
@@ -49,14 +50,16 @@ const UserDetailsForm: React.FC = () => {
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  // Get URL parameters and location state
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+  });
+
   const params = useParams();
   const location = useLocation();
-
-  // Use context to communicate with ActionBox
   const { setActionHandlers } = useContext(ActionContext);
 
-  // Populate form with user data
   const populateFormWithUserData = (user: User) => {
     setFormData({
       name: user.name ? String(user.name) : "",
@@ -64,15 +67,13 @@ const UserDetailsForm: React.FC = () => {
       password: user.password ? String(user.password) : "",
       gender: user.gender ? String(user.gender) : "",
       phoneNumber: user.phone ? String(user.phone) : "",
-      countryCode: "+91", // Default or from user data if available
-      addresses: [], // Populate addresses if available in your user data
+      countryCode: "+91",
+      addresses: [],
     });
   };
 
-  // Fetch user data when component mounts or when userId changes
   useEffect(() => {
     const fetchUserData = async () => {
-      // Handle ID from URL params (if edit mode)
       const id = params.id;
       if (id && id !== "new") {
         setIsLoading(true);
@@ -90,7 +91,6 @@ const UserDetailsForm: React.FC = () => {
           setIsLoading(false);
         }
       } else if (location.state?.user) {
-        // Handle data passed via location state
         const user = location.state.user;
         setIsEditMode(true);
         setUserId(String(user.id || user._id));
@@ -101,18 +101,15 @@ const UserDetailsForm: React.FC = () => {
     fetchUserData();
   }, [params.id, location.state]);
 
-  // Set up action handlers for the parent component
   useEffect(() => {
     setActionHandlers({
       onConfirm: handleConfirm,
       onCancel: () => {
-        // Can be handled by parent or here
         console.log("Cancel action triggered");
       },
     });
 
     return () => {
-      // Reset action handlers when component unmounts
       setActionHandlers({
         onConfirm: () => console.warn("onConfirm is not implemented"),
         onCancel: () => console.warn("onCancel is not implemented"),
@@ -122,10 +119,61 @@ const UserDetailsForm: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    if (name === "phoneNumber") {
+      // Handle phone number specifically
+      if (value.startsWith("+91")) {
+        const phoneDigits = value.substring(3).replace(/\D/g, ""); // Remove +91 and non-digits
+        const newPhoneValue =
+          "+91" +
+          (phoneDigits.length > 10 ? phoneDigits.slice(0, 10) : phoneDigits);
+
+        setFormData((prev) => ({
+          ...prev,
+          phoneNumber: newPhoneValue,
+        }));
+
+        setErrors((prev) => ({
+          ...prev,
+          phoneNumber:
+            phoneDigits.length === 10 ? "" : "Phone number must be 10 digits.",
+        }));
+      } else {
+        // If somehow the +91 prefix was removed, restore it
+        const phoneDigits = value.replace(/\D/g, "");
+        setFormData((prev) => ({
+          ...prev,
+          phoneNumber:
+            "+91" +
+            (phoneDigits.length > 10 ? phoneDigits.slice(0, 10) : phoneDigits),
+        }));
+      }
+    } else {
+      // Handle other inputs normally
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+
+      // Validation logic
+      if (name === "name") {
+        setErrors((prev) => ({
+          ...prev,
+          name: /^[a-zA-Z\s]+$/.test(value)
+            ? ""
+            : "Name cannot contain numbers or special characters.",
+        }));
+      }
+
+      if (name === "email") {
+        setErrors((prev) => ({
+          ...prev,
+          email: value.endsWith("@gmail.com")
+            ? ""
+            : "Email must end with @gmail.com.",
+        }));
+      }
+    }
   };
 
   const handleAddAddress = (addressData: AddressData) => {
@@ -176,6 +224,12 @@ const UserDetailsForm: React.FC = () => {
 
     console.log("Form data being submitted:", userData);
 
+    // Check for errors before submission
+    if (errors.name || errors.email || errors.phoneNumber) {
+      console.error("There are validation errors", errors);
+      return; // Stop if there are validation errors
+    }
+
     try {
       if (isEditMode && userId) {
         // Update existing user (API call to be implemented)
@@ -201,7 +255,7 @@ const UserDetailsForm: React.FC = () => {
           email: "",
           password: "",
           gender: "",
-          phoneNumber: "",
+          phoneNumber: "+91",
           countryCode: "+91",
           addresses: [],
         });
@@ -214,6 +268,22 @@ const UserDetailsForm: React.FC = () => {
     }
   };
 
+  // Calculate phone length excluding +91 prefix
+  const phoneDigitsLength = formData.phoneNumber.startsWith("+91")
+    ? formData.phoneNumber.substring(3).length
+    : formData.phoneNumber.length;
+
+  // Custom styles for text fields
+  const textFieldStyle = {
+    backgroundColor: "white",
+    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "rgba(0, 0, 0, 0.23)", // Keep standard border color when focused
+    },
+    "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "rgba(0, 0, 0, 0.23)", // Keep standard border color when hovered
+    },
+  };
+
   return (
     <div>
       {isLoading ? (
@@ -223,60 +293,92 @@ const UserDetailsForm: React.FC = () => {
       ) : (
         <div className={`${showAddress ? "filter pointer-events-none" : ""}`}>
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="Name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
-            />
-            {/* <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
-            />
-            <input
-              type="text"
-              name="gender"
-              placeholder="Gender"
-              value={formData.gender}
-              onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
-            /> */}
-            <div className="relative w-full md:w-1/3">
-              <input
+            <div className="w-full md:w-1/3 text-left">
+              <label className="block text-black text-small font-medium mb-2 text-left">
+                Name
+              </label>
+              <TextField
+                variant="outlined"
+                name="name"
+                placeholder="Name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full"
+                error={!!errors.name} // Here to indicate error state
+                helperText={errors.name}
+                size="small"
+                InputProps={{
+                  style: { backgroundColor: "white" },
+                }}
+                sx={{
+                  ...textFieldStyle,
+                  "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: "red", // Custom red border color for error state
+                    },
+                }}
+              />
+            </div>
+
+            <div className="w-full md:w-1/3 text-left">
+              <label className="block text-black text-small font-medium mb-2 text-left">
+                Email
+              </label>
+              <TextField
+                variant="outlined"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full"
+                error={!!errors.email} // Here to indicate error state
+                helperText={errors.email}
+                size="small"
+                InputProps={{
+                  style: { backgroundColor: "white" },
+                }}
+                sx={{
+                  ...textFieldStyle,
+                  "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: "red", // Custom red border color for error state
+                    },
+                }}
+              />
+            </div>
+
+            <div className="relative w-full md:w-1/3 text-left">
+              <label className="block text-black text-small font-medium mb-2 text-left">
+                Phone Number
+              </label>
+              <TextField
+                variant="outlined"
                 type="tel"
                 name="phoneNumber"
                 placeholder="Phone Number"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
-                maxLength={10}
-                className="w-full border rounded-md input-box py-2 px-3"
+                className="w-full"
+                error={!!errors.phoneNumber} // Here to indicate error state
+                helperText={errors.phoneNumber}
+                size="small"
+                InputProps={{
+                  style: { backgroundColor: "white" },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      {phoneDigitsLength}/10
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  ...textFieldStyle,
+                  "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: "red", // Custom red border color for error state
+                    },
+                }}
               />
-              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
-                {formData.phoneNumber.length}/10
-              </span>
             </div>
-            {/* <input
-              type="text"
-              name="countryCode"
-              placeholder="Country Code"
-              value={formData.countryCode}
-              onChange={handleInputChange}
-              className="w-full md:w-1/3 border rounded-md input-box py-2 px-3"
-            /> */}
           </div>
 
           <button
@@ -306,12 +408,17 @@ const UserDetailsForm: React.FC = () => {
               <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-2">
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">Address Line 1</label>
-                  <input
-                    type="text"
+                  <TextField
+                    variant="outlined"
                     name="addressLine1"
                     value={address.addressLine1}
-                    readOnly
-                    className="w-full border rounded px-2 py-2 text-sm input-box"
+                    className="w-full"
+                    size="small"
+                    InputProps={{
+                      readOnly: true,
+                      style: { backgroundColor: "white" },
+                    }}
+                    sx={textFieldStyle}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Street address or P.O. Box
@@ -319,12 +426,17 @@ const UserDetailsForm: React.FC = () => {
                 </div>
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">Address Line 2</label>
-                  <input
-                    type="text"
+                  <TextField
+                    variant="outlined"
                     name="addressLine2"
                     value={address.addressLine2}
-                    readOnly
-                    className="w-full border rounded px-2 py-2 text-sm input-box"
+                    className="w-full"
+                    size="small"
+                    InputProps={{
+                      readOnly: true,
+                      style: { backgroundColor: "white" },
+                    }}
+                    sx={textFieldStyle}
                   />
                   <p className="text-xs text-gray-500 mt-1">Optional</p>
                 </div>
@@ -332,35 +444,50 @@ const UserDetailsForm: React.FC = () => {
 
               <div className="mb-2">
                 <label className="block text-sm mb-1">City</label>
-                <input
-                  type="text"
+                <TextField
+                  variant="outlined"
                   name="city"
                   value={address.city}
-                  readOnly
-                  className="w-full border rounded px-2 py-2 text-sm input-box"
+                  className="w-half"
+                  size="small"
+                  InputProps={{
+                    readOnly: true,
+                    style: { backgroundColor: "white" },
+                  }}
+                  sx={textFieldStyle}
                 />
               </div>
 
               <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-2">
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">State</label>
-                  <input
-                    type="text"
+                  <TextField
+                    variant="outlined"
                     name="state"
                     value={address.state}
-                    readOnly
-                    className="w-full border rounded px-2 py-2 text-sm input-box"
+                    className="w-full"
+                    size="small"
+                    InputProps={{
+                      readOnly: true,
+                      style: { backgroundColor: "white" },
+                    }}
+                    sx={textFieldStyle}
                   />
                 </div>
 
                 <div className="w-full md:w-1/2">
                   <label className="block text-sm mb-1">PIN Code</label>
-                  <input
-                    type="text"
+                  <TextField
+                    variant="outlined"
                     name="pinCode"
                     value={address.pinCode}
-                    readOnly
-                    className="w-full border rounded px-2 py-2 text-sm input-box"
+                    className="w-full"
+                    size="small"
+                    InputProps={{
+                      readOnly: true,
+                      style: { backgroundColor: "white" },
+                    }}
+                    sx={textFieldStyle}
                   />
                 </div>
               </div>
@@ -408,18 +535,6 @@ const UserDetailsForm: React.FC = () => {
             />
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setShowAddress(false);
-              setEditingAddress(null);
-              setEditingIndex(null);
-            }}
-            color="primary"
-          >
-            Cancel
-          </Button>
-        </DialogActions>
       </Dialog>
     </div>
   );
