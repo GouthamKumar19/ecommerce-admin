@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import DataTable from "../../components/common/DataTable";
-import { getAllProducts } from "../../api/product"; // Import your API fetching function
+import { getAllProducts, deleteProduct } from "../../api/product"; // Import your API fetching function
 import type { Product } from "../../types/product.types";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
@@ -14,6 +14,8 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -26,6 +28,7 @@ const ProductPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -34,24 +37,15 @@ const ProductPage: React.FC = () => {
   };
 
   // Payload for API fetching
-  const payload = {
-    options: {
-      page: 1,
-      itemsPerPage: 10,
-      sortBy: ["createdAt"],
-      sortDesc: [true],
-    },
-  };
-
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true); // Set loading state to true
       setError(null); // Reset error state
       setTimeout(async () => {
         try {
-          const response = await getAllProducts(payload); // Sending the payload to fetch data
+          const response = await getAllProducts(); // Fetching data without payload
           console.log(error);
-          setProducts(response); // Assuming response is already an array of products
+          setProducts(response.data); // Assuming response.data is an array of products
         } catch (err: any) {
           setError(err.message || "Failed to fetch products");
         } finally {
@@ -70,11 +64,17 @@ const ProductPage: React.FC = () => {
     setDialogOpen(true);
   };
 
-  const confirmDeleteProduct = () => {
+  const confirmDeleteProduct = async () => {
     if (selectedProduct) {
-      console.log(`Deleting product with ID: ${selectedProduct._id}`);
-      // Implement your delete logic here
-      // You can call a delete API method here and re-fetch the products after successful deletion
+      try {
+        const response = await deleteProduct(selectedProduct._id);
+        setSnackbarMessage(response.message);
+        setProducts(
+          products.filter((product) => product._id !== selectedProduct._id)
+        ); // Remove the deleted product from the list
+      } catch (error: any) {
+        setSnackbarMessage(error.message || "Failed to delete product");
+      }
     }
     setDialogOpen(false);
     setSelectedProduct(null);
@@ -277,6 +277,20 @@ const ProductPage: React.FC = () => {
           }
         }}
       />
+
+      <Snackbar
+        open={!!snackbarMessage}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarMessage(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarMessage(null)}
+          severity={snackbarMessage?.includes("Failed") ? "error" : "success"}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

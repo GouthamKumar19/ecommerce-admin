@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginComponent from "../../components/LoginForm";
+import { login } from "../../api/login";
+import { LoginRequest } from "../../types/loginTypes";
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
@@ -8,19 +10,26 @@ const LoginPage = () => {
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (email: string, password: string) => {
+  const handleSubmit = async (
+    email: string,
+    password: string,
+    googleId?: string,
+    appleId?: string
+  ) => {
     setLoading(true);
     setError("");
 
     try {
-      if (email && password) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      const loginData: LoginRequest = { email, password, googleId, appleId };
+      console.log("Login data:", loginData);
+      const response = await login(loginData);
 
-        localStorage.setItem("auth_token", "demo_token");
-
+      if (response.status === 200) {
+        localStorage.setItem("auth_token", response.data.access_token);
+        localStorage.setItem("refresh_token", response.data.refresh_token);
         navigate("/dashboard");
       } else {
-        setError("Please enter both email and password");
+        setError(response.message);
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
