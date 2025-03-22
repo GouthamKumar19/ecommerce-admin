@@ -1,8 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "../../components/common/DataTable";
-import { useQuery } from "@tanstack/react-query";
-import { orderMockData } from "../../config/mock/orderNew";
-import type { Order } from "../../types/order.types";
+import type { Order, OrderFilters } from "../../types/order.types";
 import { useNavigate } from "react-router-dom";
 import { Visibility, FilterList } from "@mui/icons-material";
 import { Button } from "@mui/material";
@@ -15,21 +13,15 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-
-const fetchOrders = async (): Promise<Order[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(orderMockData), 1000);
-  });
-};
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import Skeleton Loader
+import { getAllOrders } from "../../api/orders";
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  const [filters, setFilters] = useState<{
-    paymentStatus: string;
-    orderStatus: string;
-  }>({
-    paymentStatus: "",
-    orderStatus: "",
+  const [filters, setFilters] = useState<OrderFilters>({
+    paymentStatus: [],
+    orderStatus: [],
+    date: "",
   });
 
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
@@ -37,25 +29,46 @@ const OrderPage: React.FC = () => {
     key: "",
     direction: null,
   });
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const handleViewOrder = (item: Order) => {
+    navigate(`/orders/${item._id}`, { state: { order: item } });
+  };
 
   const actionRenderer = (item: Order) => (
     <div className="flex justify-center items-center gap-4">
       <Visibility
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() =>
-          navigate(`/orders/${item.orderId}?action=edit`, {
-            state: { order: item },
-          })
-        }
+        onClick={() => handleViewOrder(item)}
       />
     </div>
   );
 
-  const { data: orderMockData = [], isLoading } = useQuery({
-    queryKey: ["orderMockData"],
-    queryFn: fetchOrders,
-  });
+  
+  useEffect(() => {
+    const fetchOrderData = async () => {
+      setIsLoading(true); // Start loading
+      setError(null); // Reset error
+
+      setTimeout(async () => {
+        try {
+          const response = await getAllOrders();
+          setOrders(response.data.tableData);
+          console.log(error);
+          console.log("Order Details:", response.data.tableData);
+        } catch (err: any) {
+          setError(err.message || "Failed to fetch orders");
+        } finally {
+          setIsLoading(false);
+        }
+      }, 500); // Simulating network delay
+    };
+
+    fetchOrderData();
+  }, []); // Empty dependency array means this runs once on component mount
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -66,7 +79,7 @@ const OrderPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const sortedOrders = useSortableData(orderMockData, sortConfig);
+  const sortedOrders = useSortableData(orders, sortConfig);
 
   const columns = [
     {
@@ -86,44 +99,44 @@ const OrderPage: React.FC = () => {
     {
       header: (
         <SortableHeader
-          label="Username"
-          columnKey="username"
+          label="Customer Name"
+          columnKey="customerDetails.name"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
       ),
-      key: "username",
+      key: "customerDetails.name",
       render: (item: Order) => (
-        <div className="text-sm text-gray-900">{item.username}</div>
+        <div className="text-sm text-gray-900">{item.customerDetails.name}</div>
       ),
     },
     {
       header: (
         <SortableHeader
-          label="Amount"
-          columnKey="amount"
+          label="Total"
+          columnKey="total"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
       ),
-      key: "amount",
+      key: "total",
       render: (item: Order) => (
-        <div className="text-sm text-gray-900">${item.amount.toFixed(2)}</div>
+        <div className="text-sm text-gray-900">${item.total.toFixed(2)}</div>
       ),
     },
     {
       header: (
         <SortableHeader
           label="Date"
-          columnKey="date"
+          columnKey="createdAt"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
       ),
-      key: "date",
+      key: "createdAt",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">
-          {new Date(item.date).toLocaleDateString()}
+          {new Date(item.createdAt).toLocaleDateString()}
         </div>
       ),
     },
@@ -131,28 +144,30 @@ const OrderPage: React.FC = () => {
       header: (
         <SortableHeader
           label="Payment Status"
-          columnKey="paymentStatus"
+          columnKey="paymentDetails.status"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
       ),
-      key: "paymentStatus",
+      key: "paymentDetails.status",
       render: (item: Order) => (
-        <div className="text-sm text-gray-900">{item.paymentStatus}</div>
+        <div className="text-sm text-gray-900">
+          {item.paymentDetails.status}
+        </div>
       ),
     },
     {
       header: (
         <SortableHeader
           label="Order Status"
-          columnKey="orderStatus"
+          columnKey="status"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
       ),
-      key: "orderStatus",
+      key: "status",
       render: (item: Order) => (
-        <div className="text-sm text-gray-900">{item.orderStatus}</div>
+        <div className="text-sm text-gray-900">{item.status}</div>
       ),
     },
     {
@@ -162,6 +177,7 @@ const OrderPage: React.FC = () => {
         </div>
       ),
       key: "actions",
+      render: (item: Order) => actionRenderer(item),
     },
   ];
 
@@ -169,11 +185,23 @@ const OrderPage: React.FC = () => {
     setOpenFilterDialog(true);
   };
 
-  const applyFilters = (newFilters: {
-    paymentStatus: string;
-    orderStatus: string;
-  }) => {
+  const applyFilters = (newFilters: OrderFilters) => {
     setFilters(newFilters);
+  };
+
+  const filterOrders = (orders: Order[]) => {
+    return orders
+      .filter((order) => {
+        if (filters.paymentStatus.length === 0) return true;
+        return filters.paymentStatus.includes(order.paymentDetails.status);
+      })
+      .filter((order) => {
+        if (filters.orderStatus.length === 0) return true;
+        return filters.orderStatus.includes(order.status);
+      })
+      .filter((order) =>
+        order.orderId.toLowerCase().includes(searchValue.toLowerCase())
+      );
   };
 
   return (
@@ -207,34 +235,23 @@ const OrderPage: React.FC = () => {
       <OrderFilterDialog
         open={openFilterDialog}
         onClose={() => setOpenFilterDialog(false)}
-        // @ts-expect-error non fix error
         onApply={applyFilters}
       />
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable<Order>
-          items={sortedOrders
-            .filter(
-              (order) =>
-                !filters.paymentStatus ||
-                order.paymentStatus === filters.paymentStatus
-            )
-            .filter(
-              (order) =>
-                !filters.orderStatus ||
-                order.orderStatus === filters.orderStatus
-            )
-            .filter((order) =>
-              order.orderId.toLowerCase().includes(searchValue.toLowerCase())
-            )}
-          
-          columns={columns}
-          idKey="orderId"
-          itemsPerPage={15}
-          tableType="order"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <TableSkeletonLoader columns={7} rows={10} /> // Show the skeleton loader while loading
+        ) : (
+          <DataTable<Order>
+            items={filterOrders(sortedOrders)}
+            columns={columns}
+            idKey="_id"
+            itemsPerPage={15}
+            tableType="order"
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+          />
+        )}
       </div>
     </div>
   );
