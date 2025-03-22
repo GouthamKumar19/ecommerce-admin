@@ -24,6 +24,7 @@ interface CollectionFormProps {
 
 interface FormErrors {
   collectionName: string;
+  collectionImages: string;
 }
 
 const CollectionForm: React.FC = () => {
@@ -34,6 +35,7 @@ const CollectionForm: React.FC = () => {
   const [collectionId, setCollectionId] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({
     collectionName: "",
+    collectionImages: "",
   });
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
@@ -129,7 +131,7 @@ const CollectionForm: React.FC = () => {
   }, [collectionName, images, isEditMode, collectionId, setActionHandlers]);
 
   const validateForm = (): boolean => {
-    const newErrors = { collectionName: "" };
+    const newErrors = { collectionName: "", collectionImages: "" };
     let isValid = true;
 
     // Validate collection name
@@ -142,6 +144,13 @@ const CollectionForm: React.FC = () => {
       isValid = false;
     }
 
+    // Validate if at least one image is selected
+    const selectedImage = images.find((img) => img.selected);
+    if (!selectedImage) {
+      newErrors.collectionImages = "At least one image must be selected";
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
@@ -149,7 +158,7 @@ const CollectionForm: React.FC = () => {
   const resetForm = () => {
     setCollectionName("");
     setImages(images.map((img) => ({ ...img, selected: false })));
-    setErrors({ collectionName: "" });
+    setErrors({ collectionName: "", collectionImages: "" });
   };
 
   const handleConfirm = async () => {
@@ -234,7 +243,7 @@ const CollectionForm: React.FC = () => {
     >
       <div className="form-group text-left">
         <Typography variant="subtitle1" gutterBottom align="left">
-          COLLECTION NAME
+          Collection Name
         </Typography>
         <TextField
           type="text"
@@ -242,16 +251,42 @@ const CollectionForm: React.FC = () => {
           placeholder="Enter Collection Name"
           value={collectionName}
           onChange={(e) => {
-            setCollectionName(e.target.value);
-            // Clear error when typing
-            if (e.target.value.trim() && errors.collectionName) {
-              setErrors({ ...errors, collectionName: "" });
+            const value = e.target.value;
+            if (/^[a-zA-Z\s]*$/.test(value)) {
+              setCollectionName(value);
+              // Clear error when typing
+              if (value.trim() && errors.collectionName) {
+                setErrors({ ...errors, collectionName: "" });
+              }
             }
           }}
           error={!!errors.collectionName}
           helperText={errors.collectionName}
-          fullWidth
-          margin="normal"
+          fullWidth={false}
+          // margin="normal"
+          sx={{
+            width: "300px", // Reduce the width of the text field
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: errors.collectionName
+                  ? "red"
+                  : "rgba(0, 0, 0, 0.23)",
+              },
+              "&:hover fieldset": {
+                borderColor: errors.collectionName
+                  ? "red"
+                  : "rgba(0, 0, 0, 0.23)",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: errors.collectionName
+                  ? "red"
+                  : "rgba(0, 0, 0, 0.23)",
+              },
+            },
+            "& .MuiFormHelperText-root": {
+              color: errors.collectionName ? "red" : "rgba(0, 0, 0, 0.87)",
+            },
+          }}
         />
       </div>
 
@@ -267,9 +302,15 @@ const CollectionForm: React.FC = () => {
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
               p: 4,
               width: "100%",
+              border: errors.collectionImages ? "1px solid red" : "none",
             }}
           >
             <ImageSelection images={images} setImages={setImages} />
+            {errors.collectionImages && (
+              <Typography variant="body2" color="red" mt={2}>
+                {errors.collectionImages}
+              </Typography>
+            )}
           </Box>
         </Grid>
       </Grid>
