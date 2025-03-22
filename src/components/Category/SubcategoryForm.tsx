@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Typography, Grid, Box, Button, IconButton } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Typography,
+  Grid,
+  Box,
+  Button,
+  IconButton,
+  TextField,
+} from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { createSubCategory } from "../../api/category"; // Adjust the import path as necessary
@@ -20,10 +27,12 @@ interface Subcategory {
 const SubcategoryForm: React.FC = () => {
   const [currentSubcategoryId, setCurrentSubcategoryId] = useState<number>(1);
   const [currentImages, setCurrentImages] = useState<ProductImage[]>([]);
-
   const [subcategories, setSubcategories] = useState<Subcategory[]>([
     { id: 1, name: "", images: [] },
   ]);
+  const [errors, setErrors] = useState<{ [key: number]: boolean }>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [touched, setTouched] = useState<{ [key: number]: boolean }>({});
 
   const updateSubcategoryImages = () => {
     setSubcategories(
@@ -34,6 +43,7 @@ const SubcategoryForm: React.FC = () => {
   };
 
   const handleAddSubcategory = () => {
+    setIsSubmitted(true);
     updateSubcategoryImages();
 
     const newId =
@@ -62,6 +72,15 @@ const SubcategoryForm: React.FC = () => {
   };
 
   const handleNameChange = (id: number, name: string) => {
+    // Mark this field as touched
+    setTouched((prev) => ({ ...prev, [id]: true }));
+
+    const regex = /^[A-Za-z\s]*$/;
+    if (!regex.test(name)) {
+      setErrors((prev) => ({ ...prev, [id]: true }));
+    } else {
+      setErrors((prev) => ({ ...prev, [id]: false }));
+    }
     setSubcategories(
       subcategories.map((sc) => (sc.id === id ? { ...sc, name } : sc))
     );
@@ -69,42 +88,64 @@ const SubcategoryForm: React.FC = () => {
 
   const handleSelectSubcategory = (id: number) => {
     updateSubcategoryImages();
-
     setCurrentSubcategoryId(id);
     const subcategory = subcategories.find((sc) => sc.id === id);
     setCurrentImages(subcategory?.images || []);
   };
 
-  // useEffect to create subcategory on changes to subcategories state
-  useEffect(() => {
-    const handleCreateSubCategory = async () => {
-      const payload = subcategories.map((subcategory) => {
-        const { name, images } = subcategory;
-        const selectedImage = images.find((img) => img.selected)?.url || "";
-
-        return {
-          name: name || "Default Subcategory Name", // Provide a default name if undefined
-          categoryId: "67cbd3f910f8a7e83ac9e3a0", // Replace with the appropriate category ID
-          image: selectedImage,
-        };
-      });
-
-      console.log("Payload to create subcategories:", payload); // Log the entire payload
-
-      try {
-        // Map through the payload to call the API
-        for (const subcategoryData of payload) {
-          const response = await createSubCategory(subcategoryData);
-          console.log("Create Subcategory API Response:", response);
-        }
-      } catch (error) {
-        console.error("Error creating subcategory:", error);
+  const validateSubcategories = () => {
+    let valid = true;
+    const newErrors: { [key: number]: boolean } = {};
+    subcategories.forEach((subcategory) => {
+      if (
+        !subcategory.name ||
+        errors[subcategory.id] ||
+        !subcategory.images.length
+      ) {
+        newErrors[subcategory.id] = true;
+        valid = false;
       }
-    };
+    });
+    setErrors(newErrors);
+    return valid;
+  };
 
-    // This will trigger the creation logic
-    handleCreateSubCategory();
-  }, [subcategories]); // Call on changes to subcategories
+  const handleSaveCategory = async () => {
+    // Mark all fields as touched when saving
+    const allTouched: { [key: number]: boolean } = {};
+    subcategories.forEach((sc) => {
+      allTouched[sc.id] = true;
+    });
+    setTouched(allTouched);
+    setIsSubmitted(true);
+
+    if (!validateSubcategories()) {
+      console.error("All fields are required and must be valid");
+      return;
+    }
+
+    const payload = subcategories.map((subcategory) => {
+      const { name, images } = subcategory;
+      const selectedImage = images.find((img) => img.selected)?.url || "";
+
+      return {
+        name: name || "Default Subcategory Name", // Provide a default name if undefined
+        categoryId: "67cbd3f910f8a7e83ac9e3a0", // Replace with the appropriate category ID
+        image: selectedImage,
+      };
+    });
+
+    console.log("Payload to create subcategories:", payload); // Log the entire payload
+
+    try {
+      for (const subcategoryData of payload) {
+        const response = await createSubCategory(subcategoryData);
+        console.log("Create Subcategory API Response:", response);
+      }
+    } catch (error) {
+      console.error("Error creating subcategory:", error);
+    }
+  };
 
   return (
     <div className="subcategories-container">
@@ -159,25 +200,40 @@ const SubcategoryForm: React.FC = () => {
             </IconButton>
           )}
 
-          <div className="form-group text-left">
+          <div className="mb-4">
             <Typography variant="subtitle1" gutterBottom align="left">
-              SUBCATEGORY NAME
+              Name
             </Typography>
-            <input
-              type="text"
-              placeholder="Enter SubCategory Name"
-              value={subcategory.name}
-              onChange={(e) => handleNameChange(subcategory.id, e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: "100%",
-                padding: "12px",
-                boxSizing: "border-box",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                marginBottom: "16px",
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start", // Align items to the start (left)
               }}
-            />
+            >
+              <TextField
+                id={`subcategoryName-${subcategory.id}`}
+                size="small"
+                value={subcategory.name}
+                variant="outlined"
+                onChange={(e) =>
+                  handleNameChange(subcategory.id, e.target.value)
+                }
+                onBlur={() =>
+                  setTouched((prev) => ({ ...prev, [subcategory.id]: true }))
+                }
+                placeholder="Subcategory Name"
+                // margin="normal"
+                error={touched[subcategory.id] && errors[subcategory.id]}
+                helperText={
+                  touched[subcategory.id] && errors[subcategory.id]
+                    ? "Only letters and spaces are allowed"
+                    : ""
+                }
+                // Set the size to small
+                style={{ height: "40px", width: "50%" }} // Adjust the width as needed
+              />
+            </Box>
           </div>
 
           {currentSubcategoryId === subcategory.id && (
@@ -198,6 +254,18 @@ const SubcategoryForm: React.FC = () => {
                     boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                     p: 4,
                     width: "100%",
+                    borderColor:
+                      isSubmitted &&
+                      touched[subcategory.id] &&
+                      !subcategory.images.length
+                        ? "red"
+                        : "inherit",
+                    borderWidth:
+                      isSubmitted &&
+                      touched[subcategory.id] &&
+                      !subcategory.images.length
+                        ? "2px"
+                        : "1px",
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -205,6 +273,10 @@ const SubcategoryForm: React.FC = () => {
                     images={currentImages}
                     setImages={(newImages) => {
                       setCurrentImages(newImages);
+                      setTouched((prev) => ({
+                        ...prev,
+                        [subcategory.id]: true,
+                      }));
                       setSubcategories(
                         subcategories.map((sc) =>
                           sc.id === currentSubcategoryId
@@ -214,12 +286,33 @@ const SubcategoryForm: React.FC = () => {
                       );
                     }}
                   />
+                  {isSubmitted &&
+                    touched[subcategory.id] &&
+                    !subcategory.images.length && (
+                      <Typography variant="body2" color="error">
+                        At least one image must be selected
+                      </Typography>
+                    )}
                 </Box>
               </Grid>
             </Grid>
           )}
         </Box>
       ))}
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+        <Button
+          variant="contained"
+          onClick={handleSaveCategory}
+          sx={{
+            backgroundColor: "#0d7f3f",
+            "&:hover": {
+              backgroundColor: "#0a6633",
+            },
+          }}
+        >
+          Save Category
+        </Button>
+      </Box>
     </div>
   );
 };
