@@ -18,6 +18,8 @@ import {
 } from "../../components/common/SortUtils";
 import { getAllProducts } from "../../api/collectionProduct";
 import { toggleProductStatus } from "../../api/collectionProduct";
+import BackArrow from "../../components/common/BackArrow";
+
 const fetchProducts = async (): Promise<Product[]> => {
   try {
     const response = await getAllProducts();
@@ -311,6 +313,7 @@ const ProductAddPage: React.FC = () => {
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
+          <BackArrow />
           <div className="flex justify-center w-full md:w-auto flex-grow">
             <SearchBar
               searchValue={searchValue}
