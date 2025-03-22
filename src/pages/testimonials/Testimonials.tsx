@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
 import { StarRating } from "../../components/common/DataTable";
-import { useNavigate } from "react-router-dom";
 import { Edit } from "@mui/icons-material";
 import { Testimonial } from "../../types/testimonials.types";
 import SearchBar from "../../components/common/SearchBar";
@@ -14,16 +13,7 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 import { getAllTestimonials } from "../../api/tesstimonial";
-
-const fetchTestimonials = async (): Promise<Testimonial[]> => {
-  try {
-    const response = await getAllTestimonials();
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching testimonials:", error);
-    return [];
-  }
-};
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import the skeleton loader
 
 const TestimonialsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -31,6 +21,9 @@ const TestimonialsPage: React.FC = () => {
     key: "",
     direction: null,
   });
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error state
 
   const navigate = useNavigate();
 
@@ -56,10 +49,25 @@ const TestimonialsPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const { data: testimonials = [], isLoading } = useQuery({
-    queryKey: ["testimonials"],
-    queryFn: fetchTestimonials,
-  });
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      setIsLoading(true);
+      setError(null); // Reset error state
+setTimeout(async () => {
+      try {
+        const response = await getAllTestimonials();
+        setTestimonials(response.data);
+      } catch (error) {
+        setError("Error fetching testimonials");
+        console.error("Error fetching testimonials:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },500); 
+    };
+
+    fetchTestimonials();
+  }, []); // Empty dependency array means it runs once on component mount
 
   const sortedTestimonials = useSortableData(testimonials, sortConfig);
 
@@ -130,17 +138,21 @@ const TestimonialsPage: React.FC = () => {
           </div>
         </div>
       </div>
-
+      {error && <div className="text-red-600 text-center mb-4">{error}</div>}{" "}
+      {/* Displaying the error message */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={sortedTestimonials}
-          columns={columns}
-          idKey="id"
-          itemsPerPage={15}
-          tableType="testimonial"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <TableSkeletonLoader columns={4} rows={10} /> // Show skeleton loader while loading
+        ) : (
+          <DataTable
+            items={sortedTestimonials}
+            columns={columns}
+            idKey="_id" // Assuming _id is the key for testimonials
+            itemsPerPage={15}
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+          />
+        )}
       </div>
     </div>
   );
