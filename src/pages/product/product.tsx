@@ -160,7 +160,9 @@ const ProductPage: React.FC = () => {
       render: (item: Product) => (
         <div className="flex text-left">
           <div className="ml-0">
-            <div className="text-sm font-medium text-gray-900">{item.name}</div>
+            <div className="text-sm text-gray-900 max-w-xs truncate">
+              {item.name}
+            </div>
           </div>
         </div>
       ),
