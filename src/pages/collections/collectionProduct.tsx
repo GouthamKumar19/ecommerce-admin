@@ -212,7 +212,7 @@ const ProductAddPage: React.FC = () => {
         <div className="flex text-left">
           <div className="ml-0">
             <div
-              className={`text-sm font-medium ${
+              className={`text-sm max-w-xs truncate ${
                 disabledProducts.includes(String(item.id))
                   ? "text-gray-400"
                   : "text-gray-900"
@@ -271,12 +271,11 @@ const ProductAddPage: React.FC = () => {
           >
             ${item.price.toFixed(2)}
           </span>
-          {item.discountPrice && (
+          {/* {item.discountPrice && (
             <span className="ml-2 text-sm text-gray-500 line-through">
-              {/* @ts-ignore */
-              }${item.discountPrice.toFixed(2)}
+            ${item.discountPrice.toFixed(2)}
             </span>
-          )}
+          )} */}
         </div>
       ),
     },
