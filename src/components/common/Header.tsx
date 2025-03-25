@@ -42,6 +42,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       "/collections/collection-product": "COLLECTIONS",
       "/collection/collection-add-product": "COLLECTIONS",
       "/collection/collection-product": "COLLECTIONS",
+      "/collection/new": "COLLECTIONS",
       "/": "DASHBOARD",
     };
 
