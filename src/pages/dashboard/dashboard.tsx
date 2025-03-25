@@ -1,3 +1,5 @@
+import DashboardOrdersTable from "../../components/DashboardOrdersTable"; // Adjust the import path based on your file structure
+
 const DashboardPage = () => {
   // Mock data for dashboard statistics
   const stats = [
@@ -29,8 +31,6 @@ const DashboardPage = () => {
 
   return (
     <div>
-      {/* <h1 className="text-3xl font-semibold text-gray-800 mb-6">Dashboard</h1> */}
-
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat, index) => (
@@ -55,54 +55,12 @@ const DashboardPage = () => {
         ))}
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
-        </div>
-        <div className="px-6 py-4">
-          <ul className="divide-y divide-gray-200">
-            <li className="py-3">
-              <div className="flex items-center space-x-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    New user registered
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    John Doe (john@example.com)
-                  </p>
-                </div>
-                <div className="text-sm text-gray-500">5 minutes ago</div>
-              </div>
-            </li>
-            <li className="py-3">
-              <div className="flex items-center space-x-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    New order placed
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Order #12345 - $126.54
-                  </p>
-                </div>
-                <div className="text-sm text-gray-500">2 hours ago</div>
-              </div>
-            </li>
-            <li className="py-3">
-              <div className="flex items-center space-x-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    Product updated
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Smartphone XS - Stock: 23
-                  </p>
-                </div>
-                <div className="text-sm text-gray-500">Yesterday</div>
-              </div>
-            </li>
-          </ul>
-        </div>
+      {/* Recent Orders Table */}
+      <div className="mt-8">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Recent Orders
+        </h3>
+        <DashboardOrdersTable />
       </div>
     </div>
   );
