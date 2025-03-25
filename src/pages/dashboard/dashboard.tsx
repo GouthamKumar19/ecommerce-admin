@@ -29,7 +29,7 @@ const DashboardPage = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-semibold text-gray-800 mb-6">Dashboard</h1>
+      {/* <h1 className="text-3xl font-semibold text-gray-800 mb-6">Dashboard</h1> */}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
