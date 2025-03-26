@@ -32,23 +32,58 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     pinCode: "",
   });
 
+  const [pinCodeError, setPinCodeError] = useState<string>("");
+
   useEffect(() => {
     if (initialData) {
       setAddressData(initialData);
     }
   }, [initialData]);
 
+  const validatePinCode = (pinCode: string): boolean => {
+    // Check if pin code is exactly 6 digits
+    const pinCodeRegex = /^[0-9]{6}$/;
+    return pinCodeRegex.test(pinCode);
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setAddressData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    if (name === "pinCode") {
+      // Only allow numbers and limit to 6 characters
+      const numericValue = value.replace(/[^0-9]/g, "").slice(0, 6);
+      
+      // Clear error if field is empty or validate if it has a value
+      if (numericValue === "") {
+        setPinCodeError("");
+      } else if (numericValue.length < 6) {
+        setPinCodeError("PIN code must be 6 digits");
+      } else {
+        setPinCodeError("");
+      }
+      
+      setAddressData((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+    } else {
+      setAddressData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSave = () => {
+    if (!validatePinCode(addressData.pinCode)) {
+      setPinCodeError("PIN code must be 6 digits");
+      return;
+    }
+    
+    // If validation passes, clear error and save
+    setPinCodeError("");
     onSave?.(addressData);
   };
 
@@ -112,11 +147,16 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
           <input
             type="text"
             name="pinCode"
-            placeholder="eg. 12345"
+            placeholder="eg. 123456"
             value={addressData.pinCode}
             onChange={handleInputChange}
-            className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
+            className={`w-full border rounded px-2 py-2 text-sm bg-white ${
+              pinCodeError ? "border-red-500" : "border-gray-300"
+            }`}
           />
+          {pinCodeError && (
+            <p className="text-xs text-red-500 mt-1">{pinCodeError}</p>
+          )}
         </div>
       </div>
 
@@ -134,7 +174,7 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
           sx={{
             borderColor: "grey.500",
             color: "grey.700",
-            mr: 2, // Add margin to the right to create a gap
+            mr: 2,
             "&:hover": {
               borderColor: "grey.700",
               backgroundColor: "grey.50",
@@ -162,4 +202,4 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
   );
 };
 
-export default AddressPopup;
+export default AddressPopup;  
