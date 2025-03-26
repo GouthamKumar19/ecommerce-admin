@@ -1,22 +1,25 @@
 import { useState, FormEvent } from "react";
 import { FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
 import { GoogleLogin } from "@react-oauth/google";
-
+import { useNavigate } from "react-router-dom";
 interface LoginComponentProps {
   onSubmit: (email: string, password: string) => Promise<void>;
   loading: boolean;
   error: string;
+  onGoogleLogin: (googleCredential: string) => Promise<void>;
 }
 
 const LoginComponent: React.FC<LoginComponentProps> = ({
   onSubmit,
   loading,
   error,
+  onGoogleLogin,
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -25,7 +28,10 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
 
   const handleGoogleLoginSuccess = (response: any) => {
     console.log("Google Login Success:", response);
-    // Handle the response from Google login
+    navigate("/dashboard");
+    // Extract the credential from the Google login response
+    const googleCredential = response.credential;
+    onGoogleLogin(googleCredential);
   };
 
   const handleGoogleLoginError = () => {
@@ -76,8 +82,6 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
           </button>
         </div>
         <div className="flex items-center ml-0.1">
-          {" "}
-          {/* Shifted checkbox slightly right */}
           <label
             htmlFor="remember-me"
             className="flex items-center cursor-pointer space-x-2"
