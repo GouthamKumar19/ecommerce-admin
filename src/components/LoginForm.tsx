@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
-import { FaGoogle, FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
+import { GoogleLogin } from "@react-oauth/google";
 
 interface LoginComponentProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -20,6 +21,15 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     await onSubmit(email, password);
+  };
+
+  const handleGoogleLoginSuccess = (response: any) => {
+    console.log("Google Login Success:", response);
+    // Handle the response from Google login
+  };
+
+  const handleGoogleLoginError = () => {
+    console.error("Google Login Failed");
   };
 
   return (
@@ -97,12 +107,10 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
           Or continue with
         </p>
         <div className="flex justify-center space-x-4 mt-2">
-          <button
-            className="bg-[var(--secondary-color)] text-white p-2 rounded-full"
-            style={{ background: "var(--secondary-color)" }}
-          >
-            <FaGoogle />
-          </button>
+          <GoogleLogin
+            onSuccess={handleGoogleLoginSuccess}
+            onError={handleGoogleLoginError}
+          />
           <button
             className="bg-[var(--secondary-color)] text-white p-2 rounded-full"
             style={{ background: "var(--secondary-color)" }}
