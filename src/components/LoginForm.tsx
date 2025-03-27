@@ -1,25 +1,41 @@
 import { useState, FormEvent } from "react";
-import { FaGoogle, FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
-
+import { FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
+import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
 interface LoginComponentProps {
   onSubmit: (email: string, password: string) => Promise<void>;
   loading: boolean;
   error: string;
+  onGoogleLogin: (googleCredential: string) => Promise<void>;
 }
 
 const LoginComponent: React.FC<LoginComponentProps> = ({
   onSubmit,
   loading,
   error,
+  onGoogleLogin,
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     await onSubmit(email, password);
+  };
+
+  const handleGoogleLoginSuccess = (response: any) => {
+    console.log("Google Login Success:", response);
+    navigate("/dashboard");
+    // Extract the credential from the Google login response
+    const googleCredential = response.credential;
+    onGoogleLogin(googleCredential);
+  };
+
+  const handleGoogleLoginError = () => {
+    console.error("Google Login Failed");
   };
 
   return (
@@ -66,8 +82,6 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
           </button>
         </div>
         <div className="flex items-center ml-0.1">
-          {" "}
-          {/* Shifted checkbox slightly right */}
           <label
             htmlFor="remember-me"
             className="flex items-center cursor-pointer space-x-2"
@@ -97,12 +111,10 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
           Or continue with
         </p>
         <div className="flex justify-center space-x-4 mt-2">
-          <button
-            className="bg-[var(--secondary-color)] text-white p-2 rounded-full"
-            style={{ background: "var(--secondary-color)" }}
-          >
-            <FaGoogle />
-          </button>
+          <GoogleLogin
+            onSuccess={handleGoogleLoginSuccess}
+            onError={handleGoogleLoginError}
+          />
           <button
             className="bg-[var(--secondary-color)] text-white p-2 rounded-full"
             style={{ background: "var(--secondary-color)" }}

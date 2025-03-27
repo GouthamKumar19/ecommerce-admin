@@ -1,3 +1,4 @@
+"use client";
 import DashboardOrdersTable from "../../components/DashboardOrdersTable"; // Adjust the import path based on your file structure
 
 const DashboardPage = () => {

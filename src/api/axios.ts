@@ -6,7 +6,7 @@ import axios, {
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const baseURL = import.meta.env.VITE_API_URL;
 
 // Flag to prevent multiple refresh token requests
 let isRefreshing = false;
