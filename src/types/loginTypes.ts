@@ -1,10 +1,10 @@
 // Define the types for the login request and response
 
 export interface LoginRequest {
-  email: string;
-  password: string;
+  //email: string;
+  //password: string;
   googleId?: string;
-  appleId?: string;
+  //appleId?: string;
 }
 
 export interface LoginResponse {

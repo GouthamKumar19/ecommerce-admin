@@ -11,16 +11,16 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (
-    email: string,
-    password: string,
+    //email: string,
+    //password: string,
     googleId?: string,
-    appleId?: string
+    //appleId?: string
   ) => {
     setLoading(true);
     setError("");
 
     try {
-      const loginData: LoginRequest = { email, password, googleId, appleId };
+      const loginData: LoginRequest = {googleId};
 
       const response = await login(loginData);
 
@@ -63,8 +63,6 @@ const LoginPage = () => {
 
     try {
       const loginData: LoginRequest = {
-        email: "",
-        password: "",
         googleId: googleCredential,
       };
 

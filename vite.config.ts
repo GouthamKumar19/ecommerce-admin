@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5173, 
     proxy: {
     '/api': {
-      target: 'https://dev4.exeloncircuits.com',
+      target: 'http://localhost:5173',
       changeOrigin: true,
       rewrite: (path) => path.replace(/^\/api/, '')
     }
