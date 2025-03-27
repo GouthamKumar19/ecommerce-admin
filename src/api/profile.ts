@@ -1,8 +1,6 @@
 import { ApiResponse, UserProfile } from "../types/profileTypes";
-import {
-  mockApiResponse,
-  mockUpdateApiResponse,
-} from "../config/mock/mockProfiles"; // Import the mock data
+import axiosInstance from "./axios"; // Make sure to import axios instance
+import Cookies from "js-cookie"; // Import js-cookie
 
 // Function to get user profile information
 export const getProfile = async (
@@ -11,21 +9,22 @@ export const getProfile = async (
   try {
     console.log("[API] Fetching user profile with token:", token);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.post(
-    //   "/admin/auth/get",
-    //   {},
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   }
-    // );
-    // return response.data;
+    const response = await axiosInstance.post(
+      "/admin/auth/get",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const profileData = response.data;
 
-    // Mock response
-    console.log("[API] Mock profile response:", mockApiResponse);
-    return Promise.resolve(mockApiResponse);
+    // Store profile data in cookies
+    Cookies.set("name", profileData.name);
+    Cookies.set("email", profileData.email);
+
+    return response.data;
   } catch (error) {
     console.error("[API] Error fetching profile:", error);
     throw error;
@@ -34,29 +33,26 @@ export const getProfile = async (
 
 // Function to update user profile information
 export const updateProfile = async (
-  _token: string,
+  token: string,
   profileData: UserProfile
 ): Promise<ApiResponse<UserProfile>> => {
-  try {
     console.log("[API] Updating profile with data:", profileData);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.put(
-    //   "/admin/auth/profile",
-    //   profileData,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   }
-    // );
-    // return response.data;
+    const response = await axiosInstance.put(
+      "/admin/auth/",
+      profileData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const updatedData = response.data;
 
-    // Mock response
-    console.log("[API] Mock update profile response:", mockUpdateApiResponse);
-    return Promise.resolve(mockUpdateApiResponse);
-  } catch (error) {
-    console.error("[API] Error updating profile:", error);
-    throw error;
-  }
+    // Update cookies with the new profile data
+    Cookies.set("name", updatedData.name);
+    Cookies.set("email", updatedData.email);
+
+    return response.data;
+ 
 };

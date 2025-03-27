@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { Box, TextField } from "@mui/material";
+import Cookies from "js-cookie"; // Import js-cookie
 import { ActionContext } from "../../context/ActionContext"; // Import the ActionContext
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
@@ -11,14 +12,13 @@ const Profile: React.FC = () => {
   const [showEmailAlert, setShowEmailAlert] = useState(false);
   const [nameError, setNameError] = useState(false);
   const [nameErrorMessage, setNameErrorMessage] = useState("");
-  //const [emailFocused, setEmailFocused] = useState(false); // State for email field focus
 
   const { setActionHandlers } = useContext(ActionContext); // Use the ActionContext
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = "123"; // Replace with actual token
+        const token = "your_actual_token"; // Replace with actual token
         const response = await getProfile(token);
         const { name, email } = response.data;
 
@@ -30,6 +30,15 @@ const Profile: React.FC = () => {
     };
 
     fetchUserProfile();
+  }, []);
+
+  useEffect(() => {
+    // Get profile data from cookies
+    const storedName = Cookies.get("name");
+    const storedEmail = Cookies.get("email");
+
+    if (storedName) setName(storedName);
+    if (storedEmail) setEmail(storedEmail);
   }, []);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +71,7 @@ const Profile: React.FC = () => {
     }
 
     console.log("Form submitted"); // Add this log to confirm form submission
-    const token = "123"; // Replace with actual token
+    const token = "your_actual_token"; // Replace with actual token
     try {
       const updatedProfile = {
         _id: "6512c5f3e4b09a12d8f42b68",
@@ -162,8 +171,6 @@ const Profile: React.FC = () => {
                 }}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                //onFocus={() => setEmailFocused(true)} // Set focused state on focus
-                //onBlur={() => setEmailFocused(false)} // Reset focused state on blur
                 fullWidth
                 sx={{
                   height: "40px",
