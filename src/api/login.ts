@@ -19,15 +19,7 @@ export const login = async (
     console.groupEnd();
 
     // Direct API call for login with detailed logging
-    const response = await axiosInstance.post('/admin/auth/login', loginData, {
-      // Add these headers for more detailed network logging
-      headers: {
-        'X-Detailed-Logging': 'true',
-        'Access-Control-Allow-Origin': '*'
-      },
-      withCredentials: true // Ensure withCredentials is set to true
-    });
-
+    const response = await axiosInstance.post('/admin/auth/login', loginData)
     // Detailed console logging
     console.group("Login API Response");
     console.log("Full Response Status:", response.status);
