@@ -70,6 +70,12 @@ axiosInstance.interceptors.response.use(
     const response = error.response?.data;
     console.log("error in axios instance", error);
 
+    // Handle network errors
+    if (error.message === "Network Error") {
+      toast.error("Network error. Please check your connection.");
+      return Promise.reject(error);
+    }
+
     // Check if the error is 401 and the request is not a refresh token request
     if (
       error.response?.status === 401 &&
@@ -102,6 +108,12 @@ axiosInstance.interceptors.response.use(
 
         const response = await axios.post(`${baseURL}/admin/auth/refresh`, {
           refresh_token: refreshToken,
+        }, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json"
+          },
+          withCredentials: true // Ensure withCredentials is set to true
         });
 
         const { accessToken, tokenExpiresAt } = response.data.data;
@@ -132,7 +144,7 @@ axiosInstance.interceptors.response.use(
 
     // Handle other errors
     // @ts-expect-error non fixable error
-    toast.error(response?.toastMessage);
+    toast.error(response?.toastMessage || "An unexpected error occurred");
     return Promise.reject(error);
   }
 );
