@@ -1,6 +1,6 @@
 import { ApiResponse, UserProfile } from "../types/profileTypes";
-import axiosInstance from "./axios"; // Make sure to import axios instance
-import Cookies from "js-cookie"; // Import js-cookie
+import axiosInstance from "./axios";
+import Cookies from "js-cookie";
 
 // Function to get user profile information
 export const getProfile = async (
@@ -31,28 +31,34 @@ export const getProfile = async (
   }
 };
 
-// Function to update user profile information
+// Updated function to update only the name in user profile
 export const updateProfile = async (
-  token: string,
-  profileData: UserProfile
+  token: string, 
+  name: string, 
+  currentProfileData: UserProfile
 ): Promise<ApiResponse<UserProfile>> => {
-    console.log("[API] Updating profile with data:", profileData);
+  console.log("[API] Updating profile name:", name);
 
-    const response = await axiosInstance.put(
-      "/admin/auth/",
-      profileData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    const updatedData = response.data;
+  // Create an updated profile object, keeping other fields from current profile
+  const updatedProfileData = {
+    ...currentProfileData,
+    name: name,
+    updatedAt: new Date().toISOString()
+  };
 
-    // Update cookies with the new profile data
-    Cookies.set("name", updatedData.name);
-    Cookies.set("email", updatedData.email);
+  const response = await axiosInstance.put(
+    "/admin/auth/update",
+    updatedProfileData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const updatedData = response.data;
 
-    return response.data;
- 
+  // Update name in cookies
+  Cookies.set("name", updatedData.name);
+
+  return response.data;
 };
