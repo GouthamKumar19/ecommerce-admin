@@ -66,13 +66,17 @@ export const getTestimonialById = async (
 };
 
 // Get all testimonials
-export const getAllTestimonials = async (): Promise<
-  ApiResponse<TestimonialResponse>
-> => {
+export const getAllTestimonials = async (
+  page: number,
+  itemsPerPage: number
+): Promise<ApiResponse<TestimonialResponse>> => {
   try {
     console.log("[API] Fetching all testimonials");
 
-    const response = await axiosInstance.post("/admin/testimonials/getAll");
+    const response = await axiosInstance.post("/admin/testimonials/getAll", {
+      page,
+      itemsPerPage,
+    });
     return response.data;
   } catch (error) {
     console.error("[API] Error fetching all testimonials:", error);

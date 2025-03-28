@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Star, StarBorder } from "@mui/icons-material";
 import {
   useReactTable,
@@ -33,6 +33,8 @@ interface DataTableProps<T extends BaseRecord> {
   disabledRows?: string[];
   tableType?: string;
   loading?: boolean;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 // Star Rating Component for testimonials
@@ -61,11 +63,23 @@ const DataTable = <T extends BaseRecord>({
   actionRenderer,
   disabledRows = [],
   loading = false,
+  currentPage = 1,
+  onPageChange,
 }: DataTableProps<T>) => {
   const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
+    pageIndex: currentPage - 1,
     pageSize: itemsPerPage,
   });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: currentPage - 1 }));
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    if (onPageChange) {
+      onPageChange(page);
+    }
+  };
 
   // Convert TableColumn array to Tanstack ColumnDef array
   const tableColumns: ColumnDef<T>[] = columns.map((column) => ({
@@ -182,7 +196,12 @@ const DataTable = <T extends BaseRecord>({
       </div>
 
       {/* Pagination Component */}
-      <Pagination table={table} itemsCount={items.length} />
+      <Pagination
+        table={table}
+        itemsCount={items.length}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 };

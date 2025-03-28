@@ -24,6 +24,8 @@ const TestimonialsPage: React.FC = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isLoading, setIsLoading] = useState(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
+  const [page, setPage] = useState<number>(1); // Pagination state
+  const [itemsPerPage] = useState<number>(10); // Items per page
 
   const navigate = useNavigate();
 
@@ -54,7 +56,7 @@ const TestimonialsPage: React.FC = () => {
       setIsLoading(true);
       setError(null); // Reset error state
       try {
-        const response = await getAllTestimonials();
+        const response = await getAllTestimonials(page, itemsPerPage);
         console.log("Fetched Testimonials Response:", response); // Log the entire response
         console.log("Fetched Testimonials Data:", response.data); // Log the fetched data
         setTestimonials(response.data.tableData); // Ensure the correct data structure is passed
@@ -67,7 +69,7 @@ const TestimonialsPage: React.FC = () => {
     };
 
     fetchTestimonials();
-  }, []); // Empty dependency array means it runs once on component mount
+  }, [page, itemsPerPage]); // Add page and itemsPerPage as dependencies
 
   const sortedTestimonials = useSortableData(testimonials, sortConfig);
 
@@ -152,9 +154,11 @@ const TestimonialsPage: React.FC = () => {
             items={sortedTestimonials}
             columns={columns}
             idKey="_id" // Assuming _id is the key for testimonials
-            itemsPerPage={15}
+            itemsPerPage={itemsPerPage}
             actionRenderer={actionRenderer}
             loading={isLoading}
+            currentPage={page}
+            onPageChange={setPage}
           />
         )}
       </div>
