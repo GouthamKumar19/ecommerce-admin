@@ -68,7 +68,8 @@ export const getTestimonialById = async (
 // Get all testimonials
 export const getAllTestimonials = async (
   page: number,
-  itemsPerPage: number
+  itemsPerPage: number,
+  searchTerm: string
 ): Promise<ApiResponse<TestimonialResponse>> => {
   try {
     console.log("[API] Fetching all testimonials");
@@ -76,6 +77,14 @@ export const getAllTestimonials = async (
     const response = await axiosInstance.post("/admin/testimonials/getAll", {
       page,
       itemsPerPage,
+      search: [
+        {
+          term: searchTerm,
+          fields: ["name"],
+          startsWith: true,
+          endsWith: false,
+        },
+      ],
     });
     return response.data;
   } catch (error) {

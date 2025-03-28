@@ -56,7 +56,11 @@ const TestimonialsPage: React.FC = () => {
       setIsLoading(true);
       setError(null); // Reset error state
       try {
-        const response = await getAllTestimonials(page, itemsPerPage);
+        const response = await getAllTestimonials(
+          page,
+          itemsPerPage,
+          searchValue
+        );
         console.log("Fetched Testimonials Response:", response); // Log the entire response
         console.log("Fetched Testimonials Data:", response.data); // Log the fetched data
         setTestimonials(response.data.tableData); // Ensure the correct data structure is passed
@@ -69,7 +73,7 @@ const TestimonialsPage: React.FC = () => {
     };
 
     fetchTestimonials();
-  }, [page, itemsPerPage]); // Add page and itemsPerPage as dependencies
+  }, [page, itemsPerPage, searchValue]); // Add page, itemsPerPage, and searchValue as dependencies
 
   const sortedTestimonials = useSortableData(testimonials, sortConfig);
 
