@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Rating } from "@mui/material";
+import { Rating, CircularProgress } from "@mui/material";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -190,6 +190,21 @@ const TestimonialsDetails = () => {
   const handleBack = () => {
     navigate("/testimonials");
   };
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress sx={{ color: "#0d7f3f" }} />
+      </Box>
+    );
+  }
 
   return (
     <Box
