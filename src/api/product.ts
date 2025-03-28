@@ -1,64 +1,45 @@
-import axios from "axios";
-import { Product } from "../types/product.types";
-import { productMockData } from "../config/mock/productTable"; // Adjust the import path to where your mock data is located
 
+import { Product, ProductResponse } from "../types/product.types";
+import { productMockData } from "../config/mock/productTable"; // Adjust the import path to where your mock data is located
+import axiosInstance from "./axios";
 interface ApiResponse<T> {
   status: number;
   message: string;
   data: T;
 }
 
-const axiosInstance = axios.create({
-  baseURL: "http://localhost:7004/v1",
-  headers: {
-    Authorization: "Bearer 123",
-    Accept: "application/json",
-    "Content-Type": "application/json",
-  },
-});
 
 // Get all products
-export const getAllProducts = async (): Promise<ApiResponse<Product[]>> => {
+export const getAllProducts = async (): Promise<ApiResponse<ProductResponse>> => {
   try {
     console.log("[API] Fetching all products");
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.post(
-    //   '/admin/products/getAll',
-    //   {
-    //     project: {
-    //       _id: 1,
-    //       name: 1,
-    //       description: 1,
-    //       price: 1,
-    //       slashedPrice: 1,
-    //       categoryId: 1,
-    //       subCategoryId: 1,
-    //       thumbnailImage: 1,
-    //       images: 1,
-    //       createdAt: 1,
-    //       updatedAt: 1
-    //     }
-    //   }
-    // );
-    // return response.data;
+    const response = await axiosInstance.post('/admin/products/getAll')//, {
+      // project: {
+      //   _id: 1,
+      //   name: 1,
+      //   description: 1,
+      //   price: 1,
+      //   slashedPrice: 1,
+      //   categoryId: 1,
+      //   subCategoryId: 1,
+      //   thumbnailImage: 1,
+      //   images: 1,
+      //   quantity: 1,
+      //   isFeatured: 1,
+      //   createdAt: 1,
+      //   updatedAt: 1
+      // }
+    //});
 
-    // Mock response
-    const mockResponse: ApiResponse<Product[]> = {
-      status: 200,
-      message: "Success",
-      data: productMockData,
-    };
-
-    console.log("[API] Mock getAll response:", mockResponse);
-    return Promise.resolve(mockResponse);
+    console.log("[API] getAll response:", response.data);
+    return response.data;
   } catch (error) {
     console.error("[API] Error fetching products:", error);
     throw error;
   }
 };
 
-// Get a product by ID
 export const getProductById = async (
   id: string
 ): Promise<ApiResponse<Product>> => {
@@ -217,3 +198,4 @@ export const addProductVariants = async (
     throw error;
   }
 };
+
