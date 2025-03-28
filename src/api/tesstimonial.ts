@@ -1,5 +1,9 @@
-// import axiosInstance from "./axios";
-import { Testimonial } from "../types/testimonials.types";
+import axiosInstance from "./axios";
+import {
+  Testimonial,
+  TestimonialResponse,
+  ApiResponse,
+} from "../types/testimonials.types";
 import { testimonials } from "../config/mock/testimonialsTable";
 
 interface TestimonialFormData {
@@ -7,12 +11,6 @@ interface TestimonialFormData {
   name: string;
   ratings: number;
   description: string;
-}
-
-interface ApiResponse<T> {
-  status: number;
-  message: string;
-  data: T;
 }
 
 // Create a new testimonial
@@ -128,20 +126,44 @@ export const getTestimonialById = async (
 
 // Get all testimonials
 export const getAllTestimonials = async (): Promise<
-  ApiResponse<Testimonial[]>
+  ApiResponse<TestimonialResponse>
 > => {
   try {
     console.log("[API] Fetching all testimonials");
 
     // Uncomment when API is ready
-    // const response = await axiosInstance.get('/admin/testimonials/getAll');
-    // return response.data;
+     const response = await axiosInstance.post('/admin/testimonials/getAll');
+    return response.data;
 
     // Mock response
-    const mockResponse: ApiResponse<Testimonial[]> = {
+    const mockResponse: ApiResponse<TestimonialResponse> = {
       status: 200,
       message: "Success",
-      data: testimonials,
+      data: {
+        totalCount: 2,
+        tableData: [
+          {
+            id: "66b3279c39c21f7342c1520a",
+            _id: "66b3279c39c21f7342c1520a",
+            name: "John Doe",
+            ratings: 5,
+            rating: 5, // Adding rating to match the Testimonial type
+            description: "Excellent service, highly recommend!",
+            createdAt: "2025-02-01T08:00:00Z",
+            updatedAt: "2025-02-01T08:00:00Z",
+          },
+          {
+            id: "66b3279c39c21f7342c1520b",
+            _id: "66b3279c39c21f7342c1520b",
+            name: "Jane Smith",
+            ratings: 4,
+            rating: 4, // Adding rating to match the Testimonial type
+            description: "Good service but could be improved.",
+            createdAt: "2025-02-01T08:00:00Z",
+            updatedAt: "2025-02-01T08:00:00Z",
+          },
+        ],
+      },
     };
 
     console.log("[API] Mock getAll response:", mockResponse);

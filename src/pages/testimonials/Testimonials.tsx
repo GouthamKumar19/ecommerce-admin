@@ -53,23 +53,27 @@ const TestimonialsPage: React.FC = () => {
     const fetchTestimonials = async () => {
       setIsLoading(true);
       setError(null); // Reset error state
-setTimeout(async () => {
       try {
         const response = await getAllTestimonials();
-        setTestimonials(response.data);
+        console.log("Fetched Testimonials Response:", response); // Log the entire response
+        console.log("Fetched Testimonials Data:", response.data); // Log the fetched data
+        setTestimonials(response.data.tableData); // Ensure the correct data structure is passed
       } catch (error) {
         setError("Error fetching testimonials");
         console.error("Error fetching testimonials:", error);
       } finally {
         setIsLoading(false);
       }
-    },500); 
     };
 
     fetchTestimonials();
   }, []); // Empty dependency array means it runs once on component mount
 
   const sortedTestimonials = useSortableData(testimonials, sortConfig);
+
+  useEffect(() => {
+    console.log("Sorted Testimonials:", sortedTestimonials);
+  }, [sortedTestimonials]);
 
   const columns = [
     {
@@ -93,7 +97,7 @@ setTimeout(async () => {
         />
       ),
       key: "rating",
-      render: (item: Testimonial) => <StarRating rating={item.rating} />,
+      render: (item: Testimonial) => <StarRating rating={item.ratings} />, // Use item.ratings
     },
     {
       header: (

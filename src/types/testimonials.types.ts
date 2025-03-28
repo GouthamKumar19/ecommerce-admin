@@ -1,18 +1,27 @@
-// Define possible value types that can be stored in the record
 type RecordValue = string | number | boolean | null | undefined;
 
 export interface BaseRecord {
-  [key: string]: RecordValue; // More specific index signature
+  [key: string]: RecordValue;
 }
 
 export interface Testimonial extends BaseRecord {
   id: string | number;
-  _id?: string; // API response format
+  _id?: string;
   name: string;
   rating: number;
-  ratings?: number; // API response format
+  ratings: number;
   description: string;
   createdAt?: string;
   updatedAt?: string;
-  // Add any other fields your testimonial has
+}
+
+export interface TestimonialResponse {
+  totalCount: number;
+  tableData: Testimonial[];
+}
+
+export interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data: T;
 }
