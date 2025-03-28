@@ -18,7 +18,7 @@ import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; /
 const TestimonialsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "createdAt",
+    key: "updatedAt",
     direction: "descending",
   });
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -66,7 +66,7 @@ const TestimonialsPage: React.FC = () => {
         console.log("Fetched Testimonials Data:", response.data); // Log the fetched data
         setTestimonials(response.data.tableData); // Ensure the correct data structure is passed
       } catch (error) {
-        setError("Error fetching testimonials");
+        setError("");
         console.error("Error fetching testimonials:", error);
       } finally {
         setIsLoading(false);

@@ -5,7 +5,7 @@ import {
   ApiResponse,
   SortConfig,
 } from "../types/testimonials.types";
-
+let currentController: AbortController | null = null;
 interface TestimonialFormData {
   _id?: string;
   name: string;
@@ -74,24 +74,34 @@ export const getAllTestimonials = async (
   sortConfig: SortConfig
 ): Promise<ApiResponse<TestimonialResponse>> => {
   try {
+    if (currentController) {
+      currentController.abort();
+    }
+    currentController = new AbortController();
     console.log("[API] Fetching all testimonials");
 
-    const response = await axiosInstance.post("/admin/testimonials/getAll", {
-      page,
-      itemsPerPage,
-      search: [
-        {
-          term: searchTerm,
-          fields: ["description"],
-          startsWith: true,
-          endsWith: false,
+    const response = await axiosInstance.post(
+      "/admin/testimonials/getAll",
+      {
+        page,
+        itemsPerPage,
+        search: [
+          {
+            term: searchTerm,
+            fields: ["description"],
+            startsWith: true,
+            endsWith: false,
+          },
+        ],
+        options: {
+          sortBy: [sortConfig.key],
+          sortDesc: [sortConfig.direction === "descending"],
         },
-      ],
-      options: {
-        sortBy: [sortConfig.key],
-        sortDesc: [sortConfig.direction === "descending"],
       },
-    });
+      {
+        signal: currentController.signal,
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("[API] Error fetching all testimonials:", error);
