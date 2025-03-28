@@ -18,8 +18,8 @@ import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; /
 const TestimonialsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "createdAt",
+    direction: "descending",
   });
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isLoading, setIsLoading] = useState(true); // Loading state
@@ -59,7 +59,8 @@ const TestimonialsPage: React.FC = () => {
         const response = await getAllTestimonials(
           page,
           itemsPerPage,
-          searchValue
+          searchValue,
+          sortConfig
         );
         console.log("Fetched Testimonials Response:", response); // Log the entire response
         console.log("Fetched Testimonials Data:", response.data); // Log the fetched data
@@ -73,7 +74,7 @@ const TestimonialsPage: React.FC = () => {
     };
 
     fetchTestimonials();
-  }, [page, itemsPerPage, searchValue]); // Add page, itemsPerPage, and searchValue as dependencies
+  }, [page, itemsPerPage, searchValue, sortConfig]); // Add page, itemsPerPage, searchValue, and sortConfig as dependencies
 
   const sortedTestimonials = useSortableData(testimonials, sortConfig);
 

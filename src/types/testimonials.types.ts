@@ -1,3 +1,10 @@
+export type SortDirection = "ascending" | "descending" | null;
+
+export interface SortConfig {
+  key: string;
+  direction: SortDirection;
+}
+
 type RecordValue = string | number | boolean | null | undefined;
 
 export interface BaseRecord {

@@ -3,6 +3,7 @@ import {
   Testimonial,
   TestimonialResponse,
   ApiResponse,
+  SortConfig,
 } from "../types/testimonials.types";
 
 interface TestimonialFormData {
@@ -69,7 +70,8 @@ export const getTestimonialById = async (
 export const getAllTestimonials = async (
   page: number,
   itemsPerPage: number,
-  searchTerm: string
+  searchTerm: string,
+  sortConfig: SortConfig
 ): Promise<ApiResponse<TestimonialResponse>> => {
   try {
     console.log("[API] Fetching all testimonials");
@@ -80,11 +82,15 @@ export const getAllTestimonials = async (
       search: [
         {
           term: searchTerm,
-          fields: ["name"],
+          fields: ["description"],
           startsWith: true,
           endsWith: false,
         },
       ],
+      options: {
+        sortBy: [sortConfig.key],
+        sortDesc: [sortConfig.direction === "descending"],
+      },
     });
     return response.data;
   } catch (error) {
