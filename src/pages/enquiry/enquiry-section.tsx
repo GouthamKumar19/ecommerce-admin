@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DataTable from "../../components/common/DataTable";
-import { useQuery } from "@tanstack/react-query";
-import { enquiries } from "../../config/mock/enquiriesTable";
 import type { Enquiry } from "../../types/enquiry.types";
 import { Visibility } from "@mui/icons-material";
 import SearchBar from "../../components/common/SearchBar";
@@ -15,41 +13,41 @@ import {
 import EnquiryPopup from "../../components/EnquiryPopup";
 import { getAllEnquiry } from "../../api/enquiry"; // Import the API call
 
-const fetchEnquiries = async (): Promise<Enquiry[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(enquiries), 1000);
-  });
-};
-
 const EnquiryPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "createdAt",
+    direction: "descending",
   });
   // State for managing the popup dialog
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const { data: enquiryData = [], isLoading: queryLoading } = useQuery({
-    queryKey: ["enquiryData"],
-    queryFn: fetchEnquiries,
-  });
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const fetchEnquiries = async () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
       setIsLoading(true); // Start loading
 
       try {
         const payload = {}; // Define payload if needed
         const response = await getAllEnquiry(payload); // Call the API
 
-        console.log("Fetched Enquiries:", response.data);
-
-        // Log each enquiry's id, name, email, and message
+        if (response) {
+          console.log("Fetched Enquiries:", response.data);
+          setEnquiries(response.data); // Set the enquiries data
+        }
       } catch (err: any) {
-        console.error(err.message || "Failed to fetch enquiries"); // Handle any errors
+        if (!signal.aborted) {
+          console.error(err.message || "Failed to fetch enquiries"); // Handle any errors
+        }
       } finally {
         setIsLoading(false); // End loading
       }
@@ -83,7 +81,7 @@ const EnquiryPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const sortedEnquiries = useSortableData(enquiryData, sortConfig);
+  const sortedEnquiries = useSortableData(enquiries, sortConfig);
 
   const columns = [
     {
@@ -137,6 +135,7 @@ const EnquiryPage: React.FC = () => {
         </div>
       ),
       key: "actions",
+      render: actionRenderer,
     },
   ];
 
@@ -166,7 +165,7 @@ const EnquiryPage: React.FC = () => {
           itemsPerPage={15}
           tableType="enquiry"
           actionRenderer={actionRenderer}
-          loading={isLoading || queryLoading}
+          loading={isLoading}
         />
       </div>
 
