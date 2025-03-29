@@ -105,7 +105,9 @@ const DataTable = <T extends BaseRecord>({
       } else {
         return (
           <div
-            className={`text-center ${isDisabled ? "text-gray-400" : "text-gray-900"}`}
+            className={`text-center ${
+              isDisabled ? "text-gray-400" : "text-gray-900"
+            }`}
           >
             {String(item[column.key] ?? "N/A")}
           </div>
@@ -127,6 +129,7 @@ const DataTable = <T extends BaseRecord>({
     manualPagination: false,
     pageCount: Math.ceil(items.length / pagination.pageSize),
   });
+
   if (loading) {
     return <TableSkeletonLoader columns={columns.length} rows={itemsPerPage} />;
   }

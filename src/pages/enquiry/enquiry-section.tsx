@@ -12,6 +12,7 @@ import {
 } from "../../components/common/SortUtils";
 import EnquiryPopup from "../../components/EnquiryPopup";
 import { getAllEnquiry } from "../../api/enquiry"; // Import the API call
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import the skeleton loader
 
 const EnquiryPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -19,7 +20,8 @@ const EnquiryPage: React.FC = () => {
     key: "createdAt",
     direction: "descending",
   });
-  // State for managing the popup dialog
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -38,6 +40,8 @@ const EnquiryPage: React.FC = () => {
 
       try {
         const payload = {
+          page: page,
+          itemsPerPage: itemsPerPage,
           search: [
             {
               term: searchValue,
@@ -51,6 +55,7 @@ const EnquiryPage: React.FC = () => {
             sortDesc: [sortConfig.direction === "descending"],
           },
         };
+        console.log("Payload:", payload); // Log the payload for debugging
         const response = await getAllEnquiry(payload); // Call the API
 
         if (response) {
@@ -67,7 +72,7 @@ const EnquiryPage: React.FC = () => {
     };
 
     fetchEnquiries(); // Execute fetching function
-  }, [searchValue, sortConfig]);
+  }, [searchValue, sortConfig, page, itemsPerPage]);
 
   const handleClosePopup = () => {
     setIsPopupOpen(false);
@@ -166,20 +171,31 @@ const EnquiryPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable<Enquiry>
-          items={sortedEnquiries.filter(
-            (enquiry) =>
-              enquiry.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-              enquiry.email.toLowerCase().includes(searchValue.toLowerCase()) ||
-              enquiry.message.toLowerCase().includes(searchValue.toLowerCase())
-          )}
-          columns={columns}
-          idKey="_id"
-          itemsPerPage={15}
-          tableType="enquiry"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <TableSkeletonLoader columns={4} rows={10} /> // Show skeleton loader while loading
+        ) : (
+          <DataTable<Enquiry>
+            items={sortedEnquiries.filter(
+              (enquiry) =>
+                enquiry.name
+                  .toLowerCase()
+                  .includes(searchValue.toLowerCase()) ||
+                enquiry.email
+                  .toLowerCase()
+                  .includes(searchValue.toLowerCase()) ||
+                enquiry.message
+                  .toLowerCase()
+                  .includes(searchValue.toLowerCase())
+            )}
+            columns={columns}
+            idKey="_id"
+            itemsPerPage={itemsPerPage}
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+            currentPage={page}
+            onPageChange={setPage}
+          />
+        )}
       </div>
 
       {/* Enquiry Popup Dialog */}
