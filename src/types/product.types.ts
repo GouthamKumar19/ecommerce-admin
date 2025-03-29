@@ -21,7 +21,7 @@ export interface Product extends BaseRecord {
   name: string;
   description: string;
   price: number;
-  slashedPrice?: number; 
+  slashedPrice?: number;
   quantity: number;
   isFeatured: boolean; // Changed featured to isFeatured
   categoryId: string; // Required category ID
@@ -31,14 +31,19 @@ export interface Product extends BaseRecord {
   createdAt?: string | Date; // Date of creation
   updatedAt: string | Date; // Date of last update
 }
-export interface ProductResponse{
-  totalCount:number;
-  tableData:Product[];
+export interface ProductResponse {
+  totalCount: number;
+  tableData: Product[];
 }
 
 // Example response structure reflecting the overall API response
 export interface ApiResponse<T> {
   status: number;
   message: string;
-  data: T
+  data: T;
+}
+export type SortDirection = "ascending" | "descending" | null;
+export interface SortConfig {
+  key: string;
+  direction: SortDirection;
 }

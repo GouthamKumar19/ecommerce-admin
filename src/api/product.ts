@@ -1,13 +1,15 @@
-
 import { Product, ProductResponse } from "../types/product.types";
-//import { productMockData } from "../config/mock/productTable"; // Adjust the import path to where your mock data is located
 import axiosInstance from "./axios";
 import axios from "axios";
+import { SortConfig } from "../types/product.types";
+
+
 interface ApiResponse<T> {
   status: number;
   message: string;
   data: T;
 }
+
 // Add this to your API file if not already present
 const DUMMY_IMAGES = [
   "https://dummyimage.com/600x400/000/fff",
@@ -18,14 +20,46 @@ const DUMMY_IMAGES = [
 const DEFAULT_CATEGORY_ID = "67ce9292891e6b7ec5df5831";
 const DEFAULT_SUBCATEGORY_ID = "67cc21365983b789b129c1f6";
 
+// To hold the current AbortController instance
+let currentController: AbortController | null = null;
 
 // Get all products
-export const getAllProducts = async (): Promise<ApiResponse<ProductResponse>> => {
+export const getAllProducts = async (
+  page: number,
+  itemsPerPage: number,
+  searchTerm: string,
+  sortConfig: SortConfig
+): Promise<ApiResponse<ProductResponse>> => {
   try {
+    if (currentController) {
+      currentController.abort();
+    }
+    currentController = new AbortController();
     console.log("[API] Fetching all products");
 
-    const response = await axiosInstance.post('/admin/products/getAll')//, {
-     
+    const response = await axiosInstance.post(
+      "/admin/products/getAll",
+      {
+        page,
+        itemsPerPage,
+        search: [
+          {
+            term: searchTerm,
+            fields: ["name"],
+            startsWith: true,
+            endsWith: false,
+          },
+        ],
+        options: {
+          sortBy: [sortConfig.key],
+          sortDesc: [sortConfig.direction === "descending"],
+        },
+      },
+      {
+        signal: currentController.signal,
+      }
+    );
+
     console.log("[API] getAll response:", response.data);
     return response.data;
   } catch (error) {
@@ -40,32 +74,26 @@ export const getProductById = async (
   try {
     console.log("[API] Fetching product with ID:", id);
 
-    const response = await axiosInstance.post(
-      `/admin/products/getOne/${id}`,
-      {
-        projection: {
-          name: 1,
-          description: 1,
-          price: 1,
-          slashedPrice: 1,
-          categoryId: 1,
-          subCategoryId: 1,
-          images: 1,
-          thumbnailImage: 1,
-          createdAt: 1,
-          updatedAt: 1
-        }
-      }
-    );
+    const response = await axiosInstance.post(`/admin/products/getOne/${id}`, {
+      projection: {
+        name: 1,
+        description: 1,
+        price: 1,
+        slashedPrice: 1,
+        categoryId: 1,
+        subCategoryId: 1,
+        images: 1,
+        thumbnailImage: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    });
     return response.data;
-
-    
   } catch (error) {
     console.error("[API] Error fetching product:", error);
     throw error;
   }
 };
-
 
 // Update a product
 export const updateProduct = async (
@@ -85,8 +113,10 @@ export const updateProduct = async (
       ...productData,
       // Ensure these fields are processed correctly
       price: productData.price ? Number(productData.price) : undefined,
-      slashedPrice: productData.slashedPrice ? Number(productData.slashedPrice) : undefined,
-      updatedAt: new Date().toISOString()
+      slashedPrice: productData.slashedPrice
+        ? Number(productData.slashedPrice)
+        : undefined,
+      updatedAt: new Date().toISOString(),
     };
 
     // Make the API call to update the product
@@ -105,13 +135,12 @@ export const updateProduct = async (
 };
 
 // Add a product
-
 export const addProduct = async (
   productData: Product
 ): Promise<ApiResponse<{ _id: string }>> => {
   try {
     console.log("[API] Adding product with data:", productData);
-    
+
     // Create a clean object with only the fields the API expects
     const dataToSend = {
       name: productData.name,
@@ -122,7 +151,9 @@ export const addProduct = async (
       subCategoryId: productData.subCategoryId || DEFAULT_SUBCATEGORY_ID,
       isFeatured: Boolean(productData.isFeatured),
       // Ensure images is an array of strings
-      images: Array.isArray(productData.images) ? productData.images : DUMMY_IMAGES,
+      images: Array.isArray(productData.images)
+        ? productData.images
+        : DUMMY_IMAGES,
       // Ensure thumbnailImage is a string
       thumbnailImage: productData.thumbnailImage || DUMMY_IMAGES[0],
       quantity: Number(productData.quantity) || 0,
@@ -135,16 +166,16 @@ export const addProduct = async (
     console.log("[API] Formatted data being sent:", JSON.stringify(dataToSend));
 
     const response = await axiosInstance.post(
-      '/admin/products/add',
+      "/admin/products/add",
       dataToSend
     );
-    
+
     // Log the full response for debugging
     console.log("[API] Complete response:", response);
     return response.data;
   } catch (error) {
     console.error("[API] Error adding product:", error);
-    
+
     // Enhanced error logging
     if (axios.isAxiosError(error)) {
       if (error.response) {
@@ -158,11 +189,10 @@ export const addProduct = async (
       }
       console.error("Error config:", error.config);
     }
-    
+
     throw error;
   }
 };
-
 
 // Delete a product
 export const deleteProduct = async (
@@ -172,10 +202,8 @@ export const deleteProduct = async (
     console.log("[API] Deleting product with ID:", id);
 
     // Using the real API endpoint
-    const response = await axiosInstance.post(
-      `/admin/products/delete/${id}`
-    );
-    
+    const response = await axiosInstance.post(`/admin/products/delete/${id}`);
+
     console.log("[API] Delete response:", response.data);
     return response.data;
   } catch (error) {
@@ -201,4 +229,3 @@ export const addProductVariants = async (
     throw error;
   }
 };
-

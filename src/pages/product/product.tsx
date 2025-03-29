@@ -19,15 +19,17 @@ import Alert from "@mui/material/Alert";
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "updatedAt",
+    direction: "descending",
   });
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [, setError] = useState<string | null>(null); // Error state
+  const [page, setPage] = useState<number>(1); // Pagination state
+  const [itemsPerPage] = useState<number>(10); // Items per page
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
 
   const navigate = useNavigate();
@@ -36,19 +38,23 @@ const ProductPage: React.FC = () => {
     navigate("/product/new?action=add");
   };
 
-  // Payload for API fetching
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true); // Set loading state to true
       setError(null); // Reset error state
       setTimeout(async () => {
         try {
-          const response = await getAllProducts(); // Fetching data without payload
+          const response = await getAllProducts(
+            page,
+            itemsPerPage,
+            searchValue,
+            sortConfig
+          );
           console.log(response);
           setProducts(response.data.tableData); // Assuming response.data.tableData is an array of products
         } catch (error) {
           setError("Failed to fetch products");
-          console.error("Failed to fetch products",error);
+          console.error("Failed to fetch products", error);
         } finally {
           setIsLoading(false); // Loading is finished
         }
@@ -56,7 +62,7 @@ const ProductPage: React.FC = () => {
     };
 
     fetchProducts();
-  }, []); // Empty dependency array means this runs once on component mount
+  }, [page, itemsPerPage, searchValue, sortConfig]); // Dependencies updated
 
   const handleDeleteProduct = (productId: string | number) => {
     setSelectedProduct(
@@ -259,10 +265,12 @@ const ProductPage: React.FC = () => {
             items={sortedProducts}
             columns={columns}
             idKey="_id" // Use _id based on your Product type structure
-            itemsPerPage={15}
+            itemsPerPage={itemsPerPage}
             tableType="product"
             actionRenderer={actionRenderer}
             loading={isLoading}
+            currentPage={page}
+            onPageChange={setPage} // Handle pagination
           />
         )}
       </div>

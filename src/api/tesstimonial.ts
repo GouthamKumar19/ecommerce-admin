@@ -88,7 +88,7 @@ export const getAllTestimonials = async (
         search: [
           {
             term: searchTerm,
-            fields: ["description"],
+            fields: ["name"],
             startsWith: true,
             endsWith: false,
           },
