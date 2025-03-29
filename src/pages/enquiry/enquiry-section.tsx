@@ -21,7 +21,7 @@ const EnquiryPage: React.FC = () => {
     direction: "descending",
   });
   const [page, setPage] = useState<number>(1);
-  const [itemsPerPage] = useState<number>(10);
+  const [itemsPerPage] = useState<number>(3); // Set items per page to 3
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -172,7 +172,7 @@ const EnquiryPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={10} /> // Show skeleton loader while loading
+          <TableSkeletonLoader columns={4} rows={3} /> // Show skeleton loader while loading
         ) : (
           <DataTable<Enquiry>
             items={sortedEnquiries.filter(
