@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { Box, TextField } from "@mui/material";
-import { ActionContext } from "../../context/ActionContext"; // Import the ActionContext
+import Cookies from "js-cookie";
+import { ActionContext } from "../../context/ActionContext";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
 import { getProfile, updateProfile } from "../../api/profile";
+
 
 const Profile: React.FC = () => {
   const [name, setName] = useState("");
@@ -11,19 +13,22 @@ const Profile: React.FC = () => {
   const [showEmailAlert, setShowEmailAlert] = useState(false);
   const [nameError, setNameError] = useState(false);
   const [nameErrorMessage, setNameErrorMessage] = useState("");
-  //const [emailFocused, setEmailFocused] = useState(false); // State for email field focus
+  const [currentProfileData, setCurrentProfileData] = useState<any>(null);
 
-  const { setActionHandlers } = useContext(ActionContext); // Use the ActionContext
+  const { setActionHandlers } = useContext(ActionContext);
 
+  // Fetch user profile on component mount
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = "123"; // Replace with actual token
+        const token = Cookies.get("authToken") || ""; // Get token from cookies
         const response = await getProfile(token);
         const { name, email } = response.data;
 
         setName(name);
         setEmail(email);
+        // Store the entire profile data to use in update
+        setCurrentProfileData(response.data);
       } catch (error) {
         console.error("Error fetching user profile:", error);
       }
@@ -32,6 +37,16 @@ const Profile: React.FC = () => {
     fetchUserProfile();
   }, []);
 
+  // Fallback to cookies for profile data
+  useEffect(() => {
+    const storedName = Cookies.get("name");
+    const storedEmail = Cookies.get("email");
+
+    if (storedName) setName(storedName);
+    if (storedEmail) setEmail(storedEmail);
+  }, []);
+
+  // Name input change handler with validation
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setName(value);
@@ -47,6 +62,7 @@ const Profile: React.FC = () => {
     }
   };
 
+  // Email field hover handlers
   const handleMouseEnter = () => {
     setShowEmailAlert(true);
   };
@@ -55,36 +71,38 @@ const Profile: React.FC = () => {
     setShowEmailAlert(false);
   };
 
-  // ✅ Use `useCallback` to prevent unnecessary re-renders
+  // Submit handler to update profile
   const handleSubmit = useCallback(async () => {
     if (nameError) {
       return; // Prevent submission if there are errors
     }
 
-    console.log("Form submitted"); // Add this log to confirm form submission
-    const token = "123"; // Replace with actual token
+    const token = Cookies.get("authToken") || ""; // Get token from cookies
     try {
-      const updatedProfile = {
-        _id: "6512c5f3e4b09a12d8f42b68",
-        name,
-        email,
-        role: "ADMIN",
-        createdAt: "2024-02-06T15:30:00.000Z",
-        updatedAt: new Date().toISOString(),
-      };
-      const response = await updateProfile(token, updatedProfile);
-      console.log("Profile updated successfully:", response.message);
+      if (currentProfileData) {
+        const response = await updateProfile(token, name, currentProfileData);
+        console.log("Profile updated successfully:", response.message);
+
+        // Optionally, you can add a success toast or notification here
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
+      // Optionally, add error handling toast or notification
     }
-  }, [name, email, nameError]); // ✅ Add dependencies properly
+  }, [name, nameError, currentProfileData]);
 
+  // Cancel handler
   const handleCancel = useCallback(() => {
     console.log("Form cancelled");
     // Reset the form or perform any cancel actions here
-  }, []);
+    // For example, reset to original name
+    
+    if (currentProfileData) {
+      setName(currentProfileData.name);
+    }
+  }, [currentProfileData]);
 
-  // ✅ Set the action handlers only when functions change
+  // Set action handlers
   useEffect(() => {
     setActionHandlers({
       onConfirm: handleSubmit,
@@ -102,6 +120,7 @@ const Profile: React.FC = () => {
         borderRadius: "8px",
       }}
     >
+      {/* Top navigation section */}
       <Box
         sx={{
           padding: 2,
@@ -115,6 +134,7 @@ const Profile: React.FC = () => {
         <BackArrow />
       </Box>
 
+      {/* Main content section */}
       <Box
         sx={{
           flex: 1,
@@ -133,6 +153,7 @@ const Profile: React.FC = () => {
           </h2>
 
           <form noValidate autoComplete="off">
+            {/* Name Input */}
             <label className="block text-black text-lg font-medium mb-2 text-left">
               Name
             </label>
@@ -145,10 +166,11 @@ const Profile: React.FC = () => {
                 error={nameError}
                 helperText={nameErrorMessage}
                 fullWidth
-                sx={{ height: "40px" }} // Change the height to make it smaller
+                sx={{ height: "40px" }}
               />
             </div>
 
+            {/* Email Input */}
             <div className="mb-8 relative">
               <label className="block text-black text-lg font-medium mb-2 text-left">
                 Email
@@ -162,8 +184,6 @@ const Profile: React.FC = () => {
                 }}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                //onFocus={() => setEmailFocused(true)} // Set focused state on focus
-                //onBlur={() => setEmailFocused(false)} // Reset focused state on blur
                 fullWidth
                 sx={{
                   height: "40px",
@@ -180,6 +200,7 @@ const Profile: React.FC = () => {
         </div>
       </Box>
 
+      {/* Bottom action section */}
       <Box
         sx={{
           padding: 3,

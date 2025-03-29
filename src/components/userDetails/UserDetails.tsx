@@ -1,27 +1,16 @@
 import React, { useState, useContext, useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
-
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-
 import { Edit, Delete } from "@mui/icons-material";
 import TextField from "@mui/material/TextField";
+import { InputAdornment, Snackbar, Alert } from "@mui/material";
 import AddressPopup from "./AddressPopup";
 import { ActionContext } from "../../context/ActionContext";
-import { createUser, getUserById } from "../../api/user";
+import { createUser, getUserById, updateUser } from "../../api/user";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { User } from "../../types/users.types";
-import { InputAdornment } from "@mui/material";
-
-interface UserFormData {
-  name: string;
-  email: string;
-  password: string;
-  gender: string;
-  phone: string;
-  countryCode: string;
-}
 
 interface AddressData {
   addressLine1: string;
@@ -32,16 +21,18 @@ interface AddressData {
 }
 
 const UserDetailsForm: React.FC = () => {
+  // Form state variables
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     gender: "",
     phoneNumber: "+91",
-    countryCode: "",
+    countryCode: "91",
     addresses: [] as AddressData[],
   });
 
+  // UI state variables
   const [isEditMode, setIsEditMode] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,29 +42,43 @@ const UserDetailsForm: React.FC = () => {
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  // Snackbar state
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success"
+  );
+
+  // Validation state
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     phoneNumber: "",
+    password: "",
+    gender: "",
   });
 
+  // Context and routing hooks
   const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { setActionHandlers } = useContext(ActionContext);
 
+  // Helper function to populate form with user data
   const populateFormWithUserData = (user: User) => {
+    console.log("Populating form with user data:", user);
     setFormData({
-      name: user.name ? String(user.name) : "",
-      email: user.email ? String(user.email) : "",
-      password: user.password ? String(user.password) : "",
-      gender: user.gender ? String(user.gender) : "",
-      phoneNumber: user.phone ? String(user.phone) : "",
-      countryCode: "+91",
-      addresses: [],
+      name: user.name || "",
+      email: user.email || "",
+      password: "", // Don't populate password for security reasons
+      gender: user.gender || "",
+      phoneNumber: user.phone ? user.phone : "+91",
+      countryCode: "91",
+      addresses: user.addresses || [],
     });
   };
 
+  // Fetch user data effect
   useEffect(() => {
     const fetchUserData = async () => {
       const id = params.id;
@@ -83,33 +88,40 @@ const UserDetailsForm: React.FC = () => {
         setUserId(id);
 
         try {
+          // If data is passed through location state, use it
+          // Otherwise fetch from API
+          console.log("Fetching user data for ID:", id);
           const response = await getUserById(id);
-          if (response && response.data) {
+          console.log("User data response:", response);
+
+          if (response.status === 200 && response.data) {
             populateFormWithUserData(response.data);
+          } else {
+            throw new Error("Failed to load user data");
           }
         } catch (error) {
           console.error("Error fetching user:", error);
+          setSnackbarMessage("Failed to load user data. Please try again.");
+          setSnackbarSeverity("error");
+          setOpenSnackbar(true);
         } finally {
           setIsLoading(false);
         }
-      } else if (location.state?.user) {
-        const user = location.state.user;
-        setIsEditMode(true);
-        setUserId(String(user.id || user._id));
-        populateFormWithUserData(user);
       }
     };
 
     fetchUserData();
   }, [params.id, location.state]);
 
+  // Set up action handlers effect
   useEffect(() => {
     setActionHandlers({
-      onConfirm: handleConfirm,
+      onConfirm: handleSaveUser,
       onCancel: handleCancel,
     });
 
     return () => {
+      // Reset action handlers when component unmounts
       setActionHandlers({
         onConfirm: () => console.warn("onConfirm is not implemented"),
         onCancel: () => console.warn("onCancel is not implemented"),
@@ -117,6 +129,7 @@ const UserDetailsForm: React.FC = () => {
     };
   }, [formData, isEditMode, setActionHandlers]);
 
+  // Input change handler
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -148,6 +161,46 @@ const UserDetailsForm: React.FC = () => {
             (phoneDigits.length > 10 ? phoneDigits.slice(0, 10) : phoneDigits),
         }));
       }
+    } else if (name === "gender") {
+      // Convert gender input to uppercase
+      const upperCaseValue = value.toUpperCase();
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: upperCaseValue,
+      }));
+
+      // Validate gender (optional: add specific gender validation if needed)
+      setErrors((prev) => ({
+        ...prev,
+        gender: "",
+      }));
+    } else if (name === "password") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+
+      // Password validation: at least 8 characters with at least one letter and one number
+      const hasMinLength = value.length >= 8;
+      const hasLetter = /[a-zA-Z]/.test(value);
+      const hasNumber = /[0-9]/.test(value);
+      const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(value);
+
+      let passwordError = "";
+
+      if (
+        value &&
+        (!hasMinLength || !hasLetter || !hasNumber || !hasSpecialChar)
+      ) {
+        passwordError =
+          "Password must be at least 8 characters with at least one letter, one number, and one special character.";
+      }
+
+      setErrors((prev) => ({
+        ...prev,
+        password: passwordError,
+      }));
     } else {
       // Handle other inputs normally
       setFormData((prev) => ({
@@ -176,6 +229,7 @@ const UserDetailsForm: React.FC = () => {
     }
   };
 
+  // Address handlers
   const handleAddAddress = (addressData: AddressData) => {
     setFormData((prev) => ({
       ...prev,
@@ -212,65 +266,109 @@ const UserDetailsForm: React.FC = () => {
     }));
   };
 
-  const handleConfirm = async () => {
-    const userData: UserFormData = {
+  // Save user handler
+  const handleSaveUser = async () => {
+    // Check for validation errors
+    if (
+      errors.name ||
+      errors.email ||
+      errors.phoneNumber ||
+      errors.password ||
+      errors.gender
+    ) {
+      setSnackbarMessage(
+        "Please correct the validation errors before submitting."
+      );
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return;
+    }
+
+    // If it's a new user, validate that password field is not empty
+    if (!isEditMode && !formData.password) {
+      setErrors((prev) => ({
+        ...prev,
+        password: "Password is required for new users.",
+      }));
+      setSnackbarMessage("Password is required for new users.");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return;
+    }
+
+    // Prepare user data for API
+    const userData: any = {
       name: formData.name,
       email: formData.email,
-      password: formData.password,
       gender: formData.gender,
       phone: formData.phoneNumber,
       countryCode: formData.countryCode,
+      addresses: formData.addresses,
     };
 
-    console.log("Form data being submitted:", userData);
-
-    // Check for errors before submission
-    if (errors.name || errors.email || errors.phoneNumber) {
-      console.error("There are validation errors", errors);
-      return; // Stop if there are validation errors
+    // Add password only if provided (for updates) or required (for new users)
+    if (formData.password) {
+      userData.password = formData.password;
     }
+
+    setIsLoading(true);
 
     try {
       if (isEditMode && userId) {
-        // Update existing user (API call to be implemented)
+        // Update existing user
         console.log("Updating user with ID:", userId);
         console.log("Updated user data:", userData);
+
+        const response = await updateUser(userId, userData);
+        console.log("Update response:", response);
+
+        if (response.status === 200) {
+          setSnackbarMessage("User updated successfully");
+          setSnackbarSeverity("success");
+          setOpenSnackbar(true);
+
+          // Navigate back after short delay
+          setTimeout(() => {
+            navigate("/users");
+          }, 1500);
+        } else {
+          throw new Error(response.message || "Something went wrong");
+        }
       } else {
         // Create new user
+        console.log("Creating new user with data:", userData);
+
         const response = await createUser(userData);
-        console.log({
-          status: 201,
-          message: "Success",
-          data: {
-            id: response.data._id,
-          },
-          toastMessage: "User created successfully",
-        });
-      }
+        console.log("Create response:", response);
 
-      // Reset form after successful submission
-      if (!isEditMode) {
-        setFormData({
-          name: "",
-          email: "",
-          password: "",
-          gender: "",
-          phoneNumber: "+91",
-          countryCode: "+91",
-          addresses: [],
-        });
-      }
+        if (response.status === 200 || response.status === 201) {
+          setSnackbarMessage("User created successfully");
+          setSnackbarSeverity("success");
+          setOpenSnackbar(true);
 
-      // You might want to add toast notification here
+          // Navigate back after short delay
+          setTimeout(() => {
+            navigate("/users");
+          }, 1500);
+        } else {
+          throw new Error(response.message || "Something went wrong");
+        }
+      }
     } catch (error) {
       console.error("Error submitting user data:", error);
-      // Handle error notification here
+      setSnackbarMessage(
+        error instanceof Error ? error.message : "Failed to save user"
+      );
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Cancel handler
   const handleCancel = () => {
     console.log("Cancel action triggered");
-    // Redirect to a different route, e.g., the user list page
     navigate("/users");
   };
 
@@ -297,7 +395,9 @@ const UserDetailsForm: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
         </div>
       ) : (
-        <div className={`${showAddress ? "filter pointer-events-none" : ""}`}>
+        <div
+          className={`${showAddress ? "filter blur-sm pointer-events-none" : ""}`}
+        >
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
             <div className="w-full md:w-1/3 text-left">
               <label className="block text-black text-small font-medium mb-2 text-left">
@@ -310,7 +410,7 @@ const UserDetailsForm: React.FC = () => {
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full"
-                error={!!errors.name} // Here to indicate error state
+                error={!!errors.name}
                 helperText={errors.name}
                 size="small"
                 InputProps={{
@@ -320,7 +420,7 @@ const UserDetailsForm: React.FC = () => {
                   ...textFieldStyle,
                   "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
                     {
-                      borderColor: "red", // Custom red border color for error state
+                      borderColor: "red",
                     },
                 }}
               />
@@ -337,7 +437,7 @@ const UserDetailsForm: React.FC = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full"
-                error={!!errors.email} // Here to indicate error state
+                error={!!errors.email}
                 helperText={errors.email}
                 size="small"
                 InputProps={{
@@ -347,7 +447,7 @@ const UserDetailsForm: React.FC = () => {
                   ...textFieldStyle,
                   "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
                     {
-                      borderColor: "red", // Custom red border color for error state
+                      borderColor: "red",
                     },
                 }}
               />
@@ -365,7 +465,7 @@ const UserDetailsForm: React.FC = () => {
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
                 className="w-full"
-                error={!!errors.phoneNumber} // Here to indicate error state
+                error={!!errors.phoneNumber}
                 helperText={errors.phoneNumber}
                 size="small"
                 InputProps={{
@@ -380,22 +480,80 @@ const UserDetailsForm: React.FC = () => {
                   ...textFieldStyle,
                   "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
                     {
-                      borderColor: "red", // Custom red border color for error state
+                      borderColor: "red",
+                    },
+                }}
+              />
+            </div>
+            <div className="w-full md:w-1/3 text-left">
+              <label className="block text-black text-small font-medium mb-2 text-left">
+                Gender 
+              </label>
+              <TextField
+                variant="outlined"
+                name="gender"
+                placeholder="GENDER"
+                value={formData.gender}
+                onChange={handleInputChange}
+                className="w-full"
+                error={!!errors.gender}
+                helperText={errors.gender}
+                size="small"
+                InputProps={{
+                  style: { backgroundColor: "white" },
+                }}
+                sx={{
+                  ...textFieldStyle,
+                  "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: "red",
                     },
                 }}
               />
             </div>
           </div>
 
+          {/* Password field with validation */}
+          <div className="w-full md:w-1/3 text-left mt-4">
+            <label className="block text-black text-small font-medium mb-2 text-left">
+              Password 
+            </label>
+            <TextField
+              variant="outlined"
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="w-full"
+              error={!!errors.password}
+              helperText={errors.password}
+              size="small"
+              InputProps={{
+                style: { backgroundColor: "white" },
+              }}
+              sx={{
+                ...textFieldStyle,
+                "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: "red",
+                  },
+              }}
+            />
+          </div>
+
           <button
             onClick={() => setShowAddress(true)}
-            className="w-full sm:w-2/3 md:w-1/3 text-white rounded-md mt-4 mb-4 flex items-center justify-center"
+            className="w-full sm:w-2/3 md:w-1/3 bg-green-700 text-white py-2 rounded-md mt-4 mb-4 flex items-center justify-center"
           >
             + ADD A NEW ADDRESS
           </button>
 
           {formData.addresses.map((address, index) => (
-            <div key={index} className="w-full p-4 text-left bg-white mb-4">
+            <div
+              key={index}
+              className="w-full p-4 text-left bg-white mb-4 border rounded"
+            >
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-bold">Address {index + 1}</h3>
                 <div className="flex space-x-2">
@@ -542,6 +700,18 @@ const UserDetailsForm: React.FC = () => {
           </DialogContentText>
         </DialogContent>
       </Dialog>
+
+      {/* Snackbar for messages */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        onClose={() => setOpenSnackbar(false)}
+      >
+        <Alert severity={snackbarSeverity} sx={{ width: "100%" }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

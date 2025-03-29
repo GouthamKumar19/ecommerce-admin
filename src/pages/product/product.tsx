@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import DataTable from "../../components/common/DataTable";
 import { getAllProducts, deleteProduct } from "../../api/product"; // Import your API fetching function
-import type { Product } from "../../types/product.types";
+import { Product } from "../../types/product.types";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
 import SortableHeader, {
@@ -27,7 +27,7 @@ const ProductPage: React.FC = () => {
   });
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
 
   const navigate = useNavigate();
@@ -44,10 +44,11 @@ const ProductPage: React.FC = () => {
       setTimeout(async () => {
         try {
           const response = await getAllProducts(); // Fetching data without payload
-          console.log(error);
-          setProducts(response.data); // Assuming response.data is an array of products
-        } catch (err: any) {
-          setError(err.message || "Failed to fetch products");
+          console.log(response);
+          setProducts(response.data.tableData); // Assuming response.data.tableData is an array of products
+        } catch (error) {
+          setError("Failed to fetch products");
+          console.error("Failed to fetch products",error);
         } finally {
           setIsLoading(false); // Loading is finished
         }

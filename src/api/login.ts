@@ -20,11 +20,6 @@ export const login = async (
 
     // Direct API call for login with detailed logging
     const response = await axiosInstance.post('/admin/auth/login', loginData)
-    // Detailed console logging
-    console.group("Login API Response");
-    console.log("Full Response Status:", response.status);
-    console.log("Response Message:", response.data.message);
-    console.log("Environment:", response.data.environment);
 
     // Store user data in cookies
     const userData = response.data.data;
@@ -45,35 +40,7 @@ export const login = async (
       expires: new Date(userData.refreshExpiresAt),
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict'
-    });
-
-    // Log user details separately
-    console.group("User Details");
-    console.log("User ID:", userData._id);
-    console.log("Name:", userData.name);
-    console.log("Email:", userData.email);
-    console.log("Role:", userData.role);
-    console.groupEnd();
-
-    // Log tokens (avoid logging full tokens in production)
-    console.group("Token Information");
-    console.log("Access Token (first 20 chars):", userData.access_token.substring(0, 20) + "...");
-    console.log("Refresh Token (first 20 chars):", userData.refresh_token.substring(0, 20) + "...");
-    console.log("Refresh Expires At:", userData.refreshExpiresAt);
-    console.groupEnd();
-
-    console.groupEnd();
-
-    // Optionally, you can also log to the network tab using console.table
-    console.table({
-      status: response.data.status,
-      message: response.data.message,
-      environment: response.data.environment,
-      userId: userData._id,
-      userName: userData.name,
-      userEmail: userData.email,
-      userRole: userData.role
-    });
+    })
 
     return response.data;
   } catch (error) {

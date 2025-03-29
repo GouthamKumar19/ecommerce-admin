@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useMediaQuery, useTheme } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ConfirmationDialog from "./Dialog";
-import { logout } from "../../api/logout"; // Import the logout API function
+import { logout } from "../../api/logout";
+import Cookies from "js-cookie";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -19,6 +20,9 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   // Use MUI theme and media queries for responsive behavior
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
+
+  // Get user name from cookies
+  const userName = Cookies.get("user_name") || "User";
 
   const getPageTitle = () => {
     const path = location.pathname.toLowerCase();
@@ -79,15 +83,13 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
   const confirmLogout = async (confirm: boolean) => {
     setShowLogoutConfirm(false);
     if (confirm) {
-      const token = "123"; // Replace with actual token
-      const refreshToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXV2CJ9.eyJpYXQiOjE3MTg0NTYyMzEsImV4cCI6MjAzMzgxNjIzMX0.Po_Xc3MuJt4GhKWpd1B5cUcHsdZWq_4ElO138VmsU"; // Replace with actual refresh token
       try {
-        const response = await logout(token, refreshToken);
+        const response = await logout();
         console.log("Logout successful:", response.message);
         navigate("/auth/login");
       } catch (error) {
         console.error("Error during logout:", error);
+        // Optionally handle logout error (show toast, etc.)
       }
     }
   };
@@ -141,12 +143,10 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
               className="flex items-center space-x-2 cursor-pointer"
               onClick={toggleDropdown}
             >
-              <span className="text-white text-sm font-medium">
-                AnmolSShetty
-              </span>
+              <span className="text-white text-sm font-medium">{userName}</span>
               <img
                 className="h-8 w-8 rounded-full border border-white"
-                src="https://ui-avatars.com/api/?name=AnmolSShetty&background=0D8ABC&color=fff"
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0D8ABC&color=fff`}
                 alt="Profile"
               />
               <svg
