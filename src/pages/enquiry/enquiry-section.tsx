@@ -37,7 +37,20 @@ const EnquiryPage: React.FC = () => {
       setIsLoading(true); // Start loading
 
       try {
-        const payload = {}; // Define payload if needed
+        const payload = {
+          search: [
+            {
+              term: searchValue,
+              fields: ["name", "email", "message"],
+              startsWith: false,
+              endsWith: false,
+            },
+          ],
+          options: {
+            sortBy: [sortConfig.key],
+            sortDesc: [sortConfig.direction === "descending"],
+          },
+        };
         const response = await getAllEnquiry(payload); // Call the API
 
         if (response) {
@@ -54,7 +67,7 @@ const EnquiryPage: React.FC = () => {
     };
 
     fetchEnquiries(); // Execute fetching function
-  }, []);
+  }, [searchValue, sortConfig]);
 
   const handleClosePopup = () => {
     setIsPopupOpen(false);
