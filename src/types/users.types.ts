@@ -8,14 +8,14 @@ export interface AddressData {
 }
 
 // Define the possible value types that can be stored in a record
-type RecordValue = 
+type RecordValue =
   | string
   | number
   | boolean
   | null
   | undefined
   | Date
-  | { [key: string]: RecordValue; }
+  | { [key: string]: RecordValue }
   | RecordValue[]
   | AddressData[]; // Explicitly add AddressData[] as a valid RecordValue type
 
@@ -49,4 +49,10 @@ export interface ApiResponse<T> {
   status: number;
   message: string;
   data: T;
+}
+export type SortDirection = "ascending" | "descending" | null;
+
+export interface SortConfig {
+  key: string;
+  direction: SortDirection;
 }

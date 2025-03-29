@@ -42,3 +42,5 @@ export function getNextSortDirection(
 
   return "ascending";
 }
+
+export type { SortConfig };

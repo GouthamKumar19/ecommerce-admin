@@ -11,45 +11,69 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import { getAllUser } from "../../api/user";
+import {
+  SortConfig,
+} from "../../components/common/SortableHeader";
+import {
+  
+  useSortableData,
+  getNextSortDirection,
+} from "../../components/common/SortUtils";
 
 const UsersPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "updatedAt",
+    direction: "descending",
+  });
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [, setError] = useState<string | null>(null); // Error state
+  const [page, setPage] = useState<number>(1); // Pagination state
+  const [itemsPerPage] = useState<number>(10); // Items per page
   const [disabledRows, setDisabledRows] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogSubtitle, setDialogSubtitle] = useState("");
   const [currentRow, setCurrentRow] = useState<User | null>(null);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending" | null;
-  }>({ key: "", direction: null });
-
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [, setError] = useState<string | null>(null);
-
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
       setIsLoading(true);
       setError(null);
- setTimeout(async () => {
-      try {
-        const response = await getAllUser();
-        setUsers(response.data.tableData);
-        console.log("User Details:", response.data);
-      } catch (err: any) {
-        console.error("Error fetching users:", err);
-        setError(err.message || "Failed to fetch users");
-      } finally {
-        setIsLoading(false);
-      }
-    },500);
-  };
+      setTimeout(async () => {
+        try {
+          const response = await getAllUser(
+            page,
+            itemsPerPage,
+            searchValue,
+            sortConfig
+          );
+          setUsers(response.data.tableData);
+          console.log("User Details:", response.data);
+        } catch (err: any) {
+          console.error("Error fetching users:", err);
+          setError(err.message || "Failed to fetch users");
+        } finally {
+          setIsLoading(false);
+        }
+      }, 500);
+    };
 
     fetchUserData();
-  }, []);
+  }, [page, itemsPerPage, searchValue, sortConfig]);
+
+  const handleSort = (key: string) => {
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
+    setSortConfig({ key, direction });
+  };
+
+  const sortedUsers = useSortableData(users, sortConfig);
 
   const renderSortIcon = (key: string) => {
     if (sortConfig.key === key) {
@@ -63,7 +87,6 @@ const UsersPage: React.FC = () => {
   };
 
   const handleSearch = () => {
-    // Filter users based on search value
     if (!searchValue) return sortedUsers;
 
     return sortedUsers.filter(
@@ -174,52 +197,6 @@ const UsersPage: React.FC = () => {
     setCurrentRow(null);
   };
 
-  const handleSort = (key: string) => {
-    let direction: "ascending" | "descending" | null = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    } else if (
-      sortConfig.key === key &&
-      sortConfig.direction === "descending"
-    ) {
-      direction = null;
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const sortedUsers = React.useMemo(() => {
-    if (!sortConfig.key || !sortConfig.direction) {
-      return users;
-    }
-
-    return [...users].sort((a, b) => {
-      // Handle possible undefined values
-      const aValue = a[sortConfig.key as keyof User] as
-        | string
-        | number
-        | undefined;
-      const bValue = b[sortConfig.key as keyof User] as
-        | string
-        | number
-        | undefined;
-
-      // Handle undefined values in sorting
-      if (aValue === undefined && bValue === undefined) return 0;
-      if (aValue === undefined)
-        return sortConfig.direction === "ascending" ? -1 : 1;
-      if (bValue === undefined)
-        return sortConfig.direction === "ascending" ? 1 : -1;
-
-      if (aValue < bValue) {
-        return sortConfig.direction === "ascending" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === "ascending" ? 1 : -1;
-      }
-      return 0;
-    });
-  }, [users, sortConfig]);
-
   const filteredUsers = React.useMemo(() => {
     return handleSearch();
   }, [sortedUsers, searchValue]);
@@ -279,10 +256,11 @@ const UsersPage: React.FC = () => {
             items={filteredUsers}
             columns={columns}
             idKey="_id"
-            itemsPerPage={15}
+            itemsPerPage={itemsPerPage}
             actionRenderer={actionRenderer}
-            disabledRows={disabledRows}
             loading={isLoading}
+            currentPage={page}
+            onPageChange={setPage}
           />
         )}
       </div>
