@@ -4,13 +4,13 @@ import DataTable from "../../components/common/DataTable";
 import { Edit } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
-import { User } from "../../types/users.types"; // Ensure this path is correct
-import SearchBar from "../../components/common/SearchBar"; // Import the SearchBar component
+import { User } from "../../types/users.types";
+import SearchBar from "../../components/common/SearchBar";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import Skeleton Loader
-import { getAllUser } from "../../api/user"; // Import the API function for fetching users
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
+import { getAllUser } from "../../api/user";
 
 const UsersPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -26,41 +26,30 @@ const UsersPage: React.FC = () => {
 
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
-
-  const payload = {
-    options: {
-      page: 1,
-      itemsPerPage: 15,
-      sortBy: ["name"], // Example sort, adjust as needed
-      sortDesc: [false], // Example sort, adjust as needed
-    },
-  };
-
   useEffect(() => {
     const fetchUserData = async () => {
-      setIsLoading(true); // Start loading
-      setError(null); // Reset error
-
-      setTimeout(async () => {
-        try {
-          const response = await getAllUser(payload);
-          setUsers(response.data);
-          console.log(error)
-          console.log("User Details:",response.data)
-        } catch (err: any) {
-          setError(err.message || "Failed to fetch users");
-        } finally {
-          setIsLoading(false);
-        }
-      }, 500); // Simulating network delay
-    };
+      setIsLoading(true);
+      setError(null);
+ setTimeout(async () => {
+      try {
+        const response = await getAllUser();
+        setUsers(response.data.tableData);
+        console.log("User Details:", response.data);
+      } catch (err: any) {
+        console.error("Error fetching users:", err);
+        setError(err.message || "Failed to fetch users");
+      } finally {
+        setIsLoading(false);
+      }
+    },500);
+  };
 
     fetchUserData();
-  }, []); // Empty dependency array means this runs once on component mount
+  }, []);
 
   const renderSortIcon = (key: string) => {
     if (sortConfig.key === key) {
@@ -71,6 +60,18 @@ const UsersPage: React.FC = () => {
       );
     }
     return <SwapVertIcon />;
+  };
+
+  const handleSearch = () => {
+    // Filter users based on search value
+    if (!searchValue) return sortedUsers;
+
+    return sortedUsers.filter(
+      (user) =>
+        user.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchValue.toLowerCase()) ||
+        user.phone?.toLowerCase().includes(searchValue.toLowerCase())
+    );
   };
 
   const columns = [
@@ -88,7 +89,7 @@ const UsersPage: React.FC = () => {
       ),
       key: "name",
       render: (item: User) => (
-        <div className="text-sm text-gray-900">{item.name}</div>
+        <div className="text-sm text-gray-900">{item.name || "N/A"}</div>
       ),
     },
     {
@@ -105,7 +106,7 @@ const UsersPage: React.FC = () => {
       ),
       key: "email",
       render: (item: User) => (
-        <div className="text-sm text-gray-900">{item.email}</div>
+        <div className="text-sm text-gray-900">{item.email || "N/A"}</div>
       ),
     },
     {
@@ -122,7 +123,10 @@ const UsersPage: React.FC = () => {
       ),
       key: "phone",
       render: (item: User) => (
-        <div className="text-sm text-gray-900">{item.phone}</div>
+        <div className="text-sm text-gray-900">
+          {item.countryCode ? `${item.countryCode} ` : ""}
+          {item.phone || "N/A"}
+        </div>
       ),
     },
     {
@@ -184,21 +188,41 @@ const UsersPage: React.FC = () => {
   };
 
   const sortedUsers = React.useMemo(() => {
-    return sortConfig.key && sortConfig.direction
-      ? [...users].sort((a, b) => {
-          const aValue = a[sortConfig.key] as string | number;
-          const bValue = b[sortConfig.key] as string | number;
+    if (!sortConfig.key || !sortConfig.direction) {
+      return users;
+    }
 
-          if (aValue < bValue) {
-            return sortConfig.direction === "ascending" ? -1 : 1;
-          }
-          if (aValue > bValue) {
-            return sortConfig.direction === "ascending" ? 1 : -1;
-          }
-          return 0;
-        })
-      : users;
+    return [...users].sort((a, b) => {
+      // Handle possible undefined values
+      const aValue = a[sortConfig.key as keyof User] as
+        | string
+        | number
+        | undefined;
+      const bValue = b[sortConfig.key as keyof User] as
+        | string
+        | number
+        | undefined;
+
+      // Handle undefined values in sorting
+      if (aValue === undefined && bValue === undefined) return 0;
+      if (aValue === undefined)
+        return sortConfig.direction === "ascending" ? -1 : 1;
+      if (bValue === undefined)
+        return sortConfig.direction === "ascending" ? 1 : -1;
+
+      if (aValue < bValue) {
+        return sortConfig.direction === "ascending" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "ascending" ? 1 : -1;
+      }
+      return 0;
+    });
   }, [users, sortConfig]);
+
+  const filteredUsers = React.useMemo(() => {
+    return handleSearch();
+  }, [sortedUsers, searchValue]);
 
   const actionRenderer = (item: User) => {
     const isDisabled = disabledRows.includes(String(item._id));
@@ -249,12 +273,12 @@ const UsersPage: React.FC = () => {
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+          <TableSkeletonLoader columns={4} rows={10} />
         ) : (
           <DataTable
-            items={sortedUsers}
+            items={filteredUsers}
             columns={columns}
-            idKey="_id" // Updated to use _id
+            idKey="_id"
             itemsPerPage={15}
             actionRenderer={actionRenderer}
             disabledRows={disabledRows}

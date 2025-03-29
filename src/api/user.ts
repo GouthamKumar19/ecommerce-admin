@@ -1,14 +1,10 @@
-// api/product.ts
 import axios from 'axios';
 import { User } from '../types/users.types';
-import { items } from '../config/mock/userTable'; // Adjust the import path to where your mock data is located
-interface UserFormData {
-  name: string;
-  email: string;
-  password: string;
-  gender: string;
-  phone:string;
-  countryCode:string;
+import axiosInstance from './axios';
+
+interface UserResponse {
+  tableData: User[];
+  // Add other response properties as needed
 }
 
 interface ApiResponse<T> {
@@ -17,44 +13,24 @@ interface ApiResponse<T> {
   data: T;
 }
 
-let currentController: AbortController;
+let currentController: AbortController | null = null;
 
-export const getAllUser = async (payload: any): Promise<ApiResponse<User[]>> => { // Return ApiResponse<User[]> type
-  console.log("Payload received:", payload); // Log the payload for debugging
-  
+export const getAllUser = async (): Promise<ApiResponse<UserResponse>> => {
   try {
     if (currentController) {
       currentController.abort();
     }
     currentController = new AbortController();
-
-    // Uncomment the following lines if you're using an actual API call:
-    /*
+    
     const response = await axiosInstance.post(
-      '/admin/products/getAll',
-      payload, // Sending the payload for sorting and pagination
-      {
-        signal: currentController.signal,
-      }
+      '/admin/users/getAll',
     );
-    */
-
-    // Simulate API call with imported mock data
-    const totalCount = items.length;
-    const response = {
-      status: 200,
-      message: "Success",
-      data: {
-        totalCount, // Send the total count of users
-        tableData: items, // Assuming items is an array of user data
-      },
-    };
-
+    
     if (response?.status === 200) {
       return {
         status: response.status,
-        message: response.message,
-        data: response.data.tableData, // Return the array of users in the data
+        message: response.data.message || 'Success',
+        data: response.data.data || { tableData: [] }
       };
     } else {
       throw new Error('Failed to fetch users');
@@ -64,80 +40,78 @@ export const getAllUser = async (payload: any): Promise<ApiResponse<User[]>> => 
       console.log("Request canceled:", error.message);
     }
     throw error;
+  } finally {
+    currentController = null;
   }
 };
-export const createUser = async (
-  UserData: UserFormData
-): Promise<ApiResponse<User>> => {
+
+// Interface for user form data
+export interface UserFormData {
+  name: string;
+  email: string;
+  password?: string; // Made optional for updates
+  gender: string;
+  phone: string;
+  countryCode: string;
+  addresses?: any[]; // Added to support addresses
+}
+
+// Function to create a new user
+export const createUser = async (userData: UserFormData): Promise<ApiResponse<User>> => {
   try {
-    console.log("[API] Creating user with data:", UserData);
-
-    // Uncomment when API is ready
-    // const response = await axiosInstance.post('/admin/users/create', UserData);
-    // return response.data;
-
-    // Mock response
-    const mockResponse: ApiResponse<User> = {
-      status: 200,
-      message: "User created successfully",
-      data: {
-        _id: "generated-id-123", // Mock ID; replace with a real ID generation logic when implementing
-        name: UserData.name,
-        email: UserData.email,
-        password: UserData.password,
-        gender: UserData.gender,
-        phone: UserData.phone,
-        isEnabled: true, // Default to true; adjust as necessary for your application
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    };
-
-    console.log("[API] Mock create response:", mockResponse);
-    return Promise.resolve(mockResponse);
-  } catch (error) {
-    console.error("[API] Error creating user:", error);
+    const response = await axiosInstance.post('/admin/users/create', userData);
+    
+    if (response?.status === 200 || response?.status === 201) {
+      return {
+        status: response.status,
+        message: response.data.message || 'User created successfully',
+        data: response.data.data
+      };
+    } else {
+      throw new Error('Failed to create user');
+    }
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to create user');
+    }
     throw error;
   }
 };
 
-export const getUserById = async (
-  id: string
-): Promise<ApiResponse<User>> => {
+// Function to update an existing user
+export const updateUser = async (userId: string, userData: Partial<UserFormData>): Promise<ApiResponse<User>> => {
   try {
-    console.log("[API] Fetching user with ID:", id);
-
-    // Uncomment when API is ready
-    // const response = await axiosInstance.get(`/admin/users/getOne/${id}`);
-    // return response.data;
-
-    // Mock response using users data
-    const user = items.find((u) => u.id === id || u._id === id);
-
-    if (!user) {
-      throw new Error("User not found");
+    // Using the correct endpoint format based on your API structure
+    const response = await axiosInstance.put(`/admin/users/update/${userId}`, userData);
+    
+    if (response?.status === 200) {
+      return {
+        status: response.status,
+        message: response.data.message || 'User updated successfully',
+        data: response.data.data
+      };
+    } else {
+      throw new Error('Failed to update user');
     }
+  } catch (error: any) {
+    console.error("Update user error:", error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to update user');
+    }
+    throw error;
+  }
+};
 
-    const mockResponse: ApiResponse<User> = {
-      status: 200,
-      message: "Success",
-      data: {
-        _id: user._id || String(user.id),
-        name: user.name,
-        email: user.email,
-        password: user.password,
-        gender: user.gender,
-        phone: user.phone,
-        isEnabled: user.isEnabled,
-        createdAt: user.createdAt || new Date().toISOString(),
-        updatedAt: user.updatedAt || new Date().toISOString(),
-      },
-    };
+// Function to get a single user by ID
+export const getUserById = async (userId: string): Promise<ApiResponse<User>> => {
+  try {
+    // Fixed API endpoint with proper parameter format
+    const response = await axiosInstance.post(`/admin/users/getOne/${userId}`);
+    return response.data;
 
-    console.log("[API] Mock get response:", mockResponse);
-    return Promise.resolve(mockResponse);
   } catch (error) {
     console.error("[API] Error fetching user:", error);
     throw error;
   }
 };
+
