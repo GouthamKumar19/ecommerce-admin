@@ -7,13 +7,15 @@ import {
   Grid,
   InputAdornment,
   Box,
-  Button,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
 import ImageSelection from "../common/ImageSelection";
-import { VariantComponent, Variant } from "./Variant";
+import VariantManager from "./VariantManager";
 import { ActionContext } from "../../context/ActionContext";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { getProductById, updateProduct, addProduct } from "../../api/product";
+import { Product } from "../../types/product.types";
 
 interface ProductImage {
   id: number;
@@ -21,23 +23,42 @@ interface ProductImage {
   selected: boolean;
 }
 
+const DEFAULT_CATEGORY_ID = "67ce9292891e6b7ec5df5831";
+const DEFAULT_SUBCATEGORY_ID = "67cc21365983b789b129c1f6";
+const DUMMY_IMAGES = [
+  "https://dummyimage.com/600x400/000/fff",
+  "https://dummyimage.com/600x400/001/fff",
+  "https://dummyimage.com/600x400/002/fff",
+  "https://dummyimage.com/600x400/003/fff",
+];
+
 const ProductForm: React.FC = () => {
   // Form state variables
   const [productName, setProductName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [price, setPrice] = useState<string>("");
   const [slashedPrice, setSlashedPrice] = useState<string>("");
-  const [category, setCategory] = useState<string | null>(null);
-  const [subCategory, setSubCategory] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(DEFAULT_CATEGORY_ID);
+  const [subCategory, setSubCategory] = useState<string | null>(
+    DEFAULT_SUBCATEGORY_ID
+  );
   const [featured, setFeatured] = useState<boolean>(false);
-  const [images, setImages] = useState<ProductImage[]>([]);
+  const [images, setImages] = useState<ProductImage[]>(
+    DUMMY_IMAGES.map((url, index) => ({ id: index, url, selected: true }))
+  );
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [productId, setProductId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [, setIsLoading] = useState<boolean>(false);
 
   // Add state for variants
-  const [variants, setVariants] = useState<Variant[]>([]);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success"
+  );
 
+  const navigate = useNavigate();
   // Validation states
   const [isProductNameValid, setIsProductNameValid] = useState<boolean>(true);
   const [isPriceValid, setIsPriceValid] = useState<boolean>(true);
@@ -61,25 +82,51 @@ const ProductForm: React.FC = () => {
   const params = useParams();
   const location = useLocation();
 
-  // Check if we're in edit mode
+  // Check if we're in edit mode and fetch product data if necessary
   useEffect(() => {
     const id = params.id;
     if (id && id !== "new") {
       setIsEditMode(true);
       setProductId(id);
 
-      // Here you would fetch product data based on ID
-      // For demonstration purposes, let's assume we have the data from location state
+      // Fetch product data based on ID
       if (location.state?.product) {
         const product = location.state.product;
         setProductName(product.name || "");
         setDescription(product.description || "");
         setPrice(product.price?.toString() || "");
         setSlashedPrice(product.slashedPrice?.toString() || "");
-        setCategory(product.category || null);
-        setSubCategory(product.subCategory || null);
+        setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
+        setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
         setFeatured(product.featured || false);
-        // Setup images and variants here too
+        setImages(
+          product.images.map((url: string, index: number) => ({
+            id: index,
+            url,
+            selected: true,
+          }))
+        );
+        setVariants(product.variants || []);
+      } else {
+        // Fetch product data from API if not available in location state
+        setIsLoading(true);
+        getProductById(id)
+          .then((response) => {
+            const product = response.data;
+            setProductName(product.name || "");
+            setDescription(product.description || "");
+            setPrice(product.price?.toString() || "");
+            setSlashedPrice(product.slashedPrice?.toString() || "");
+            setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
+            setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
+            setFeatured(product.isFeatured || false);
+          })
+          .catch((error) => {
+            console.error("Error fetching product:", error);
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
       }
     }
   }, [params.id, location.state]);
@@ -114,63 +161,122 @@ const ProductForm: React.FC = () => {
     setActionHandlers,
   ]);
 
-  // Functions to handle variants
-  const addVariant = () => {
-    const newVariant: Variant = {
-      id: `variant-${Date.now()}`,
-      optionName: "",
-      optionValues: [],
-      isComplete: false,
-    };
-    setVariants([...variants, newVariant]);
-  };
-
-  const deleteVariant = (id: string) => {
-    setVariants(variants.filter((variant) => variant.id !== id));
-  };
-
-  const completeVariant = (updatedVariant: Variant) => {
-    setVariants(
-      variants.map((variant) =>
-        variant.id === updatedVariant.id ? updatedVariant : variant
-      )
-    );
-  };
-
   const handleSaveProduct = async () => {
+    // Validation checks
+    const validations = [
+      {
+        condition: isProductNameValid,
+        errorMessage: "Please enter a valid product name",
+      },
+      {
+        condition: isDescriptionValid,
+        errorMessage: "Please enter a valid description",
+      },
+      {
+        condition: isPriceValid,
+        errorMessage: "Please enter a valid price",
+      },
+      {
+        condition: isSlashedPriceValid,
+        errorMessage: "Please enter a valid slashed price",
+      },
+      {
+        condition: isCategoryValid,
+        errorMessage: "Please select a category",
+      },
+      {
+        condition: isSubCategoryValid,
+        errorMessage: "Please select a sub-category",
+      },
+    ];
+
+    const failedValidation = validations.find(
+      (validation) => !validation.condition
+    );
+
+    if (failedValidation) {
+      setSnackbarMessage(failedValidation.errorMessage);
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return;
+    }
+
     setIsLoading(true);
-    console.log(isLoading);
-    // Create the product data object
-    const productData = {
-      id: productId,
+
+    // Ensure we have valid image data
+    const productImages = images
+      .filter((img) => img.selected)
+      .map((img) => img.url);
+    if (productImages.length === 0) {
+      // If no images are selected, use the dummy images
+      productImages.push(...DUMMY_IMAGES);
+    }
+
+    // Prepare product data
+    const productData: Product = {
+      _id: isEditMode && productId ? productId : "",
       name: productName,
       description,
       price: parseFloat(price) || 0,
       slashedPrice: parseFloat(slashedPrice) || 0,
-      category,
-      subCategory,
-      featured,
-      images: images.filter((img) => img.selected).map((img) => img.url),
-      variants: completedVariants,
+      categoryId: category || DEFAULT_CATEGORY_ID,
+      subCategoryId: subCategory || DEFAULT_SUBCATEGORY_ID,
+      isFeatured: featured,
+      // Make sure we're sending an array of image URLs
+      images: productImages,
+      // Make sure we're setting a valid thumbnail image
+      thumbnailImage: productImages[0],
+      quantity: 0, // You might want to add a field for quantity
+      createdAt: isEditMode ? undefined : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      // Include variants if they exist
+      //variants: variants.length > 0 ? variants : undefined,
     };
 
-    console.log("Saving product:", productData);
+    try {
+      if (isEditMode && productId) {
+        productData._id = productId;
+      }
+      let response;
+      if (isEditMode && productId) {
+        // Update existing product
+        response = await updateProduct(productId, productData);
+      } else {
+        // Add new product
+        response = await addProduct(productData);
+      }
 
-    // Here you would make the API call to save/update the product
-    // For now, we'll just simulate success
-    setTimeout(() => {
+      if (response.status === 200) {
+        setSnackbarMessage(
+          isEditMode
+            ? "Product updated successfully"
+            : "Product added successfully"
+        );
+        setSnackbarSeverity("success");
+        setOpenSnackbar(true);
+
+        // Navigate back to product list or product details
+        setTimeout(() => {
+          navigate("/products");
+        }, 1500);
+      } else {
+        throw new Error(response.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Error saving product:", error);
+      setSnackbarMessage(
+        error instanceof Error ? error.message : "Failed to save product"
+      );
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    } finally {
       setIsLoading(false);
-      // Success would be handled by the parent
-    }, 1000);
+    }
   };
 
   // Sample category and subcategory data
   const categories = ["Footwear", "Clothing", "Accessories"];
   const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
-
-  // Group variants by completion status
-  const completedVariants = variants.filter((v) => v.isComplete);
-  const incompleteVariants = variants.filter((v) => !v.isComplete);
 
   // Validation functions
   const validateProductName = (name: string) =>
@@ -519,52 +625,18 @@ const ProductForm: React.FC = () => {
           <Typography variant="subtitle1" gutterBottom align="left">
             Variants
           </Typography>
-          <Box sx={{ width: "100%" }}>
-            {/* Display completed variants first */}
-            {completedVariants.length > 0 && (
-              <Box sx={{ mb: 3 }}>
-                {completedVariants.map((variant) => (
-                  <VariantComponent
-                    key={variant.id}
-                    variant={variant}
-                    onDelete={() => deleteVariant(variant.id)}
-                    onComplete={completeVariant}
-                  />
-                ))}
-              </Box>
-            )}
-
-            {/* Display incomplete variants */}
-            {incompleteVariants.map((variant) => (
-              <VariantComponent
-                key={variant.id}
-                variant={variant}
-                onDelete={() => deleteVariant(variant.id)}
-                onComplete={completeVariant}
-              />
-            ))}
-
-            {/* Add variants button now appears below all variants */}
-            <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-start" }}>
-              <Button
-                startIcon={<AddIcon />}
-                onClick={addVariant}
-                sx={{
-                  color: "var(--secondary-color)",
-                  textAlign: "left",
-                  padding: "6px 8px",
-                  minWidth: "auto",
-                  "&:hover": {
-                    backgroundColor: "transparent",
-                  },
-                }}
-                variant="text"
-              >
-                Add variants like size and color
-              </Button>
-            </Box>
-          </Box>
+          <VariantManager variants={variants} setVariants={setVariants} />
         </Grid>
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={3000}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          onClose={() => setOpenSnackbar(false)}
+        >
+          <Alert severity={snackbarSeverity} sx={{ width: "100%" }}>
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Grid>
     </div>
   );

@@ -26,9 +26,9 @@ export interface Product extends BaseRecord {
   isFeatured: boolean; // Changed featured to isFeatured
   categoryId: string; // Required category ID
   subCategoryId: string; // Required sub-category ID
-  images: string[]; // Array for multiple images
+  //images: string[]; // Array for multiple images
   thumbnailImage?: string; // Optional thumbnail image
-  createdAt: string | Date; // Date of creation
+  createdAt?: string | Date; // Date of creation
   updatedAt: string | Date; // Date of last update
 }
 export interface ProductResponse{
