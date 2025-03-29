@@ -1,9 +1,9 @@
-// import axiosInstance from "./axios";
+import axiosInstance from "./axios";
 import { OrderNew } from "../types/orders.types";
-import { Order } from "../types/order.types";
+import { Order, SortConfig } from "../types/order.types";
 import { orderMockData } from "../config/mock/orderNew";
 import { mockOrders } from "../config/mock/ordersData";
-import axiosInstance from "./axios";
+let currentController: AbortController | null = null;
 
 interface ApiResponse<T> {
   status: number;
@@ -15,23 +15,42 @@ interface ApiResponse<T> {
 }
 
 // Get all orders
-export const getAllOrders = async (): Promise<ApiResponse<Order>> => {
+export const getAllOrders = async (
+  page: number,
+  itemsPerPage: number,
+  searchTerm: string,
+  sortConfig: SortConfig
+): Promise<ApiResponse<Order>> => {
   try {
+    if (currentController) {
+      currentController.abort();
+    }
+    currentController = new AbortController();
     console.log("[API] Fetching all orders");
 
-    // Uncomment when API is ready
-     const response = await axiosInstance.post('/admin/orders/getAll');
-     return response.data;
-
-    // Mock response
-    const mockResponse: ApiResponse<Order> = {
-      status: 200,
-      message: "Success",
-      data: orderMockData.data,
-    };
-
-    console.log("[API] Mock getAll response:", mockResponse);
-    return Promise.resolve(mockResponse);
+    const response = await axiosInstance.post(
+      "/admin/orders/getAll",
+      {
+        page,
+        itemsPerPage,
+        search: [
+          {
+            term: searchTerm,
+            fields: ["orderId", "customerDetails.name", "status"],
+            startsWith: true,
+            endsWith: false,
+          },
+        ],
+        options: {
+          sortBy: [sortConfig.key],
+          sortDesc: [sortConfig.direction === "descending"],
+        },
+      },
+      {
+        signal: currentController.signal,
+      }
+    );
+    return response.data;
   } catch (error) {
     console.error("[API] Error fetching all orders:", error);
     throw error;

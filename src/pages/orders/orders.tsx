@@ -26,12 +26,15 @@ const OrderPage: React.FC = () => {
 
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "createdAt",
+    direction: "descending",
   });
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Loading state
+  const [, setError] = useState<string | null>(null); // Error state
+  const [page, setPage] = useState<number>(1); // Pagination state
+  const [itemsPerPage] = useState<number>(10); // Items per page
+
   const navigate = useNavigate();
 
   const handleViewOrder = (item: Order) => {
@@ -53,18 +56,25 @@ const OrderPage: React.FC = () => {
       setError(null); // Reset error
 
       try {
-        const response = await getAllOrders();
-        setOrders(response.data.tableData);
-        console.log("Order Details:", response.data.tableData);
+        const response = await getAllOrders(
+          page,
+          itemsPerPage,
+          searchValue,
+          sortConfig
+        );
+        console.log("Fetched Orders Response:", response); // Log the entire response
+        console.log("Fetched Orders Data:", response.data); // Log the fetched data
+        setOrders(response.data.tableData); // Ensure the correct data structure is passed
       } catch (err: any) {
         setError(err.message || "Failed to fetch orders");
+        console.error("Error fetching orders:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchOrderData();
-  }, []); // Empty dependency array means this runs once on component mount
+  }, [page, itemsPerPage, searchValue, sortConfig]); // Dependencies updated
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -173,7 +183,7 @@ const OrderPage: React.FC = () => {
         </div>
       ),
       key: "actions",
-      render: (item: Order) => actionRenderer(item),
+      render: actionRenderer,
     },
   ];
 
@@ -242,10 +252,12 @@ const OrderPage: React.FC = () => {
             items={filterOrders(sortedOrders)}
             columns={columns}
             idKey="_id"
-            itemsPerPage={4}
+            itemsPerPage={itemsPerPage}
             tableType="order"
             actionRenderer={actionRenderer}
             loading={isLoading}
+            currentPage={page}
+            onPageChange={setPage}
           />
         )}
       </div>

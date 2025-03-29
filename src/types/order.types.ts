@@ -5,7 +5,11 @@ export interface CustomerDetails {
 export interface PaymentDetails {
   status: string;
 }
-
+export type SortDirection = "ascending" | "descending" | null;
+export interface SortConfig {
+  key: string;
+  direction: SortDirection;
+}
 export interface Order {
   _id: string;
   orderId: string;
