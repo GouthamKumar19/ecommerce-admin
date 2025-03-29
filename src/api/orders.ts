@@ -3,6 +3,7 @@ import { OrderNew } from "../types/orders.types";
 import { Order } from "../types/order.types";
 import { orderMockData } from "../config/mock/orderNew";
 import { mockOrders } from "../config/mock/ordersData";
+import axiosInstance from "./axios";
 
 interface ApiResponse<T> {
   status: number;
@@ -19,8 +20,8 @@ export const getAllOrders = async (): Promise<ApiResponse<Order>> => {
     console.log("[API] Fetching all orders");
 
     // Uncomment when API is ready
-    // const response = await axiosInstance.get('/admin/orders/getAll');
-    // return response.data;
+     const response = await axiosInstance.post('/admin/orders/getAll');
+     return response.data;
 
     // Mock response
     const mockResponse: ApiResponse<Order> = {

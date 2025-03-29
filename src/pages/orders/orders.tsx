@@ -31,7 +31,7 @@ const OrderPage: React.FC = () => {
   });
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleViewOrder = (item: Order) => {
@@ -47,24 +47,20 @@ const OrderPage: React.FC = () => {
     </div>
   );
 
-  
   useEffect(() => {
     const fetchOrderData = async () => {
       setIsLoading(true); // Start loading
       setError(null); // Reset error
 
-      setTimeout(async () => {
-        try {
-          const response = await getAllOrders();
-          setOrders(response.data.tableData);
-          console.log(error);
-          console.log("Order Details:", response.data.tableData);
-        } catch (err: any) {
-          setError(err.message || "Failed to fetch orders");
-        } finally {
-          setIsLoading(false);
-        }
-      }, 500); // Simulating network delay
+      try {
+        const response = await getAllOrders();
+        setOrders(response.data.tableData);
+        console.log("Order Details:", response.data.tableData);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch orders");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchOrderData();
@@ -246,7 +242,7 @@ const OrderPage: React.FC = () => {
             items={filterOrders(sortedOrders)}
             columns={columns}
             idKey="_id"
-            itemsPerPage={15}
+            itemsPerPage={4}
             tableType="order"
             actionRenderer={actionRenderer}
             loading={isLoading}
