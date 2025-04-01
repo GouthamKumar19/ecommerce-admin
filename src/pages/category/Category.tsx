@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import DataTable from "../../components/common/DataTable";
 import { Category, Subcategory } from "../../types/category.types";
 import { useNavigate } from "react-router-dom";
-import { Box, Chip } from "@mui/material";
+import { Box, Chip, CircularProgress } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
@@ -58,43 +58,56 @@ const CategoryPage: React.FC = () => {
     null
   );
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "updatedAt",
+    direction: "descending",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1); // Pagination state
+  const [itemsPerPage] = useState<number>(10); // Items per page
   const navigate = useNavigate();
 
   const handleAddNewCategory = () => {
     navigate("/category/new");
   };
 
+  const handleSort = (key: string) => {
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
+    setSortConfig({ key, direction });
+  };
+
   useEffect(() => {
     const fetchCategories = async () => {
       setIsLoading(true);
-      setError(null);
+      setError(null); // Reset error state
       try {
-        const payload = {
-          options: {
-            page: 1, // Adjust for pagination if needed
-            itemsPerPage: 10,
-          },
-        };
-
-        setTimeout(async () => {
-          const response = await getAllCategory(payload);
-          setCategories(response.data); // Set the categories from fetched data
-          console.log("Fetched Categories:", response.data);
-          setIsLoading(false); // Set loading to false after fetching
-        }, 500); // Simulating a 500ms network delay
+        const response = await getAllCategory(
+          page,
+          itemsPerPage,
+          searchValue,
+          sortConfig
+        );
+        console.log("Fetched Categories Response:", response); // Log the entire response
+        console.log("Fetched Categories Data:", response.data); // Log the fetched data
+        if (response.data && Array.isArray(response.data.tableData)) {
+          setCategories(response.data.tableData); // Set the categories from fetched data
+        } else {
+          throw new Error("Data is not an array");
+        }
       } catch (err: any) {
         setError(err.message || "Failed to fetch categories");
-        setIsLoading(false); // Set loading to false on error
+        console.error("Error fetching categories:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchCategories();
-  }, []);
+  }, [page, itemsPerPage, searchValue, sortConfig]); // Add page, itemsPerPage, searchValue, and sortConfig as dependencies
 
   const handleDeleteCategory = (categoryId: string) => {
     const categoryToDelete =
@@ -133,16 +146,6 @@ const CategoryPage: React.FC = () => {
     </div>
   );
 
-  const handleSort = (key: string) => {
-    const direction = getNextSortDirection(
-      sortConfig.key,
-      key,
-      sortConfig.direction
-    );
-    setSortConfig({ key, direction });
-  };
-
-  
   const sortedCategories = useSortableData(categories, sortConfig);
   const filteredCategories = sortedCategories.filter((category) =>
     category.name.toLowerCase().includes(searchValue.toLowerCase())
@@ -198,26 +201,32 @@ const CategoryPage: React.FC = () => {
             <button
               className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
               onClick={handleAddNewCategory}
+              disabled={isLoading}
             >
               Add Category
             </button>
           </div>
         </div>
       </div>
-      {error && <div className="text-red-600 text-center mb-4">{error}</div>}{" "}
-      {/* Displaying the error message */}
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {isLoading ? (
           <TableSkeletonLoader columns={columns.length} rows={10} />
-        ) : (
+        ) : Array.isArray(filteredCategories) &&
+          filteredCategories.length > 0 ? (
           <DataTable<Category>
             items={filteredCategories}
             columns={columns}
             idKey="_id"
-            itemsPerPage={10}
-            tableType="category"
+            itemsPerPage={itemsPerPage}
+            currentPage={page}
+            onPageChange={setPage}
             actionRenderer={actionRenderer}
           />
+        ) : (
+          <div className="text-center p-4">
+            <CircularProgress sx={{ color: "#0d7f3f" }} />
+          </div>
         )}
       </div>
       <ConfirmationDialog

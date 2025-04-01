@@ -13,8 +13,8 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 import { getAllTestimonials } from "../../api/tesstimonial";
-import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import the skeleton loader
-
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import TableSkeletonLoader
+import {  CircularProgress } from "@mui/material";
 const TestimonialsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -151,10 +151,12 @@ const TestimonialsPage: React.FC = () => {
       </div>
       {error && <div className="text-red-600 text-center mb-4">{error}</div>}{" "}
       {/* Displaying the error message */}
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={10} /> // Show skeleton loader while loading
-        ) : (
+       <div className="bg-white rounded-lg shadow overflow-hidden">
+        {
+        isLoading ? (
+          <TableSkeletonLoader columns={columns.length} rows={10} />
+        ) : Array.isArray(sortedTestimonials) &&
+          sortedTestimonials.length > 0 ? (
           <DataTable
             items={sortedTestimonials}
             columns={columns}
@@ -165,6 +167,10 @@ const TestimonialsPage: React.FC = () => {
             currentPage={page}
             onPageChange={setPage}
           />
+        ):(
+          <div className="text-center p-4">
+            <CircularProgress sx={{ color: "#0d7f3f" }} />
+          </div>
         )}
       </div>
     </div>
