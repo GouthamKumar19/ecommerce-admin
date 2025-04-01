@@ -10,13 +10,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-// Add this to your API file if not already present
-const DUMMY_IMAGES = [
-  "https://dummyimage.com/600x400/000/fff",
-  "https://dummyimage.com/600x400/001/fff",
-  "https://dummyimage.com/600x400/002/fff",
-  "https://dummyimage.com/600x400/003/fff",
-];
+
 const DEFAULT_CATEGORY_ID = "67ce9292891e6b7ec5df5831";
 const DEFAULT_SUBCATEGORY_ID = "67cc21365983b789b129c1f6";
 
@@ -74,20 +68,7 @@ export const getProductById = async (
   try {
     console.log("[API] Fetching product with ID:", id);
 
-    const response = await axiosInstance.post(`/admin/products/getOne/${id}`, {
-      projection: {
-        name: 1,
-        description: 1,
-        price: 1,
-        slashedPrice: 1,
-        categoryId: 1,
-        subCategoryId: 1,
-        images: 1,
-        thumbnailImage: 1,
-        createdAt: 1,
-        updatedAt: 1,
-      },
-    });
+    const response = await axiosInstance.post(`/admin/products/getOne/${id}`);
     return response.data;
   } catch (error) {
     console.error("[API] Error fetching product:", error);
@@ -150,17 +131,13 @@ export const addProduct = async (
       categoryId: productData.categoryId || DEFAULT_CATEGORY_ID,
       subCategoryId: productData.subCategoryId || DEFAULT_SUBCATEGORY_ID,
       isFeatured: Boolean(productData.isFeatured),
-      // Ensure images is an array of strings
-      images: Array.isArray(productData.images)
-        ? productData.images
-        : DUMMY_IMAGES,
-      // Ensure thumbnailImage is a string
-      thumbnailImage: productData.thumbnailImage || DUMMY_IMAGES[0],
-      quantity: Number(productData.quantity) || 0,
-      // Don't send _id for a new product
-      // createdAt is typically set by the server
-      // updatedAt is typically set by the server
+      images: productData.images,
+      thumbnailImage: productData.thumbnailImage,
+      quantity: productData.quantity,
+      createdAt: productData.createdAt,
+      updatedAt: productData.updatedAt,
     };
+
 
     // Log exactly what we're sending to the server
     console.log("[API] Formatted data being sent:", JSON.stringify(dataToSend));

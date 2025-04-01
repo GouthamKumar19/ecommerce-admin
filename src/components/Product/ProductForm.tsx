@@ -15,6 +15,7 @@ import VariantManager from "./VariantManager";
 import { ActionContext } from "../../context/ActionContext";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { getProductById, updateProduct, addProduct } from "../../api/product";
+import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
 import { Product } from "../../types/product.types";
 
 interface ProductImage {
@@ -25,12 +26,6 @@ interface ProductImage {
 
 const DEFAULT_CATEGORY_ID = "67ce9292891e6b7ec5df5831";
 const DEFAULT_SUBCATEGORY_ID = "67cc21365983b789b129c1f6";
-const DUMMY_IMAGES = [
-  "https://dummyimage.com/600x400/000/fff",
-  "https://dummyimage.com/600x400/001/fff",
-  "https://dummyimage.com/600x400/002/fff",
-  "https://dummyimage.com/600x400/003/fff",
-];
 
 const ProductForm: React.FC = () => {
   // Form state variables
@@ -43,12 +38,11 @@ const ProductForm: React.FC = () => {
     DEFAULT_SUBCATEGORY_ID
   );
   const [featured, setFeatured] = useState<boolean>(false);
-  const [images, setImages] = useState<ProductImage[]>(
-    DUMMY_IMAGES.map((url, index) => ({ id: index, url, selected: true }))
-  );
+  const [images, setImages] = useState<ProductImage[]>([]);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [productId, setProductId] = useState<string | null>(null);
   const [, setIsLoading] = useState<boolean>(false);
+  const [, setUploadInProgress] = useState<boolean>(false);
 
   // Add state for variants
   const [variants, setVariants] = useState<any[]>([]);
@@ -119,7 +113,12 @@ const ProductForm: React.FC = () => {
             setSlashedPrice(product.slashedPrice?.toString() || "");
             setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
             setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
-            setFeatured(product.isFeatured || false);
+          setImages(
+          product.images.map((url: string, index: number) => ({
+            id: index,
+            url,
+            selected: true,
+          })))
           })
           .catch((error) => {
             console.error("Error fetching product:", error);
@@ -160,6 +159,52 @@ const ProductForm: React.FC = () => {
     isEditMode,
     setActionHandlers,
   ]);
+
+  const uploadPendingImages = async () => {
+    const selectedImages = images.filter((img) => img.selected);
+    if (selectedImages.length < 4) {
+      return null;
+    }
+
+    const uploadedImageUrls = await Promise.all(
+      selectedImages.map(async (selectedImage) => {
+        if (selectedImage.url.startsWith("data:image")) {
+          setUploadInProgress(true);
+          try {
+            // Convert base64 to blob
+            const response = await fetch(selectedImage.url);
+            const blob = await response.blob();
+
+            // Create a file from the blob
+            const fileName = `product_image_${Date.now()}.jpg`;
+            const imageFile = new File([blob], fileName, {
+              type: "image/jpeg",
+            });
+
+            // Store the formatted filename that will be sent to the server
+            const formattedFileName = `/public/ecommerce/product/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+
+            // Get presigned URL and upload
+            const presignedUrl = await getPresignedUrl(fileName, "product");
+            await uploadFile(presignedUrl, imageFile);
+
+            // Return the formatted filename instead of the presigned URL
+            return formattedFileName;
+          } catch (error) {
+            console.error("Error uploading image:", error);
+            throw new Error("Failed to upload image");
+          } finally {
+            setUploadInProgress(false);
+          }
+        }
+
+        // If the image is already a URL, just return it
+        return selectedImage.url;
+      })
+    );
+
+    return uploadedImageUrls;
+  };
 
   const handleSaveProduct = async () => {
     // Validation checks
@@ -203,40 +248,34 @@ const ProductForm: React.FC = () => {
 
     setIsLoading(true);
 
-    // Ensure we have valid image data
-    const productImages = images
-      .filter((img) => img.selected)
-      .map((img) => img.url);
-    if (productImages.length === 0) {
-      // If no images are selected, use the dummy images
-      productImages.push(...DUMMY_IMAGES);
-    }
-
-    // Prepare product data
-    const productData: Product = {
-      _id: isEditMode && productId ? productId : "",
-      name: productName,
-      description,
-      price: parseFloat(price) || 0,
-      slashedPrice: parseFloat(slashedPrice) || 0,
-      categoryId: category || DEFAULT_CATEGORY_ID,
-      subCategoryId: subCategory || DEFAULT_SUBCATEGORY_ID,
-      isFeatured: featured,
-      // Make sure we're sending an array of image URLs
-      images: productImages,
-      // Make sure we're setting a valid thumbnail image
-      thumbnailImage: productImages[0],
-      quantity: 0, // You might want to add a field for quantity
-      createdAt: isEditMode ? undefined : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      // Include variants if they exist
-      //variants: variants.length > 0 ? variants : undefined,
-    };
-
     try {
-      if (isEditMode && productId) {
-        productData._id = productId;
+      // Upload images and get the URLs
+      const uploadedImageUrls = await uploadPendingImages();
+      if (!uploadedImageUrls || uploadedImageUrls.length < 4) {
+        throw new Error("Please select at least 4 images.");
       }
+
+      // Prepare product data
+      const productData: Product = {
+        _id: isEditMode && productId ? productId : "",
+        name: productName,
+        description,
+        price: parseFloat(price) || 0,
+        slashedPrice: parseFloat(slashedPrice) || 0,
+        categoryId: category || DEFAULT_CATEGORY_ID,
+        subCategoryId: subCategory || DEFAULT_SUBCATEGORY_ID,
+        isFeatured: featured,
+        // Make sure we're sending an array of image URLs
+        images: uploadedImageUrls,
+        // Make sure we're setting a valid thumbnail image
+        thumbnailImage: uploadedImageUrls[0],
+        quantity: 0, // You might want to add a field for quantity
+        createdAt: isEditMode ? undefined : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        // Include variants if they exist
+        //variants: variants.length > 0 ? variants : undefined,
+      };
+
       let response;
       if (isEditMode && productId) {
         // Update existing product
@@ -614,7 +653,7 @@ const ProductForm: React.FC = () => {
             <ImageSelection
               images={images}
               setImages={setImages}
-              type="collection"
+              type="product"
             />
           </Box>
         </Grid>

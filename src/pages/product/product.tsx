@@ -16,6 +16,7 @@ import {
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import { getImage } from "../../utils/imagePreview";
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -147,7 +148,7 @@ const ProductPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-10 w-10">
           <img
             className="h-10 w-10 rounded-full"
-            src={item.thumbnailImage} // Use appropriate image field
+            src={getImage(item.thumbnailImage)} // Use appropriate image field
             alt={item.name}
           />
         </div>
