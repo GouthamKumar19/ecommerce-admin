@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import DataTable from "../../components/common/DataTable";
 import type { Enquiry } from "../../types/enquiry.types";
 import { Visibility } from "@mui/icons-material";
-import { Box, CircularProgress } from "@mui/material";
+
 import SearchBar from "../../components/common/SearchBar";
 import SortableHeader, {
   SortConfig,
@@ -173,11 +173,7 @@ const EnquiryPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={3} />
-        ) : sortedEnquiries.length === 0 ? (
-          <Box className="text-center p-4">
-            <CircularProgress sx={{ color: "#0d7f3f" }} />
-          </Box>    
+          <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
           <DataTable<Enquiry>
             items={sortedEnquiries.filter(

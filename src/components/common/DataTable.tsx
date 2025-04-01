@@ -130,7 +130,7 @@ const DataTable = <T extends BaseRecord>({
     pageCount: Math.ceil(items.length / pagination.pageSize),
   });
 
-  if (loading) {
+  if (loading || items.length === 0) {
     return <TableSkeletonLoader columns={columns.length} rows={itemsPerPage} />;
   }
 
@@ -161,39 +161,25 @@ const DataTable = <T extends BaseRecord>({
             ))}
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`hover:bg-gray-50 transition-colors ${
-                    disabledRows.includes(String(row.original[idKey]))
-                      ? "bg-gray-50"
-                      : ""
-                  }`}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500"
-                >
-                  No data available
-                </td>
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className={`hover:bg-gray-50 transition-colors ${
+                  disabledRows.includes(String(row.original[idKey]))
+                    ? "bg-gray-50"
+                    : ""
+                }`}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-center"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>

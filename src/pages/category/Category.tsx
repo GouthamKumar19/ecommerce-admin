@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import DataTable from "../../components/common/DataTable";
 import { Category, Subcategory } from "../../types/category.types";
 import { useNavigate } from "react-router-dom";
-import { Box, Chip, CircularProgress } from "@mui/material";
+import { Box, Chip } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
@@ -209,11 +209,10 @@ const CategoryPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+     <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
           <TableSkeletonLoader columns={columns.length} rows={10} />
-        ) : Array.isArray(filteredCategories) &&
-          filteredCategories.length > 0 ? (
+        ) : (
           <DataTable<Category>
             items={filteredCategories}
             columns={columns}
@@ -223,11 +222,7 @@ const CategoryPage: React.FC = () => {
             onPageChange={setPage}
             actionRenderer={actionRenderer}
           />
-        ) : (
-          <div className="text-center p-4">
-            <CircularProgress sx={{ color: "#0d7f3f" }} />
-          </div>
-        )}
+        ) }
       </div>
       <ConfirmationDialog
         open={dialogOpen}

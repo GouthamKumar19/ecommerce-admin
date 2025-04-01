@@ -47,7 +47,7 @@ const CollectionsPage: React.FC = () => {
         } finally {
           setIsLoading(false);
         }
-      }, 500);
+      }, );
     };
 
     fetchCollections(); // Execute fetching function
@@ -197,7 +197,7 @@ const CollectionsPage: React.FC = () => {
       
         <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
           {isLoading ? (
-            <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+            <TableSkeletonLoader columns={3} rows={10} /> // Show the skeleton loader while loading
           ) : (
             <DataTable
               items={sortedCollections}

@@ -11,16 +11,11 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import { getAllUser } from "../../api/user";
+import { SortConfig } from "../../components/common/SortableHeader";
 import {
-  SortConfig,
-} from "../../components/common/SortableHeader";
-import {
-  
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-import { CircularProgress } from "@mui/material";
-
 
 const UsersPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -60,7 +55,7 @@ const UsersPage: React.FC = () => {
         } finally {
           setIsLoading(false);
         }
-      },);
+      });
     };
 
     fetchUserData();
@@ -251,11 +246,9 @@ const UsersPage: React.FC = () => {
 
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {
-        isLoading ? (
+        {isLoading ? (
           <TableSkeletonLoader columns={columns.length} rows={10} />
-        ) : Array.isArray(filteredUsers) &&
-          filteredUsers.length > 0 ? (
+        ) : (
           <DataTable
             items={filteredUsers}
             columns={columns}
@@ -266,12 +259,9 @@ const UsersPage: React.FC = () => {
             currentPage={page}
             onPageChange={setPage}
           />
-        ):(
-                  <div className="text-center p-4">
-                    <CircularProgress sx={{ color: "#0d7f3f" }} />
-                  </div>
-                )}
-              </div>
+        )}
+      </div>
+
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         open={dialogOpen}
