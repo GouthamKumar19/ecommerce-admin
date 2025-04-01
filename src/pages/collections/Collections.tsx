@@ -32,23 +32,20 @@ const CollectionsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null); // New state for error
   const navigate = useNavigate();
 
-  const payload = {}; // Define your payload here if needed
-
   useEffect(() => {
     const fetchCollections = async () => {
-      setIsLoading(true); // Start loading
-      setError(null); // Reset error
-      setTimeout(async () => {
-        try {
-          const response = await getAllCollection(payload); // Call the API
-          setCollections(response.data); // Set the fetched collections
-          console.log("Fetched Collections:", response.data);
-        } catch (err: any) {
-          setError(err.message || "Failed to fetch collections"); // Handle any errors
-        } finally {
-          setIsLoading(false); // End loading
-        }
-      }, 500);
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await getAllCollection();
+        // If your API returns data in the format of CollectionResponse
+        setCollections(response.data.tableData);
+        console.log("Fetched Collections:", response.data.tableData);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch collections");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchCollections(); // Execute fetching function

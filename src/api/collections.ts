@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { Collection } from '../types/collections.types';
-import { collectionMockData } from '../config/mock/collections'; // Adjust the import path to where your mock data is located
-
+import { Collection, CollectionResponse } from '../types/collections.types';
+import { collectionMockData } from '../config/mock/collections';
+import axiosInstance from './axios';
 interface CollectionFormData {
   name: string;
   bannerImage: string;
@@ -15,8 +15,8 @@ interface ApiResponse<T> {
 
 let currentController: AbortController;
 
-export const getAllCollection = async (payload: any): Promise<ApiResponse<Collection[]>> => {
-  console.log("Payload received:", payload); // Log the payload for debugging
+export const getAllCollection = async (): Promise<ApiResponse<CollectionResponse>> => {
+  console.log("Payload received:"); // Log the payload for debugging
   
   try {
     if (currentController) {
@@ -24,22 +24,13 @@ export const getAllCollection = async (payload: any): Promise<ApiResponse<Collec
     }
     currentController = new AbortController();
 
-    // Simulate API call with imported mock data
-    const totalCount = collectionMockData.length;
-    const response = {
-      status: 200,
-      message: "Success",
-      data: {
-        totalCount, // Send the total count of collections
-        tableData: collectionMockData, // Assuming items is an array of collection data
-      },
-    };
+    const response = await axiosInstance.post('/admin/collections/getAll');
 
-    if (response?.status === 200) {
+    if (response.status === 200) {
       return {
         status: response.status,
-        message: response.message,
-        data: response.data.tableData, // Return the array of collections in the data
+        message: response.data.message,
+        data: response.data.data, // Assuming the API response has a data field with the collection array
       };
     } else {
       throw new Error('Failed to fetch collections');
@@ -47,6 +38,8 @@ export const getAllCollection = async (payload: any): Promise<ApiResponse<Collec
   } catch (error: any) {
     if (axios.isCancel(error)) {
       console.log("Request canceled:", error.message);
+    } else {
+      console.error("Error fetching collections:", error);
     }
     throw error;
   }
@@ -148,25 +141,20 @@ export const deleteCollection = async (
   try {
     console.log("[API] Deleting collection with ID:", id);
 
-    // First check if the collection exists
-    const collection = collectionMockData.find((c) => c._id === id || c.id === id);
-    
-    if (!collection) {
-      throw new Error("Collection not found");
+    const response = await axiosInstance.delete(`/admin/collections/delete/${id}`);
+
+    if (response.status === 200) {
+      return {
+        status: response.status,
+        message: response.data.message || "Collection deleted successfully",
+        data: {
+          id: id, // Return the ID of the deleted collection
+        },
+      };
+    } else {
+      throw new Error('Failed to delete collection');
     }
-
-    // Mock response for successful deletion
-    const mockResponse: ApiResponse<{ id: string }> = {
-      status: 200,
-      message: "Collection deleted successfully",
-      data: {
-        id: id, // Return the ID of the deleted collection
-      },
-    };
-
-    console.log("[API] Mock delete response:", mockResponse);
-    return Promise.resolve(mockResponse);
-  } catch (error) {
+  } catch (error: any) {
     console.error("[API] Error deleting collection:", error);
     throw error;
   }
