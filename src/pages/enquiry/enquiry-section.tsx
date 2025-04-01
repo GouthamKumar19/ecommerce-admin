@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import DataTable from "../../components/common/DataTable";
 import type { Enquiry } from "../../types/enquiry.types";
 import { Visibility } from "@mui/icons-material";
-
 import SearchBar from "../../components/common/SearchBar";
 import SortableHeader, {
   SortConfig,
@@ -13,7 +12,7 @@ import {
 } from "../../components/common/SortUtils";
 import EnquiryPopup from "../../components/EnquiryPopup";
 import { getAllEnquiry } from "../../api/enquiry"; // Import the API call
-import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import the skeleton loader
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; 
 
 const EnquiryPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
