@@ -15,6 +15,7 @@ import {
 } from "../../components/common/SortUtils";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import Skeleton Loader
 import { getAllOrders } from "../../api/orders";
+import { CircularProgress } from "@mui/material";
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -244,10 +245,12 @@ const OrderPage: React.FC = () => {
         onApply={applyFilters}
       />
 
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        {isLoading ? (
-          <TableSkeletonLoader columns={7} rows={10} /> // Show the skeleton loader while loading
-        ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+        {
+        isLoading ? (
+          <TableSkeletonLoader columns={columns.length} rows={10} />
+        ) : Array.isArray( filterOrders(sortedOrders)) &&
+          filterOrders(sortedOrders).length > 0 ? (
           <DataTable<Order>
             items={filterOrders(sortedOrders)}
             columns={columns}
@@ -259,10 +262,14 @@ const OrderPage: React.FC = () => {
             currentPage={page}
             onPageChange={setPage}
           />
-        )}
-      </div>
-    </div>
-  );
-};
+        ):(
+                  <div className="text-center p-4">
+                    <CircularProgress sx={{ color: "#0d7f3f" }} />
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        };
 
 export default OrderPage;

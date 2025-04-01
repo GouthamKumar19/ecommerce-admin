@@ -19,6 +19,8 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
+import { CircularProgress } from "@mui/material";
+
 
 const UsersPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -58,7 +60,7 @@ const UsersPage: React.FC = () => {
         } finally {
           setIsLoading(false);
         }
-      }, 500);
+      },);
     };
 
     fetchUserData();
@@ -248,10 +250,12 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={10} />
-        ) : (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {
+        isLoading ? (
+          <TableSkeletonLoader columns={columns.length} rows={10} />
+        ) : Array.isArray(filteredUsers) &&
+          filteredUsers.length > 0 ? (
           <DataTable
             items={filteredUsers}
             columns={columns}
@@ -262,9 +266,12 @@ const UsersPage: React.FC = () => {
             currentPage={page}
             onPageChange={setPage}
           />
-        )}
-      </div>
-
+        ):(
+                  <div className="text-center p-4">
+                    <CircularProgress sx={{ color: "#0d7f3f" }} />
+                  </div>
+                )}
+              </div>
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         open={dialogOpen}

@@ -1,5 +1,4 @@
-// Assuming the BaseRecord is defined in the collection types file
-// import { BaseRecord } from "./users.types";// Update the path as necessary
+
 type RecordValue =
   | string
   | number
@@ -36,12 +35,21 @@ export interface Category extends BaseRecord { // Extending BaseRecord
 }
 
 // ApiResponse interface for the overall structure of the API response
-export interface ApiResponse {
+export interface ApiResponse <T>{
     status: number;                   // HTTP status code
-    message: string;                  // Message describing the response
-    data: {                           // The data section contained in the response
-        totalCount: number;           // Total number of categories
-        tableData: Category[];        // Array of categories
-    };
+    message: string;     
+    data: T  ;           // Message describing the response
+    
 }
+export interface CategoryResponse {
+  
+    totalCount: number;
+    tableData: Category[];
+  };
 
+
+export type SortDirection = "ascending" | "descending" | null;
+export interface SortConfig {
+  key: string;
+  direction: SortDirection;
+}

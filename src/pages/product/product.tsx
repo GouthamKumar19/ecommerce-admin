@@ -16,6 +16,8 @@ import {
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import { CircularProgress } from "@mui/material";
+
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -58,7 +60,7 @@ const ProductPage: React.FC = () => {
         } finally {
           setIsLoading(false); // Loading is finished
         }
-      }, 500);
+      });
     };
 
     fetchProducts();
@@ -257,10 +259,12 @@ const ProductPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
-        ) : (
+       <div className="bg-white rounded-lg shadow overflow-hidden">
+        {
+        isLoading ? (
+          <TableSkeletonLoader columns={columns.length} rows={10} />
+        ) : Array.isArray(sortedProducts) &&
+          sortedProducts.length > 0 ? (
           <DataTable
             items={sortedProducts}
             columns={columns}
@@ -272,8 +276,15 @@ const ProductPage: React.FC = () => {
             currentPage={page}
             onPageChange={setPage} // Handle pagination
           />
-        )}
-      </div>
+        ):(
+                  <div className="text-center p-4">
+                    <CircularProgress sx={{ color: "#0d7f3f" }} />
+                  </div>
+                )}
+              </div>
+              
+              
+              
 
       <ConfirmationDialog
         open={dialogOpen}
