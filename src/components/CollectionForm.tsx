@@ -8,7 +8,9 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import ImageSelection from "../components/common/ImageSelection";
+import ImageSelection, {
+  ProductImage,
+} from "../components/common/ImageSelection";
 import { ActionContext } from "../context/ActionContext";
 import {
   createCollection,
@@ -16,13 +18,7 @@ import {
   updateCollection,
 } from "../api/collections";
 import { useParams, useNavigate } from "react-router-dom";
-
-// Define interface matching what ImageSelection expects
-interface CollectionFormProps {
-  id: number;
-  url: string;
-  selected: boolean;
-}
+import { getPresignedUrl,uploadFile } from "../api/collectionImage"; // Import your file upload utilities
 
 interface FormErrors {
   collectionName: string;
@@ -31,7 +27,7 @@ interface FormErrors {
 
 const CollectionForm: React.FC = () => {
   const [collectionName, setCollectionName] = useState("");
-  const [images, setImages] = useState<CollectionFormProps[]>([]);
+  const [images, setImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [collectionId, setCollectionId] = useState<string | null>(null);
@@ -41,11 +37,11 @@ const CollectionForm: React.FC = () => {
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
+  const [uploadInProgress, setUploadInProgress] = useState(false);
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
   const navigate = useNavigate();
 
-  // Fetch collection details if we have an ID
   useEffect(() => {
     const fetchCollectionDetails = async () => {
       const id = params.id;
@@ -58,29 +54,23 @@ const CollectionForm: React.FC = () => {
           const response = await getCollectionById(id);
           if (response.status === 200 && response.data) {
             setCollectionName(response.data.name);
-            console.log("Fetched collection:", response.data);
 
-            // If there's a banner image, set it as selected in the images array
             if (response.data.bannerImage) {
               const updatedImages = [...images];
               const imageIndex = updatedImages.findIndex(
                 (img) => img.url === response.data.bannerImage
               );
-
               if (imageIndex >= 0) {
-                // Image exists in the array, mark it as selected
                 updatedImages.forEach((img, idx) => {
                   updatedImages[idx] = { ...img, selected: idx === imageIndex };
                 });
               } else {
-                // Image doesn't exist in array, add it
                 updatedImages.push({
-                  id: updatedImages.length + 1,
+                  id: Date.now(),
                   url: response.data.bannerImage,
                   selected: true,
                 });
               }
-
               setImages(updatedImages);
             }
           }
@@ -99,38 +89,8 @@ const CollectionForm: React.FC = () => {
     fetchCollectionDetails();
   }, [params.id]);
 
-  // Add default images if none exist
   useEffect(() => {
-    if (images.length === 0) {
-      // Add some default placeholder images - using smaller image sizes
-      setImages([
-        {
-          id: 1,
-          url: "https://via.placeholder.com/150x100?text=Image+1",
-          selected: false,
-        },
-        {
-          id: 2,
-          url: "https://via.placeholder.com/150x100?text=Image+2",
-          selected: false,
-        },
-        {
-          id: 3,
-          url: "https://via.placeholder.com/150x100?text=Image+3",
-          selected: false,
-        },
-      ]);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Set up the action handlers for the ActionBox component
-    setActionHandlers({
-      onConfirm: handleConfirm,
-      onCancel: handleCancel,
-    });
-
-    // Clean up the action handlers when the component unmounts
+    setActionHandlers({ onConfirm: handleConfirm, onCancel: handleCancel });
     return () => {
       setActionHandlers({
         onConfirm: () => console.warn("onConfirm is not implemented"),
@@ -143,7 +103,6 @@ const CollectionForm: React.FC = () => {
     const newErrors = { collectionName: "", collectionImages: "" };
     let isValid = true;
 
-    // Validate collection name
     if (!collectionName.trim()) {
       newErrors.collectionName = "Collection name is required";
       isValid = false;
@@ -153,7 +112,6 @@ const CollectionForm: React.FC = () => {
       isValid = false;
     }
 
-    // Validate if at least one image is selected
     const selectedImage = images.find((img) => img.selected);
     if (!selectedImage) {
       newErrors.collectionImages = "At least one image must be selected";
@@ -170,91 +128,118 @@ const CollectionForm: React.FC = () => {
     setErrors({ collectionName: "", collectionImages: "" });
   };
 
+  // Helper function to handle image uploads if needed
+ const uploadPendingImages = async () => {
+   const selectedImage = images.find((img) => img.selected);
+   if (!selectedImage) return null;
+
+   // Check if the image is a base64 string that needs uploading
+   if (selectedImage.url.startsWith("data:image")) {
+     setUploadInProgress(true);
+     try {
+       // Convert base64 to blob
+       const response = await fetch(selectedImage.url);
+       const blob = await response.blob();
+
+       // Create a file from the blob
+       const fileName = `collection_image_${Date.now()}.jpg`;
+       const imageFile = new File([blob], fileName, { type: "image/jpeg" });
+
+       // Store the formatted filename that will be sent to the server
+       const formattedFileName = `/public/ecommerce/collections/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+
+       // Get presigned URL and upload
+       const presignedUrl = await getPresignedUrl(fileName, "collections");
+       await uploadFile(presignedUrl, imageFile);
+
+       // Return the formatted filename instead of the presigned URL
+       return formattedFileName;
+     } catch (error) {
+       console.error("Error uploading image:", error);
+       throw new Error("Failed to upload image");
+     } finally {
+       setUploadInProgress(false);
+     }
+   }
+
+   // If the image is already a URL, just return it
+   return selectedImage.url;
+ };
+
   const handleConfirm = async () => {
-    // Validate form
     if (!validateForm()) {
       console.log("Form validation failed");
       return false;
     }
 
-    // Get the selected image URL or use empty string if none selected
-    const selectedImage = images.find((img) => img.selected)?.url || "";
-
-    // Check if image URL is likely to cause a 413 error (if it's a very long base64 string)
-    if (
-      selectedImage.startsWith("data:image") &&
-      selectedImage.length > 100000
-    ) {
-      console.warn(
-        "Selected image is a large base64 string, which might cause payload size issues"
-      );
-    }
-
-    // Prepare the form data
-    const formData = {
-      name: collectionName,
-      bannerImage: selectedImage,
-    };
-
-    // Log to console for debugging - be careful with large base64 strings
-    console.log("Collection Form Data:", {
-      name: formData.name,
-      bannerImage: selectedImage.substring(0, 50) + "...", // Log just the beginning of the image URL
-    });
-
     try {
       setLoading(true);
-      let response;
+      let imageUrl;
 
+      // Upload any pending images (base64 data)
+      try {
+        imageUrl = await uploadPendingImages();
+        if (!imageUrl) {
+          setErrorMessage("Failed to process selected image");
+          setShowError(true);
+          return false;
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        setErrorMessage("Failed to upload image. Please try again.");
+        setShowError(true);
+        return false;
+      }
+
+      // Prepare data for API call
+      const formData = { name: collectionName, bannerImage: imageUrl };
+      console.log("Collection Form Data:", {
+        name: formData.name,
+        bannerImage: imageUrl.substring(0, 50) + "...",
+      });
+
+      let response;
       if (isEditMode && collectionId) {
-        // Update existing collection
         response = await updateCollection(collectionId, formData);
         console.log("Update API Response status:", response.status);
       } else {
-        // Create new collection
         console.log("Sending data to createCollection");
         response = await createCollection(formData);
         console.log("Create API Response status:", response.status);
       }
 
-      // If successful, reset form or navigate
       console.log(
         `Collection ${isEditMode ? "updated" : "created"} successfully`
       );
-
-      // Navigate to collections page after success
       navigate("/collections");
-      return true; // Return success to the parent component
+      return true;
     } catch (error: any) {
       console.error(
         `Error ${isEditMode ? "updating" : "creating"} collection:`,
         error
       );
-
-      // Show error message in a Snackbar instead of an alert
       setErrorMessage(
         error.message ||
           `Failed to ${isEditMode ? "update" : "create"} collection`
       );
       setShowError(true);
-      return false; // Return failure to the parent component
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    // Handle cancel action - reset form and redirect
     console.log("Form submission cancelled");
     resetForm();
-    navigate("/collections"); // Redirect to collections page or any other route
+    navigate("/collections");
   };
 
   const handleCloseError = () => {
     setShowError(false);
   };
 
-  if (loading) {
+  if (loading || uploadInProgress) {
     return (
       <Box
         display="flex"
@@ -290,7 +275,6 @@ const CollectionForm: React.FC = () => {
             const value = e.target.value;
             if (/^[a-zA-Z\s]*$/.test(value)) {
               setCollectionName(value);
-              // Clear error when typing
               if (value.trim() && errors.collectionName) {
                 setErrors({ ...errors, collectionName: "" });
               }
@@ -305,7 +289,7 @@ const CollectionForm: React.FC = () => {
           helperText={errors.collectionName}
           fullWidth={false}
           sx={{
-            width: "300px", // Reduce the width of the text field
+            width: "300px",
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
                 borderColor: errors.collectionName
@@ -345,7 +329,11 @@ const CollectionForm: React.FC = () => {
               border: errors.collectionImages ? "1px solid red" : "none",
             }}
           >
-            <ImageSelection images={images} setImages={setImages} />
+            <ImageSelection
+              images={images}
+              setImages={setImages}
+              type="collection"
+            />
             {errors.collectionImages && (
               <Typography variant="body2" color="red" mt={2}>
                 {errors.collectionImages}
@@ -364,7 +352,6 @@ const CollectionForm: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Error Snackbar */}
       <Snackbar
         open={showError}
         autoHideDuration={6000}

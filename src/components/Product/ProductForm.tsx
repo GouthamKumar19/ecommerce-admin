@@ -611,7 +611,11 @@ const ProductForm: React.FC = () => {
               width: "100%",
             }}
           >
-            <ImageSelection images={images} setImages={setImages} />
+            <ImageSelection
+              images={images}
+              setImages={setImages}
+              type="collection"
+            />
           </Box>
         </Grid>
       </Grid>

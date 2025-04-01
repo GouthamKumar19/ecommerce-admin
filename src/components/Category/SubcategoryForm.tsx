@@ -285,6 +285,7 @@ const SubcategoryForm: React.FC = () => {
                         )
                       );
                     }}
+                    type="collection"
                   />
                   {isSubmitted &&
                     touched[subcategory.id] &&

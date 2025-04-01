@@ -22,14 +22,14 @@ interface ImageCropperProps {
   open: boolean;
   onClose: () => void;
   imageUrl: string | null;
-  onCropComplete: (croppedImageUrl: string) => void;
-  type?: "product" | "general"; // Add type prop
+  onCropComplete: (croppedImageBlob: Blob) => void;
+  type?: "product" | "general"|"collection";
 }
 
 function centerAspectCrop(
   mediaWidth: number,
   mediaHeight: number,
-  aspect: number,
+  aspect: number
 ) {
   let cropWidth = 90;
   let cropHeight = cropWidth / aspect;
@@ -49,7 +49,7 @@ function centerAspectCrop(
     },
     aspect,
     mediaWidth,
-    mediaHeight,
+    mediaHeight
   );
 }
 
@@ -66,7 +66,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   onClose,
   imageUrl,
   onCropComplete,
-  type = "general", // Default to general
+  type = "general",
 }) => {
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [crop, setCrop] = useState<Crop>(defaultCrop);
@@ -74,7 +74,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   const [zoom, setZoom] = useState<number>(1);
   const [rotation, setRotation] = useState<number>(0);
   const [aspect, setAspect] = useState<number | undefined>(
-    type === "product" ? 1 : 1,
+    type === "product" ? 1 : 1
   );
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -84,7 +84,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       setRotation(0);
       setIsImageLoaded(false);
       setCrop(defaultCrop);
-      // Set aspect to 1:1 for product type
       setAspect(type === "product" ? 1 : 1);
     }
   }, [open, type]);
@@ -151,14 +150,17 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         0,
         0,
         pixelCrop.width,
-        pixelCrop.height,
+        pixelCrop.height
       );
 
       ctx.restore();
 
-      const base64Image = canvas.toDataURL("image/jpeg", 0.95);
-      onCropComplete(base64Image);
-      onClose();
+      canvas.toBlob((blob) => {
+        if (blob) {
+          onCropComplete(blob);
+          onClose();
+        }
+      });
     }
   };
 
@@ -167,7 +169,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   };
 
   const toggleAspect = () => {
-    // For product type, we don't allow changing aspect ratio
     if (type === "product") return;
 
     const aspects = [1, 16 / 9, 4 / 3, undefined];
@@ -263,6 +264,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
                 }}
               >
                 <img
+                  crossOrigin="anonymous"
                   ref={imgRef}
                   src={imageUrl}
                   style={{
@@ -335,7 +337,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
                   </IconButton>
                 </Box>
 
-                {/* Only show aspect ratio button for non-product images */}
                 <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
                   <Typography variant="body2" sx={{ mr: 1 }}>
                     Aspect:
