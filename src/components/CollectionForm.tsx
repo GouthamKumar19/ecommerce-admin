@@ -5,6 +5,8 @@ import {
   Box,
   CircularProgress,
   TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import ImageSelection from "../components/common/ImageSelection";
 import { ActionContext } from "../context/ActionContext";
@@ -37,6 +39,8 @@ const CollectionForm: React.FC = () => {
     collectionName: "",
     collectionImages: "",
   });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
   const navigate = useNavigate();
@@ -82,6 +86,10 @@ const CollectionForm: React.FC = () => {
           }
         } catch (error) {
           console.error("Error fetching collection details:", error);
+          setErrorMessage(
+            "Failed to load collection details. Please try again."
+          );
+          setShowError(true);
         } finally {
           setLoading(false);
         }
@@ -94,21 +102,21 @@ const CollectionForm: React.FC = () => {
   // Add default images if none exist
   useEffect(() => {
     if (images.length === 0) {
-      // Add some default placeholder images
+      // Add some default placeholder images - using smaller image sizes
       setImages([
         {
           id: 1,
-          url: "https://via.placeholder.com/200x150?text=Image+1",
+          url: "https://via.placeholder.com/150x100?text=Image+1",
           selected: false,
         },
         {
           id: 2,
-          url: "https://via.placeholder.com/200x150?text=Image+2",
+          url: "https://via.placeholder.com/150x100?text=Image+2",
           selected: false,
         },
         {
           id: 3,
-          url: "https://via.placeholder.com/200x150?text=Image+3",
+          url: "https://via.placeholder.com/150x100?text=Image+3",
           selected: false,
         },
       ]);
@@ -129,7 +137,7 @@ const CollectionForm: React.FC = () => {
         onCancel: () => console.warn("onCancel is not implemented"),
       });
     };
-  }, [collectionName, images, isEditMode, collectionId, setActionHandlers]);
+  }, [collectionName, images, isEditMode, collectionId]);
 
   const validateForm = (): boolean => {
     const newErrors = { collectionName: "", collectionImages: "" };
@@ -172,14 +180,27 @@ const CollectionForm: React.FC = () => {
     // Get the selected image URL or use empty string if none selected
     const selectedImage = images.find((img) => img.selected)?.url || "";
 
+    // Check if image URL is likely to cause a 413 error (if it's a very long base64 string)
+    if (
+      selectedImage.startsWith("data:image") &&
+      selectedImage.length > 100000
+    ) {
+      console.warn(
+        "Selected image is a large base64 string, which might cause payload size issues"
+      );
+    }
+
     // Prepare the form data
     const formData = {
       name: collectionName,
       bannerImage: selectedImage,
     };
 
-    // Log to console as requested
-    console.log("Collection Form Data:", formData);
+    // Log to console for debugging - be careful with large base64 strings
+    console.log("Collection Form Data:", {
+      name: formData.name,
+      bannerImage: selectedImage.substring(0, 50) + "...", // Log just the beginning of the image URL
+    });
 
     try {
       setLoading(true);
@@ -188,25 +209,34 @@ const CollectionForm: React.FC = () => {
       if (isEditMode && collectionId) {
         // Update existing collection
         response = await updateCollection(collectionId, formData);
-        console.log("Update API Response:", response);
+        console.log("Update API Response status:", response.status);
       } else {
         // Create new collection
+        console.log("Sending data to createCollection");
         response = await createCollection(formData);
-        console.log("Create API Response:", response);
+        console.log("Create API Response status:", response.status);
       }
 
-      // If successful, you could reset the form or do other actions
+      // If successful, reset form or navigate
       console.log(
         `Collection ${isEditMode ? "updated" : "created"} successfully`
       );
 
+      // Navigate to collections page after success
+      navigate("/collections");
       return true; // Return success to the parent component
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         `Error ${isEditMode ? "updating" : "creating"} collection:`,
         error
       );
 
+      // Show error message in a Snackbar instead of an alert
+      setErrorMessage(
+        error.message ||
+          `Failed to ${isEditMode ? "update" : "create"} collection`
+      );
+      setShowError(true);
       return false; // Return failure to the parent component
     } finally {
       setLoading(false);
@@ -218,6 +248,10 @@ const CollectionForm: React.FC = () => {
     console.log("Form submission cancelled");
     resetForm();
     navigate("/collections"); // Redirect to collections page or any other route
+  };
+
+  const handleCloseError = () => {
+    setShowError(false);
   };
 
   if (loading) {
@@ -270,7 +304,6 @@ const CollectionForm: React.FC = () => {
           error={!!errors.collectionName}
           helperText={errors.collectionName}
           fullWidth={false}
-          // margin="normal"
           sx={{
             width: "300px", // Reduce the width of the text field
             "& .MuiOutlinedInput-root": {
@@ -318,9 +351,34 @@ const CollectionForm: React.FC = () => {
                 {errors.collectionImages}
               </Typography>
             )}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              mt={2}
+              display="block"
+            >
+              Note: Large images may cause upload issues. Consider using smaller
+              images for better performance.
+            </Typography>
           </Box>
         </Grid>
       </Grid>
+
+      {/* Error Snackbar */}
+      <Snackbar
+        open={showError}
+        autoHideDuration={6000}
+        onClose={handleCloseError}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseError}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
