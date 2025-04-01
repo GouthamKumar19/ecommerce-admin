@@ -201,7 +201,11 @@ const CategoryForm: React.FC = () => {
               borderWidth: errors.images ? "2px" : "1px",
             }}
           >
-            <ImageSelection images={images} setImages={setImages} />
+            <ImageSelection
+              images={images}
+              setImages={setImages}
+              type="collection"
+            />
             {errors.images && (
               <Typography variant="body2" color="error">
                 At least one image must be selected

@@ -14,6 +14,7 @@ import {
 } from "../../components/common/SortUtils";
 import { getAllCollection, deleteCollection } from "../../api/collections"; // Updated import to include deleteCollection
 import type { Collection } from "../../types/collections.types";
+import { getImage } from "../../utils/imagePreview";
 
 const CollectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -139,7 +140,7 @@ const CollectionsPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-16 w-24">
           <img
             className="h-16 w-24 object-cover rounded cursor-pointer"
-            src={item.bannerImage} // Changed imageUrl to bannerImage
+            src={getImage(item.bannerImage)}
             alt={item.name}
             onClick={() => navigate(`/collections/collection-product`)}
           />
@@ -194,23 +195,22 @@ const CollectionsPage: React.FC = () => {
         </div>
       </div>
 
-      
-        <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-          {isLoading ? (
-            <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
-          ) : (
-            <DataTable
-              items={sortedCollections}
-              columns={columns}
-              idKey="_id"
-              itemsPerPage={15}
-              tableType="collection"
-              actionRenderer={actionRenderer}
-              loading={isLoading}
-            />
-          )}
-        </div>
-    
+      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
+        {isLoading ? (
+          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+        ) : (
+          <DataTable
+            items={sortedCollections}
+            columns={columns}
+            idKey="_id"
+            itemsPerPage={15}
+            tableType="collection"
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+          />
+        )}
+      </div>
+
       <ConfirmationDialog
         open={dialogOpen}
         title={dialogTitle}
