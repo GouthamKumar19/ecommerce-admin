@@ -50,7 +50,7 @@ const ProductPage: React.FC = () => {
             searchValue,
             sortConfig
           );
-          console.log(response);
+          console.log(response,"Newws");
           setProducts(response.data.tableData); // Assuming response.data.tableData is an array of products
         } catch (error) {
           setError("Failed to fetch products");

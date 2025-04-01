@@ -4,6 +4,13 @@ export function useSortableData<T extends Record<string, unknown>>(
   items: T[],
   sortConfig: SortConfig
 ): T[] {
+  console.log("Sortable data:", items);
+
+  //if items is empty, return empty array
+  if (items.length === 0) {
+    console.log("NEWSD")
+    return [];
+  }
   if (!sortConfig.key || !sortConfig.direction) {
     return items;
   }

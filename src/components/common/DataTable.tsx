@@ -130,7 +130,7 @@ const DataTable = <T extends BaseRecord>({
     pageCount: Math.ceil(items.length / pagination.pageSize),
   });
 
-  if (loading || items.length === 0) {
+  if (loading) {
     return <TableSkeletonLoader columns={columns.length} rows={itemsPerPage} />;
   }
 
