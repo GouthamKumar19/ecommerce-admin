@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
-
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import SortableHeader, {
   SortConfig,
 } from "../../components/common/SortableHeader";
@@ -29,23 +29,25 @@ const CollectionsPage: React.FC = () => {
     direction: null,
   });
   const [isLoading, setIsLoading] = useState(false); // New state for loading
-  const [error, setError] = useState<string | null>(null); // New state for error
+  const [, setError] = useState<string | null>(null); // New state for error
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCollections = async () => {
       setIsLoading(true);
       setError(null);
-      try {
-        const response = await getAllCollection();
-        // If your API returns data in the format of CollectionResponse
-        setCollections(response.data.tableData);
-        console.log("Fetched Collections:", response.data.tableData);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch collections");
-      } finally {
-        setIsLoading(false);
-      }
+      setTimeout(async () => {
+        try {
+          const response = await getAllCollection();
+          // If your API returns data in the format of CollectionResponse
+          setCollections(response.data.tableData);
+          console.log("Fetched Collections:", response.data.tableData);
+        } catch (err: any) {
+          setError(err.message || "Failed to fetch collections");
+        } finally {
+          setIsLoading(false);
+        }
+      }, 500);
     };
 
     fetchCollections(); // Execute fetching function
@@ -191,19 +193,24 @@ const CollectionsPage: React.FC = () => {
           </div>
         </div>
       </div>
-      {isLoading && <div>Loading...</div>} {/* Loading Indicator */}
-      {error && <div>Error: {error}</div>} {/* Error Display */}
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={sortedCollections}
-          columns={columns}
-          idKey="_id"
-          itemsPerPage={15}
-          tableType="collection"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
-      </div>
+
+      
+        <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
+          {isLoading ? (
+            <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+          ) : (
+            <DataTable
+              items={sortedCollections}
+              columns={columns}
+              idKey="_id"
+              itemsPerPage={15}
+              tableType="collection"
+              actionRenderer={actionRenderer}
+              loading={isLoading}
+            />
+          )}
+        </div>
+    
       <ConfirmationDialog
         open={dialogOpen}
         title={dialogTitle}
