@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Collection, CollectionResponse } from '../types/collections.types';
+import { Collection } from '../types/collections.types';
 import axiosInstance from './axios';
 
 interface CollectionFormData {
@@ -15,7 +15,10 @@ interface ApiResponse<T> {
 
 let currentController: AbortController;
 
-export const getAllCollection = async (): Promise<ApiResponse<CollectionResponse>> => {
+export const getAllCollection = async (
+  payload: any
+): Promise<ApiResponse<Collection[]> | undefined> => {
+  console.log("Payload received:", payload); // Log the payload for debugging
   try {
     if (currentController) {
       currentController.abort();
@@ -23,25 +26,31 @@ export const getAllCollection = async (): Promise<ApiResponse<CollectionResponse
     currentController = new AbortController();
 
     console.log("[API] Fetching all collections");
-    
-    const response = await axiosInstance.post('/admin/collections/getAll', {}, {
-      signal: currentController.signal
-    });
 
-    console.log("[API] All collections response:", response.data);
-    
-    return {
-      status: response.status,
-      message: response.data.message || "Collections retrieved successfully",
-      data: response.data.data,
-    };
+    const response = await axiosInstance.post(
+      "/admin/collections/getAll",
+      payload,
+      {
+        signal: currentController.signal,
+      }
+    );
+    if (response.status === 200) {
+      console.log(response,"DSDSDS");
+      return {
+        status: response.status,
+        message: response.data.message,
+        data: response?.data?.data?.tableData,
+      };
+    } else {
+      throw new Error("Failed to fetch enquiries");
+    }
   } catch (error: any) {
     if (axios.isCancel(error)) {
-      console.log("[API] Request canceled:", error.message);
+      console.log("Request canceled:", error.message);
     } else {
-      console.error("[API] Error fetching collections:", error.message);
+      console.error("[API] Error fetching all enquiries:", error);
+      return undefined;
     }
-    throw error;
   }
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DataTable from "../../components/common/DataTable";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
@@ -12,7 +12,7 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-import { getAllCollection, deleteCollection } from "../../api/collections"; // Updated import to include deleteCollection
+import { getAllCollection, deleteCollection } from "../../api/collections";
 import type { Collection } from "../../types/collections.types";
 
 const CollectionsPage: React.FC = () => {
@@ -25,33 +25,67 @@ const CollectionsPage: React.FC = () => {
   );
   const [collections, setCollections] = useState<Collection[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "updatedAt",
+    direction: "descending",
   });
-  const [isLoading, setIsLoading] = useState(false); // New state for loading
-  const [, setError] = useState<string | null>(null); // New state for error
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCollections = async () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
       setIsLoading(true);
-      setError(null);
-      setTimeout(async () => {
-        try {
-          const response = await getAllCollection();
-          // If your API returns data in the format of CollectionResponse
-          setCollections(response.data.tableData);
-          console.log("Fetched Collections:", response.data.tableData);
-        } catch (err: any) {
-          setError(err.message || "Failed to fetch collections");
-        } finally {
-          setIsLoading(false);
+
+      try {
+        const payload = {
+          page: page,
+          itemsPerPage: itemsPerPage,
+          search: [
+            {
+              term: searchValue,
+              fields: ["name"],
+              startsWith: true,
+              endsWith: false,
+            },
+          ],
+          options: {
+            sortBy: [sortConfig.key],
+            sortDesc: [sortConfig.direction === "descending"],
+          },
+        };
+        console.log("Payload:", payload);
+        const response = await getAllCollection(payload);
+
+        console.log("API Response:", response); // Log the entire response object
+
+        if (response && Array.isArray(response.data)) {
+          console.log("Fetched Collections:", response.data);
+          setCollections(response.data);
+        } else {
+          console.error("Invalid response format:", response);
+          throw new Error("Invalid response format");
         }
-      }, );
+      } catch (err: any) {
+        if (!signal.aborted) {
+          console.error(err.message || "Failed to fetch collections");
+          setError(err.message || "Failed to fetch collections");
+        }
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchCollections(); // Execute fetching function
-  }, []); // Empty dependency array to run once on mount
+    fetchCollections();
+  }, [searchValue, sortConfig, page, itemsPerPage]);
 
   const handleAddNewCollection = () => {
     navigate("/collection/new");
@@ -75,11 +109,9 @@ const CollectionsPage: React.FC = () => {
       if (dialogTitle === "Delete Collection") {
         setIsLoading(true);
         try {
-          // Call the deleteCollection API function
           const response = await deleteCollection(currentCollection._id);
 
           if (response.status === 200) {
-            // If successful, remove the collection from the state
             setCollections((prevData) =>
               prevData.filter(
                 (collection) => collection._id !== currentCollection._id
@@ -103,9 +135,16 @@ const CollectionsPage: React.FC = () => {
     setCurrentCollection(null);
   };
 
-  const filteredCollections = collections.filter((collection) =>
-    collection.name.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  const handleSort = (key: string) => {
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
+    setSortConfig({ key, direction });
+  };
+
+  const sortedCollections = useSortableData(collections, sortConfig);
 
   const actionRenderer = (item: Collection) => (
     <div className="flex justify-center items-center gap-2">
@@ -120,17 +159,6 @@ const CollectionsPage: React.FC = () => {
     </div>
   );
 
-  const handleSort = (key: string) => {
-    const direction = getNextSortDirection(
-      sortConfig.key,
-      key,
-      sortConfig.direction
-    );
-    setSortConfig({ key, direction });
-  };
-
-  const sortedCollections = useSortableData(filteredCollections, sortConfig);
-
   const columns = [
     {
       header: "BannerImage",
@@ -139,7 +167,7 @@ const CollectionsPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-16 w-24">
           <img
             className="h-16 w-24 object-cover rounded cursor-pointer"
-            src={item.bannerImage} // Changed imageUrl to bannerImage
+            src={item.bannerImage}
             alt={item.name}
             onClick={() => navigate(`/collections/collection-product`)}
           />
@@ -186,7 +214,7 @@ const CollectionsPage: React.FC = () => {
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewCollection}
-              disabled={isLoading} // Disable button while loading
+              disabled={isLoading}
             >
               ADD COLLECTION
             </button>
@@ -194,23 +222,25 @@ const CollectionsPage: React.FC = () => {
         </div>
       </div>
 
-      
-        <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-          {isLoading ? (
-            <TableSkeletonLoader columns={3} rows={10} /> // Show the skeleton loader while loading
-          ) : (
-            <DataTable
-              items={sortedCollections}
-              columns={columns}
-              idKey="_id"
-              itemsPerPage={15}
-              tableType="collection"
-              actionRenderer={actionRenderer}
-              loading={isLoading}
-            />
-          )}
-        </div>
-    
+      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
+        {isLoading ? (
+          <TableSkeletonLoader columns={columns.length} rows={10} />
+        ) : (
+          <DataTable<Collection>
+            items={sortedCollections.filter((collection) =>
+              collection.name.toLowerCase().includes(searchValue.toLowerCase())
+            )}
+            columns={columns}
+            idKey="_id"
+            itemsPerPage={itemsPerPage}
+            loading={isLoading}
+            currentPage={page}
+            onPageChange={setPage}
+            actionRenderer={actionRenderer}
+          />
+        )}
+      </div>
+
       <ConfirmationDialog
         open={dialogOpen}
         title={dialogTitle}
