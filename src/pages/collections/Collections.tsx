@@ -31,7 +31,7 @@ const CollectionsPage: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [, setError] = useState<string | null>(null);
-  const [page, setPage] = useState<number>(1);
+  const [page, ] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
