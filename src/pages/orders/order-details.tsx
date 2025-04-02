@@ -4,10 +4,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import OrdersForm from "../../components/OrdersForm";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
-import { getOrderById } from "../../api/orders"; // Import your API function
+import {
+  getOrderById,
+  updateOrderStatus,
+  updatePaymentStatus,
+} from "../../api/orders"; // Import your API functions
 import { OrderNew } from "../../types/orders.types";
 import { ActionContext } from "../../context/ActionContext";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 const OrderDetails = () => {
   const { setActionHandlers } = useContext(ActionContext);
@@ -76,15 +81,28 @@ const OrderDetails = () => {
         paymentStatus,
       });
 
-      // Simulate successful operation
-      setTimeout(() => {
-        setIsLoading(false);
+      if (id) {
+        const statusResponse = await updateOrderStatus(id, orderStatus || "");
+        const paymentResponse = await updatePaymentStatus(
+          id,
+          paymentStatus || ""
+        );
+        console.log("Update responses:", statusResponse, paymentResponse);
         toast.success("Order updated successfully");
-        navigate("/orders");
-      }, 500);
+      }
+
+      setIsLoading(false);
+      navigate("/orders");
     } catch (error) {
       console.error("Failed to update order:", error);
-      toast.error("Failed to update order");
+
+      // Display the error message from the server response
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(`Failed to update order: ${error.response.data.message}`);
+      } else {
+        toast.error("Failed to update order");
+      }
+
       setIsLoading(false);
     }
   };

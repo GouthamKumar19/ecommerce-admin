@@ -46,7 +46,7 @@ const CollectionAddPage: React.FC = () => {
   const handleAdd = async () => {
     try {
       const selectedProductIds = Object.entries(checkedProducts)
-        .filter(([_, isChecked]) => isChecked)
+        .filter(([ isChecked]) => isChecked)
         .map(([productId]) => productId);
 
       // Fetch complete details for each selected product
