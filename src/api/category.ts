@@ -1,4 +1,4 @@
-import { CategoryResponse } from "../types/category.types";
+import {  CategoryResponse } from "../types/category.types";
 import { mockCategoryData } from "../config/mock/categoryTable";
 import { SortConfig } from "../types/category.types";
 import axiosInstance from "./axios";
@@ -25,7 +25,8 @@ export const getAllCategory = async (
     console.log("[API] Fetching all testimonials");
 
     const response = await axiosInstance.post(
-      "/admin/categories/getAll",
+     
+"/admin/categories/getAll",
       {
         page,
         itemsPerPage,
@@ -52,6 +53,8 @@ export const getAllCategory = async (
     throw error;
   }
 };
+
+
 
 export const createCategory = async (
   payload: any
@@ -136,10 +139,8 @@ export const deleteCategoryById = async (
   console.log("Deleting category with ID:", id);
 
   try {
-    const response = await axiosInstance.delete(
-      `/admin/categories/delete/${id}`
-    );
-
+    const response = await axiosInstance.delete(`/admin/categories/delete/${id}`);
+    
     if (response.status === 200) {
       return {
         status: 200,
