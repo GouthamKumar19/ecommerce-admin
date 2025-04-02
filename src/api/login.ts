@@ -1,6 +1,6 @@
-import { LoginRequest, LoginResponse } from "../types/loginTypes";
-import axiosInstance from "./axios";
-import axios, { AxiosError } from "axios";
+import { LoginRequest, LoginResponse } from "../types/loginTypes"; 
+import axiosInstance from "./axios"; 
+import axios, { AxiosError } from "axios"; 
 import Cookies from "js-cookie";
 
 interface ApiResponse<T> {
@@ -18,8 +18,15 @@ export const login = async (
     console.log("Login Request Data:", loginData);
     console.groupEnd();
 
+    // Determine which endpoint to use based on the login method
+    let endpoint = '/admin/auth/login';
+    
+    if (loginData.googleId) {
+      endpoint = '/admin/auth/login';
+    }
+
     // Direct API call for login with detailed logging
-    const response = await axiosInstance.post('/admin/auth/login', loginData)
+    const response = await axiosInstance.post(endpoint, loginData);
 
     // Store user data in cookies
     const userData = response.data.data;
@@ -29,25 +36,35 @@ export const login = async (
     Cookies.set('user_name', userData.name, { expires: 1 });
     Cookies.set('user_email', userData.email, { expires: 1 });
     Cookies.set('user_role', userData.role, { expires: 1 });
-
+    
     // Store tokens in cookies
-    Cookies.set('access_token', userData.access_token, { 
+    Cookies.set('access_token', userData.access_token, {
       expires: new Date(userData.tokenExpiresAt),
       secure: process.env.NODE_ENV === 'production', // only send over HTTPS in production
       sameSite: 'strict'
     });
-    Cookies.set('refresh_token', userData.refresh_token, { 
+    
+    Cookies.set('refresh_token', userData.refresh_token, {
       expires: new Date(userData.refreshExpiresAt),
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict'
-    })
+    });
+
+    // Also store in localStorage as indicated in LoginPage
+    localStorage.setItem("user_id", userData._id);
+    localStorage.setItem("user_name", userData.name);
+    localStorage.setItem("user_email", userData.email);
+    localStorage.setItem("user_role", userData.role);
+    localStorage.setItem("auth_token", userData.access_token);
+    localStorage.setItem("refresh_token", userData.refresh_token);
+    localStorage.setItem("token_expires_at", userData.refreshExpiresAt);
 
     return response.data;
   } catch (error) {
     console.group("Login API Error");
     console.error("Detailed Error:", error);
     console.groupEnd();
-
+    
     // More specific error handling with proper type checking
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
@@ -62,7 +79,7 @@ export const login = async (
         throw new Error("Error setting up login request");
       }
     }
-
+    
     // Fallback error handling for non-axios errors
     throw new Error(
       error instanceof Error ? error.message : "An unexpected error occurred"

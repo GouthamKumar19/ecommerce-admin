@@ -1,5 +1,6 @@
-import { Product } from "../types/collectionProduct.types";
-import { productMockData } from "../config/mock/productCollectionTable";
+import { Product,ProductResponse } from "../types/collectionProduct.types";
+
+import axiosInstance from "./axios";
 
 interface ProductFormData {
   _id?: string;
@@ -26,31 +27,17 @@ interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
 // Create a new product
 export const createProduct = async (
   productData: ProductFormData
 ): Promise<ApiResponse<Product>> => {
   try {
-    console.log("[API] Creating product with data:", productData); // Fixed: Changed productMockData to productData
+    console.log("[API] Creating product with data:", productData);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.post('/admin/products/create-update', productData);
-    // return response.data;
+    const response = await axiosInstance.post('/admin/products/create-update', productData);
+    return response.data;
 
-    // Mock response
-    const mockResponse: ApiResponse<Product> = {
-      status: 200,
-      message: "Product created successfully",
-      data: {
-        _id: String(productMockData.length + 1),
-        ...productData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } as Product, // Add type assertion here
-    };
-
-    console.log("[API] Mock create response:", mockResponse);
-    return Promise.resolve(mockResponse);
   } catch (error) {
     console.error("[API] Error creating product:", error);
     throw error;
@@ -64,24 +51,9 @@ export const updateProduct = async (
   try {
     console.log("[API] Updating product with data:", productData);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.post('/admin/products/create-update', productData);
-    // return response.data;
+    const response = await axiosInstance.post('/admin/products/create-update', productData);
+    return response.data;
 
-    // Mock response
-    const mockResponse: ApiResponse<Product> = {
-      status: 200,
-      message: "Product created successfully",
-      data: {
-        _id: String(productMockData.length + 1),
-        ...productData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } as Product, // Add type assertion here
-    };
-
-    console.log("[API] Mock update response:", mockResponse);
-    return Promise.resolve(mockResponse);
   } catch (error) {
     console.error("[API] Error updating product:", error);
     throw error;
@@ -95,25 +67,9 @@ export const getProductById = async (
   try {
     console.log("[API] Fetching product with ID:", id);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.get(`/admin/products/getOne/${id}`);
-    // return response.data;
+    const response = await axiosInstance.get(`/admin/products/getOne/${id}`);
+    return response.data;
 
-    // Mock response using productMockData
-    const product = productMockData.find((p) => p._id === id);
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    const mockResponse: ApiResponse<Product> = {
-      status: 200,
-      message: "Success",
-      data: product,
-    };
-
-    console.log("[API] Mock get response:", mockResponse);
-    return Promise.resolve(mockResponse);
   } catch (error) {
     console.error("[API] Error fetching product:", error);
     throw error;
@@ -121,21 +77,13 @@ export const getProductById = async (
 };
 
 // Get all products
-export const getAllProducts = async (): Promise<ApiResponse<Product[]>> => {
+export const getAllProducts = async (): Promise<ApiResponse<ProductResponse>> => {
   try {
     console.log("[API] Fetching all products");
 
-    // Add this line to log the mock products data
-    console.log("[API] Mock products data:", productMockData);
+    const response = await axiosInstance.post("/admin/collectionProducts/getAll");
 
-    const mockResponse: ApiResponse<Product[]> = {
-      status: 200,
-      message: "Success",
-      data: productMockData,
-    };
-
-    console.log("[API] Mock getAll response:", mockResponse);
-    return Promise.resolve(mockResponse);
+    return response.data;
   } catch (error) {
     console.error("[API] Error fetching all products:", error);
     throw error;
@@ -149,19 +97,9 @@ export const deleteProduct = async (
   try {
     console.log("[API] Deleting product with ID:", id);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.delete(`/admin/products/delete/${id}`);
-    // return response.data;
+    const response = await axiosInstance.delete(`/admin/products/delete/${id}`);
+    return response.data;
 
-    // Mock response
-    const mockResponse: ApiResponse<{ deleted: boolean }> = {
-      status: 200,
-      message: "Product deleted successfully",
-      data: { deleted: true },
-    };
-
-    console.log("[API] Mock delete response:", mockResponse);
-    return Promise.resolve(mockResponse);
   } catch (error) {
     console.error("[API] Error deleting product:", error);
     throw error;
@@ -176,28 +114,9 @@ export const toggleProductStatus = async (
   try {
     console.log("[API] Toggling product status:", { id, enabled });
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.patch(`/admin/products/toggle-status/${id}`, { enabled });
-    // return response.data;
+    const response = await axiosInstance.patch(`/admin/products/toggle-status/${id}`, { enabled });
+    return response.data;
 
-    // Mock response
-    const product = productMockData.find((p) => p._id === id);
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    const mockResponse: ApiResponse<Product> = {
-      status: 200,
-      message: `Product ${enabled ? "enabled" : "disabled"} successfully`,
-      data: {
-        ...product,
-        status: enabled ? "in-stock" : "disabled",
-        updatedAt: new Date().toISOString(),
-      },
-    };
-
-    console.log("[API] Mock toggle status response:", mockResponse);
-    return Promise.resolve(mockResponse);
   } catch (error) {
     console.error("[API] Error toggling product status:", error);
     throw error;
