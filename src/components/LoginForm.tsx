@@ -1,9 +1,9 @@
 import { useState, FormEvent } from "react";
 import { FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
 import { GoogleLogin } from "@react-oauth/google";
-import { useNavigate } from "react-router-dom";
+
 interface LoginComponentProps {
-  onSubmit: (email: string, password: string) => Promise<void>;
+  onSubmit?: (email: string, password: string) => Promise<void>;
   loading: boolean;
   error: string;
   onGoogleLogin: (googleCredential: string) => Promise<void>;
@@ -19,19 +19,22 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await onSubmit(email, password);
+    if (onSubmit) {
+      await onSubmit(email, password);
+    } else {
+      console.warn("Email/password login not implemented");
+    }
   };
 
   const handleGoogleLoginSuccess = (response: any) => {
     console.log("Google Login Success:", response);
-    navigate("/dashboard");
     // Extract the credential from the Google login response
     const googleCredential = response.credential;
     onGoogleLogin(googleCredential);
+    // Note: navigation happens in the parent component after successful login
   };
 
   const handleGoogleLoginError = () => {
@@ -118,6 +121,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
           <button
             className="bg-[var(--secondary-color)] text-white p-2 rounded-full"
             style={{ background: "var(--secondary-color)" }}
+            type="button"
           >
             <FaApple />
           </button>
