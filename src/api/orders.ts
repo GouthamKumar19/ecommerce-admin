@@ -2,13 +2,15 @@ import axiosInstance from "./axios";
 import { OrderNew } from "../types/orders.types";
 import { Order, SortConfig } from "../types/order.types";
 import { orderMockData } from "../config/mock/orderNew";
-import { mockOrders } from "../config/mock/ordersData";
+
 let currentController: AbortController | null = null;
 
 interface ApiResponse<T> {
   status: number;
   message: string;
   data: {
+    status(status: any): unknown;
+    paymentDetails: any;
     totalCount: number;
     tableData: T[];
   };
@@ -64,26 +66,8 @@ export const getOrderById = async (
   try {
     console.log("[API] Fetching order with ID:", id);
 
-    // Find order from the mockOrders array you provided
-    const order = mockOrders.find(
-      (order) => order._id === id || order.orderId === id
-    );
-
-    if (!order) {
-      throw new Error("Order not found");
-    }
-
-    const mockResponse: ApiResponse<OrderNew> = {
-      status: 200,
-      message: "Success",
-      data: {
-        totalCount: 1,
-        tableData: [order],
-      },
-    };
-
-    console.log("[API] Mock get response:", mockResponse);
-    return Promise.resolve(mockResponse);
+    const response = await axiosInstance.post(`/admin/orders/getOne/${id}`);
+    return response.data;
   } catch (error) {
     console.error("[API] Error fetching order:", error);
     throw error;
@@ -203,6 +187,10 @@ export const getOrdersByDateRange = async (
       data: {
         totalCount: filteredOrders.length,
         tableData: filteredOrders,
+        status: function (): unknown {
+          throw new Error("Function not implemented.");
+        },
+        paymentDetails: undefined
       },
     };
 
