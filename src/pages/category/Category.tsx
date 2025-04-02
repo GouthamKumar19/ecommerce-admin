@@ -13,7 +13,7 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-import { getAllCategory } from "../../api/category";
+import { getAllCategory, deleteCategoryById } from "../../api/category";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import TableSkeletonLoader
 
 const SubcategoryCell: React.FC<{ subcategories: Subcategory[] }> = ({
@@ -116,12 +116,24 @@ const CategoryPage: React.FC = () => {
     setDialogOpen(true);
   };
 
-  const confirmDeleteCategory = () => {
+  const confirmDeleteCategory = async () => {
     if (selectedCategory) {
       console.log(`Deleting category with ID: ${selectedCategory._id}`);
-      setCategories(
-        categories.filter((category) => category._id !== selectedCategory._id)
-      );
+      try {
+        const response = await deleteCategoryById(selectedCategory._id);
+        if (response.status === 200) {
+          setCategories(
+            categories.filter(
+              (category) => category._id !== selectedCategory._id
+            )
+          );
+          console.log("Category deleted successfully:", response.message);
+        } else {
+          console.error("Error deleting category:", response.message);
+        }
+      } catch (error) {
+        console.error("Error deleting category:", error);
+      }
     }
     setDialogOpen(false);
     setSelectedCategory(null);
@@ -209,7 +221,7 @@ const CategoryPage: React.FC = () => {
         </div>
       </div>
 
-     <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
+      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
           <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
@@ -222,7 +234,7 @@ const CategoryPage: React.FC = () => {
             onPageChange={setPage}
             actionRenderer={actionRenderer}
           />
-        ) }
+        )}
       </div>
       <ConfirmationDialog
         open={dialogOpen}

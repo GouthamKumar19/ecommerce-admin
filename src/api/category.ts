@@ -1,4 +1,3 @@
-
 import {  CategoryResponse } from "../types/category.types";
 import { mockCategoryData } from "../config/mock/categoryTable";
 import { SortConfig } from "../types/category.types";
@@ -132,4 +131,31 @@ export const createSubCategory = async (payload: {
     message: "Subcategory created successfully",
     data: payload,
   };
+};
+
+export const deleteCategoryById = async (
+  id: string
+): Promise<ApiResponse<any>> => {
+  console.log("Deleting category with ID:", id);
+
+  try {
+    const response = await axiosInstance.delete(`/admin/categories/delete/${id}`);
+    
+    if (response.status === 200) {
+      return {
+        status: 200,
+        message: "Category deleted successfully",
+        data: response.data,
+      };
+    } else {
+      return {
+        status: response.status,
+        message: "Error deleting category",
+        data: null,
+      };
+    }
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    throw error;
+  }
 };
