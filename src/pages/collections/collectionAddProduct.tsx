@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
-import { productMockData } from "../../config/mock/productCollectionTable";
+//import { productMockData } from "../../config/mock/productCollectionTable";
 import type { Product } from "../../types/collectionProduct.types";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -10,11 +10,11 @@ import BackArrow from "../../components/common/BackArrow";
 import SearchBar from "../../components/common/SearchBar";
 import { getProductById } from "../../api/product"; // Adjust the import path as needed
 // Mock fetch function
-const fetchProducts = async (): Promise<Product[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(productMockData), 1000);
-  });
-};
+// const fetchProducts = async (): Promise<Product[]> => {
+//   return new Promise((resolve) => {
+//     setTimeout(() => resolve(productMockData), 1000);
+//   });
+// };
 
 const CollectionAddPage: React.FC = () => {
   const [checkedProducts, setCheckedProducts] = useState<
@@ -24,9 +24,9 @@ const CollectionAddPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Use React Query for data fetching with loading state
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["products"],
-    queryFn: fetchProducts,
+    //queryFn: fetchProducts,
   });
 
   // Function to handle checkbox change
@@ -43,11 +43,10 @@ const CollectionAddPage: React.FC = () => {
   };
 
   // Function to handle add button click
-  // Function to handle add button click
   const handleAdd = async () => {
     try {
       const selectedProductIds = Object.entries(checkedProducts)
-        .filter(([isChecked]) => isChecked)
+        .filter(([_, isChecked]) => isChecked)
         .map(([productId]) => productId);
 
       // Fetch complete details for each selected product
@@ -79,7 +78,9 @@ const CollectionAddPage: React.FC = () => {
 
   // Filter products based on search input
   const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchValue.toLowerCase())
+    product.productDetails.name
+      .toLowerCase()
+      .includes(searchValue.toLowerCase())
   );
 
   // Define columns for product table
@@ -112,8 +113,8 @@ const CollectionAddPage: React.FC = () => {
           ) : (
             <img
               className="h-10 w-10 rounded-full"
-              // src={item.imageUrl}
-              alt={item.name}
+              src={item.productDetails.thumbnailImage}
+              //alt={item.name}
             />
           )}
         </div>
@@ -129,7 +130,7 @@ const CollectionAddPage: React.FC = () => {
               <Skeleton variant="text" width={120} />
             ) : (
               <div className="text-sm font-medium text-gray-900">
-                {item.name}
+                {item.productDetails.name}
               </div>
             )}
           </div>
@@ -144,7 +145,7 @@ const CollectionAddPage: React.FC = () => {
           {isLoading ? (
             <Skeleton variant="text" width={200} />
           ) : (
-            item.description
+            item.productDetails.description
           )}
         </div>
       ),
@@ -159,12 +160,11 @@ const CollectionAddPage: React.FC = () => {
           ) : (
             <>
               <span className="text-sm font-medium text-gray-900">
-                ${item.price.toFixed(2)}
+                ${(item.productDetails.price as number).toFixed(2)}
               </span>
               {item.discountPrice && (
                 <span className="ml-2 text-sm text-gray-500 line-through">
-                  {/* @ts-ignore */}
-                  ${item.discountPrice.toFixed(2)}
+                  {/* @ts-ignore */}${(item.discountPrice as number).toFixed(2)}
                 </span>
               )}
             </>
@@ -175,25 +175,13 @@ const CollectionAddPage: React.FC = () => {
     {
       header: "Quantity",
       key: "quantity",
-      render: (item: Product) => (
+      render: () => (
         <div className="text-sm text-gray-900">
-          {isLoading ? <Skeleton variant="text" width={40} /> : item.quantity}
+          {/* {isLoading ? <Skeleton variant="text" width={40} /> : item.quantity} */}
         </div>
       ),
     },
   ];
-
-  // Generate skeleton rows when loading
-  const skeletonData = isLoading
-    ? Array(5).fill({
-        _id: "skeleton",
-        name: "",
-        description: "",
-        price: 0,
-        quantity: 0,
-        imageUrl: "",
-      })
-    : [];
 
   return (
     <div>
@@ -251,7 +239,7 @@ const CollectionAddPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         <DataTable
-          items={isLoading ? skeletonData : filteredProducts}
+          items={filteredProducts}
           columns={columns}
           idKey="_id"
           itemsPerPage={15}

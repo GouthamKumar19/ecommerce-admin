@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../components/common/DataTable";
-// import { productMockData } from "../../config/mock/productCollectionTable";
 import type { Product } from "../../types/collectionProduct.types";
 import { useNavigate } from "react-router-dom";
 import { Delete } from "@mui/icons-material";
@@ -20,16 +18,6 @@ import { getAllProducts } from "../../api/collectionProduct";
 import { toggleProductStatus } from "../../api/collectionProduct";
 import BackArrow from "../../components/common/BackArrow";
 
-const fetchProducts = async (): Promise<Product[]> => {
-  try {
-    const response = await getAllProducts();
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    return [];
-  }
-};
-
 const ProductAddPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -38,6 +26,9 @@ const ProductAddPage: React.FC = () => {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [disabledProducts, setDisabledProducts] = useState<string[]>([]);
   const [tableData, setTableData] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "",
     direction: null,
@@ -45,16 +36,31 @@ const ProductAddPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const { data: fetchedProducts = [], isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
-  });
-
   useEffect(() => {
-    if (fetchedProducts.length > 0) {
-      setTableData(fetchedProducts);
-    }
-  }, [fetchedProducts]);
+    const fetchProductData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await getAllProducts();
+        console.log("Fetched Products ResponseEWEWEEW:", response);
+
+        // Make sure we're accessing the data properly
+        if (response && response.data && response.data.tableData) {
+          setTableData(response.data.tableData);
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch products");
+        console.error("Error fetching products:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProductData();
+  }, []);
 
   const handleAddNewProduct = () => {
     navigate("/collection/collection-product/:id");
@@ -80,6 +86,7 @@ const ProductAddPage: React.FC = () => {
     );
     setDialogOpen(true);
   };
+
   const handleDialogClose = async (confirm: boolean) => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
@@ -143,9 +150,13 @@ const ProductAddPage: React.FC = () => {
     setDialogOpen(false);
     setCurrentProduct(null);
   };
-  const filteredProducts = tableData.filter((product) =>
-    product.name.toLowerCase().includes(searchValue.toLowerCase())
-  );
+
+  // Filter products based on search value
+  // const filteredProducts = tableData.filter((product) =>
+  //   product && product.name
+  //     ? product.name.toLowerCase().includes(searchValue.toLowerCase())
+  //     : false
+  // );
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -156,9 +167,10 @@ const ProductAddPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const sortedProducts = useSortableData(filteredProducts, sortConfig);
+  const sortedProducts = useSortableData(tableData, sortConfig);
 
   const actionRenderer = (item: Product) => {
+    // Make sure we're using _id consistently, not id
     const isDisabled = disabledProducts.includes(String(item._id));
     return (
       <div className="flex justify-center items-center gap-4">
@@ -183,17 +195,16 @@ const ProductAddPage: React.FC = () => {
       </div>
     );
   };
+
   const columns = [
     {
       header: "",
-      key: "productImage",
+      key: "imageUrl",
       render: (item: Product) => (
         <div className="text-center flex-shrink-0 h-10 w-10">
           <img
             className="h-10 w-10 rounded-full"
-            // @ts-ignore
-            src={item.imageUrl}
-            alt={item.name}
+            src={item?.productDetails?.thumbnailImage} // Use appropriate image field
           />
         </div>
       ),
@@ -213,12 +224,12 @@ const ProductAddPage: React.FC = () => {
           <div className="ml-0">
             <div
               className={`text-sm max-w-xs truncate ${
-                disabledProducts.includes(String(item.id))
+                disabledProducts.includes(String(item._id))
                   ? "text-gray-400"
                   : "text-gray-900"
               }`}
             >
-              {item.name}
+              {item?.productDetails?.name}
             </div>
           </div>
         </div>
@@ -237,12 +248,12 @@ const ProductAddPage: React.FC = () => {
       render: (item: Product) => (
         <div
           className={`text-sm max-w-xs truncate ${
-            disabledProducts.includes(String(item.id))
+            disabledProducts.includes(String(item._id))
               ? "text-gray-400"
               : "text-gray-900"
           }`}
         >
-          {item.description}
+          {item?.productDetails?.description}
         </div>
       ),
     },
@@ -259,23 +270,23 @@ const ProductAddPage: React.FC = () => {
       render: (item: Product) => (
         <div
           className={`flex items-center ${
-            disabledProducts.includes(String(item.id)) ? "text-gray-400" : ""
+            disabledProducts.includes(String(item._id)) ? "text-gray-400" : ""
           }`}
         >
           <span
             className={`text-sm font-medium ${
-              disabledProducts.includes(String(item.id))
+              disabledProducts.includes(String(item._id))
                 ? "text-gray-400"
                 : "text-gray-900"
             }`}
           >
-            ${item.price.toFixed(2)}
+            ${item?.productDetails?.price}
           </span>
-          {/* {item.discountPrice && (
+          {item.slashedPrice && (
             <span className="ml-2 text-sm text-gray-500 line-through">
-            ${item.discountPrice.toFixed(2)}
+              ${item.slashedPrice.toFixed(2)}
             </span>
-          )} */}
+          )}
         </div>
       ),
     },
@@ -292,12 +303,12 @@ const ProductAddPage: React.FC = () => {
       render: (item: Product) => (
         <div
           className={`text-sm ${
-            disabledProducts.includes(String(item.id))
+            disabledProducts.includes(String(item._id))
               ? "text-gray-400"
               : "text-gray-900"
           }`}
         >
-          {item.quantity}
+          {item?.productDetails?.quantity}
         </div>
       ),
     },
@@ -307,6 +318,14 @@ const ProductAddPage: React.FC = () => {
       render: actionRenderer,
     },
   ];
+
+  if (error) {
+    return (
+      <div className="bg-white p-4 rounded-lg shadow mb-4">
+        <div className="text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -333,16 +352,22 @@ const ProductAddPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={sortedProducts}
-          columns={columns}
-          idKey="id"
-          itemsPerPage={15}
-          tableType="product"
-          actionRenderer={actionRenderer}
-          disabledRows={disabledProducts}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <div className="p-4 text-center">Loading products...</div>
+        ) : tableData.length === 0 ? (
+          <div className="p-4 text-center">No products found</div>
+        ) : (
+          <DataTable
+            items={sortedProducts}
+            columns={columns}
+            idKey="_id" // Changed from "id" to "_id" to match your data structure
+            itemsPerPage={15}
+            tableType="product"
+            actionRenderer={actionRenderer}
+            disabledRows={disabledProducts}
+            loading={isLoading}
+          />
+        )}
       </div>
 
       <ConfirmationDialog

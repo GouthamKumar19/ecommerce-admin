@@ -17,29 +17,33 @@ export interface BaseRecord {
 
 // Revised Product interface based on the provided JSON structure
 export interface Product extends BaseRecord {
-  _id: string; // Changed id to _id to match the JSON structure
-  name: string;
-  description: string;
-  price: number;
-  slashedPrice?: number; // Changed discountPrice to slashedPrice
-  quantity: number;
-  isFeatured: boolean; // Changed featured to isFeatured
-  categoryId: string; // Required category ID
-  collectionId?: string; // Required collection ID
-  productId?: string; // Required product ID
-  subCategoryId?: string; // Required sub-category ID
-  images: string[]; // Array for multiple images
-  thumbnailImage?: string; // Optional thumbnail image
-  createdAt: string | Date; // Date of creation
-  updatedAt: string | Date; // Date of last update
+  _id: string;
+  productDetails: {
+    thumbnailImage: string;
+    name: string;
+    description: string;
+    price: number;
+    quantity: number;
+  };
+  slashedPrice?: number;
+  isFeatured: boolean;
+  categoryId: string;
+  subCategoryId: string;
+  images: string[];
+  thumbnailImage?: string;
+  createdAt?: string | Date;
+  updatedAt: string | Date;
 }
 
 // Example response structure reflecting the overall API response
-export interface ApiResponse {
-  status: number;
-  message: string;
-  data: {
-    totalCount: number;
-    tableData: Product[]; // Array of Product objects
-  };
+export interface ProductResponse {
+  totalCount: number;
+  tableData: Product[];
 }
+
+export interface ApiResponse<T> {
+  status: number; // HTTP status code
+  message: string; // Response message
+  data: T;
+}
+
