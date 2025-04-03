@@ -7,7 +7,7 @@ import ImagePopup from "./ImagePopup";
 import ImageUploader from "./ImageUploader";
 import ConfirmationDialog from "./Dialog"; // Importing the ConfirmationDialog
 import "yet-another-react-lightbox/styles.css";
-import { getPresignedUrl,uploadFile } from "../../api/collectionImage";
+import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
 // Types
 export interface ProductImage {
   id: number;
@@ -15,7 +15,7 @@ export interface ProductImage {
   selected: boolean;
 }
 
-type ImageType = "product" | "general" | "collection" | undefined; // Update the type to include "collection"
+type ImageType = "product" | "general" | "collection" |"category" | undefined; // Update the type to include "collection"
 
 interface ImageSelectionProps {
   images: ProductImage[];
@@ -143,10 +143,10 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
       // Get the presigned URL for upload
       const typeFolder = type || "general"; // Use the type prop or default to "general"
       const presignedUrl = await getPresignedUrl(fileName, typeFolder);
-
+      console.log(presignedUrl, "PRESIGNEDURL");
       // Upload the file
       await uploadFile(presignedUrl, imageFile);
-
+      
       // Create a local URL for preview while waiting for server response
       const reader = new FileReader();
       reader.onload = (e) => {

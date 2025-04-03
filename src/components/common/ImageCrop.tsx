@@ -23,7 +23,7 @@ interface ImageCropperProps {
   onClose: () => void;
   imageUrl: string | null;
   onCropComplete: (croppedImageBlob: Blob) => void;
-  type?: "product" | "general"|"collection";
+  type?: "product" | "general"|"collection"|"category";
 }
 
 function centerAspectCrop(

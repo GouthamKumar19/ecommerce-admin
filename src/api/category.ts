@@ -1,7 +1,8 @@
-import {  CategoryResponse } from "../types/category.types";
+import { CategoryResponse } from "../types/category.types";
 import { mockCategoryData } from "../config/mock/categoryTable";
 import { SortConfig } from "../types/category.types";
 import axiosInstance from "./axios";
+import axios from "axios";
 
 interface ApiResponse<T> {
   status: number;
@@ -25,8 +26,7 @@ export const getAllCategory = async (
     console.log("[API] Fetching all testimonials");
 
     const response = await axiosInstance.post(
-     
-"/admin/categories/getAll",
+      "/admin/categories/getAll",
       {
         page,
         itemsPerPage,
@@ -54,18 +54,36 @@ export const getAllCategory = async (
   }
 };
 
-
-
-export const createCategory = async (
-  payload: any
-): Promise<ApiResponse<any>> => {
+// Define the API response structure for creating a category
+export const createCategory = async (payload: {
+  name: string;
+  image: string;
+}): Promise<ApiResponse<{ id: string }>> => {
   console.log("Create Category payload:", payload);
 
-  return {
-    status: 200,
-    message: "Category created successfully",
-    data: payload,
-  };
+  try {
+    const response = await axiosInstance.post(
+      "/admin/categories/create",
+      payload
+    );
+
+    // The API response is expected to be structured like this:
+    // { status: 200, message: "Category created successfully.", data: { id: "some_id" }, toastMessage: "Category created successfully." }
+
+    // Return the response.data directly
+    return response.data;
+  } catch (error) {
+    // Log the error response properly
+    if (axios.isAxiosError(error)) {
+      console.error("Error creating category:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error creating category"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error creating category");
+    }
+  }
 };
 
 export const getCategoryById = async (
@@ -139,8 +157,10 @@ export const deleteCategoryById = async (
   console.log("Deleting category with ID:", id);
 
   try {
-    const response = await axiosInstance.delete(`/admin/categories/delete/${id}`);
-    
+    const response = await axiosInstance.delete(
+      `/admin/categories/delete/${id}`
+    );
+
     if (response.status === 200) {
       return {
         status: 200,
