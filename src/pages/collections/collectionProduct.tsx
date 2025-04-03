@@ -14,7 +14,10 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 import { getCollectionById } from "../../api/collections";
-import { toggleProductStatus } from "../../api/collectionProduct";
+import {
+  toggleProductStatus,
+  deleteProduct,
+} from "../../api/collectionProduct";
 import BackArrow from "../../components/common/BackArrow";
 import {
   CollectionProduct,
@@ -22,8 +25,6 @@ import {
   BaseRecord,
   Collections,
 } from "../../types/collectionResponse.types";
-
-
 
 const ProductAddPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -56,17 +57,22 @@ const ProductAddPage: React.FC = () => {
       setError(null);
 
       try {
-        
         const response: ApiResponse<Collections> = await getCollectionById(id);
         console.log("Fetched Collection Response:", response);
 
         if (response?.data?.collectionProducts) {
           setTableData(response.data.collectionProducts);
-                  const productIds = response.data.collectionProducts.map(
-                    (product) => product.productId
-                  );
-                  console.log("Product IDs in this collection:", productIds);
+          // Extract product IDs for later use when adding new products
+          const productIds = response.data.collectionProducts.map(
+            (product) => product.productId
+          );
+          console.log("Product IDs in this collection:", productIds);
 
+          // Store these IDs in sessionStorage for use in the CollectionAddPage
+          sessionStorage.setItem(
+            "existingProductIds",
+            JSON.stringify(productIds)
+          );
         } else {
           throw new Error("Invalid response format");
         }
@@ -82,6 +88,7 @@ const ProductAddPage: React.FC = () => {
   }, [id]);
 
   const handleAddNewProduct = () => {
+    // When navigating, we're already storing the existing product IDs in sessionStorage
     navigate(`/collections/collection-product/collectionAdd/${id}`);
   };
 
@@ -114,37 +121,28 @@ const ProductAddPage: React.FC = () => {
   const handleDialogClose = async (confirm: boolean) => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
-        setTableData((prevData) =>
-          prevData.filter((product) => product._id !== currentProduct._id)
-        );
-
-        const deletedIds = {
-          ids: [currentProduct._id],
-        };
-        console.log(JSON.stringify(deletedIds, null, 2));
-
         try {
-          // await deleteProduct(currentProduct._id);
+          // Call the API to delete the product
+          await deleteProduct(currentProduct._id);
+
+          // Remove the product from the table data
+          setTableData((prevData) =>
+            prevData.filter((product) => product._id !== currentProduct._id)
+          );
+
+          // If the product was in the disabled list, remove it from there too
+          setDisabledProducts((prev) =>
+            prev.filter((id) => id !== String(currentProduct._id))
+          );
         } catch (error) {
           console.error("Error deleting product:", error);
+          // Optionally add error handling/notification here
         }
       } else if (
         dialogTitle === "Disable Product" ||
         dialogTitle === "Enable Product"
       ) {
         const isEnabling = dialogTitle === "Enable Product";
-        const productIds = [currentProduct._id];
-
-        console.log(
-          JSON.stringify(
-            {
-              ids: productIds,
-              isEnabled: isEnabling,
-            },
-            null,
-            2
-          )
-        );
 
         try {
           await toggleProductStatus(currentProduct._id, isEnabling);

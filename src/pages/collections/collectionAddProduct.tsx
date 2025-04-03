@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
-import { getAllProducts } from "../../api/product"; // Import your API fetching functions
+import { getAllProducts } from "../../api/product";
 import {
   addProductsToCollection,
   getProductsByCollectionId,
+  // Import the function for removing products from collection
+  updateProductsInCollection
 } from "../../api/collectionProduct";
 import { Product } from "../../types/product.types";
 import SearchBar from "../../components/common/SearchBar";
@@ -20,6 +22,8 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import { getImage } from "../../utils/imagePreview";
 
+
+
 const CollectionAddPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -27,10 +31,10 @@ const CollectionAddPage: React.FC = () => {
     direction: "descending",
   });
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  const [, setError] = useState<string | null>(null); // Error state
-  const [page, setPage] = useState<number>(1); // Pagination state
-  const [itemsPerPage] = useState<number>(10); // Items per page
+  const [isLoading, setIsLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [checkedProducts, setCheckedProducts] = useState<
     Record<string, boolean>
@@ -38,13 +42,44 @@ const CollectionAddPage: React.FC = () => {
   const [existingCollectionProducts, setExistingCollectionProducts] = useState<
     string[]
   >([]);
+  const [, setInitialCheckedState] = useState<
+    Record<string, boolean>
+  >({});
   const [isLoadingCollection, setIsLoadingCollection] = useState(true);
 
   const navigate = useNavigate();
-  const { id: collectionId } = useParams<{ id: string }>(); // Extract the ID from the URL
+  const { id: collectionId } = useParams<{ id: string }>();
 
-  // Fetch collection products when component mounts
+  // Read saved product IDs from the previous screen
   useEffect(() => {
+    const loadSavedProductIds = () => {
+      const savedIds = sessionStorage.getItem("existingProductIds");
+      if (savedIds) {
+        try {
+          const parsedIds = JSON.parse(savedIds);
+          setExistingCollectionProducts(parsedIds);
+          console.log(
+            "Loaded existing product IDs from sessionStorage:",
+            parsedIds
+          );
+
+          // Initialize checked products state with existing collection products
+          const initialCheckedProducts: Record<string, boolean> = {};
+          parsedIds.forEach((id: string) => {
+            initialCheckedProducts[id] = true;
+          });
+          setCheckedProducts(initialCheckedProducts);
+          setInitialCheckedState({ ...initialCheckedProducts });
+          setIsLoadingCollection(false);
+        } catch (error) {
+          console.error("Error parsing saved product IDs:", error);
+          fetchCollectionProducts();
+        }
+      } else {
+        fetchCollectionProducts();
+      }
+    };
+
     const fetchCollectionProducts = async () => {
       if (!collectionId) return;
 
@@ -62,6 +97,7 @@ const CollectionAddPage: React.FC = () => {
           initialCheckedProducts[id] = true;
         });
         setCheckedProducts(initialCheckedProducts);
+        setInitialCheckedState({ ...initialCheckedProducts });
       } catch (error) {
         console.error("Failed to fetch collection products", error);
         setSnackbarMessage("Failed to fetch existing collection products");
@@ -70,13 +106,13 @@ const CollectionAddPage: React.FC = () => {
       }
     };
 
-    fetchCollectionProducts();
+    loadSavedProductIds();
   }, [collectionId]);
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setIsLoading(true); // Set loading state to true
-      setError(null); // Reset error state
+      setIsLoading(true);
+      setError(null);
 
       try {
         const response = await getAllProducts(
@@ -85,10 +121,10 @@ const CollectionAddPage: React.FC = () => {
           searchValue,
           sortConfig
         );
-        console.log(response, "Newws");
-        setProducts(response.data.tableData); // Assuming response.data.tableData is an array of products
+        console.log(response, "Fetched products");
+        setProducts(response.data.tableData);
 
-        // If collection products are loaded, mark them as checked
+        // Mark existing product IDs as checked once they load
         if (!isLoadingCollection && existingCollectionProducts.length > 0) {
           const updatedCheckedProducts = { ...checkedProducts };
           response.data.tableData.forEach((product: Product) => {
@@ -105,7 +141,7 @@ const CollectionAddPage: React.FC = () => {
         setError("Failed to fetch products");
         console.error("Failed to fetch products", error);
       } finally {
-        setIsLoading(false); // Loading is finished
+        setIsLoading(false);
       }
     };
 
@@ -117,7 +153,7 @@ const CollectionAddPage: React.FC = () => {
     sortConfig,
     isLoadingCollection,
     existingCollectionProducts,
-  ]); // Dependencies updated
+  ]);
 
   const handleCheckboxChange = (productId: string) => {
     setCheckedProducts((prev) => ({
@@ -127,34 +163,78 @@ const CollectionAddPage: React.FC = () => {
   };
 
   const handleCancel = () => {
+    // Clear session storage before navigating back
+    sessionStorage.removeItem("existingProductIds");
     navigate(-1);
   };
 
-  const handleAdd = async () => {
-    try {
-      if (!collectionId) {
-        setSnackbarMessage("Collection ID is missing");
+const handleAdd = async () => {
+  try {
+    if (!collectionId) {
+      setSnackbarMessage("Collection ID is missing");
+      return;
+    }
+
+    // Get selected product IDs
+    const selectedProductIds = Object.entries(checkedProducts)
+      .filter(([, isChecked]) => isChecked)
+      .map(([productId]) => productId);
+
+    console.log("Selected products:", selectedProductIds);
+    console.log("Existing collection products:", existingCollectionProducts);
+
+    // Identify new products that are not already in the collection
+    const newProductIds = selectedProductIds.filter(
+      (id) => !existingCollectionProducts.includes(id)
+    );
+
+    console.log("New products to add:", newProductIds);
+
+    if (newProductIds.length > 0) {
+      // Prepare the payload in the required format
+      const addPayload = newProductIds.map((productId) => ({
+        collectionId: collectionId,
+        productId: productId,
+      }));
+
+      console.log("Payload for adding products:", addPayload);
+
+      // Add new products to the collection
+      const addResponse = await addProductsToCollection(addPayload);
+
+      if (addResponse.status === 200 && addResponse.data.success) {
+        setSnackbarMessage("New products added to collection successfully");
+      } else {
+        setSnackbarMessage("Failed to add new products");
         return;
       }
-
-      const selectedProductIds = Object.entries(checkedProducts)
-        .filter(([, isChecked]) => isChecked)
-        .map(([productId]) => ({ collectionId, productId }));
-
-      // Send the selected products with collection ID to the backend
-      const response = await addProductsToCollection(selectedProductIds);
-
-      if (response.status === 200 && response.data.success) {
-        setSnackbarMessage("Products added to collection successfully");
-        navigate(-1);
-      } else {
-        setSnackbarMessage("Failed to add products to collection");
-      }
-    } catch (error) {
-      setSnackbarMessage("Error processing selected products");
-      console.error("Error processing selected products:", error);
+    } else {
+      console.log("No new products to add.");
     }
-  };
+
+    // Update existing collection products
+    const updateResponse = await updateProductsInCollection({
+      ids: selectedProductIds,
+      isEnabled: true,
+    });
+
+    if (updateResponse.status === 200 && updateResponse.data.success) {
+      setSnackbarMessage("Collection products updated successfully");
+    } else {
+      setSnackbarMessage("Failed to update collection products");
+      return;
+    }
+
+    sessionStorage.removeItem("existingProductIds");
+    navigate(-1);
+  } catch (error) {
+    setSnackbarMessage("Error updating collection products");
+    console.error("Error updating collection products:", error);
+  }
+};
+
+
+
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -203,7 +283,7 @@ const CollectionAddPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-10 w-10">
           <img
             className="h-10 w-10 rounded-full"
-            src={getImage(item.thumbnailImage)} // Use appropriate image field
+            src={getImage(item.thumbnailImage)}
             alt={item.name}
           />
         </div>
@@ -301,7 +381,7 @@ const CollectionAddPage: React.FC = () => {
               onClick={handleAdd}
               disabled={isLoading || isLoadingCollection}
             >
-              Add Product
+              Update Collection
             </button>
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
@@ -321,12 +401,12 @@ const CollectionAddPage: React.FC = () => {
           <DataTable
             items={sortedProducts}
             columns={columns}
-            idKey="_id" // Use _id based on your Product type structure
+            idKey="_id"
             itemsPerPage={itemsPerPage}
             tableType="product"
             loading={isLoading}
             currentPage={page}
-            onPageChange={setPage} // Handle pagination
+            onPageChange={setPage}
           />
         )}
       </div>
