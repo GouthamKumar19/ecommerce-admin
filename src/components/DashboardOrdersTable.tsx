@@ -143,7 +143,7 @@ const DashboardOrdersTable: React.FC = () => {
       key: "paymentDetails.status",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">
-          {item.paymentDetails.status}
+          {item.paymentDetails?.status ?? "N/A"}
         </div>
       ),
     },

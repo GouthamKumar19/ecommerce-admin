@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "../../components/common/DataTable";
-import type { Product } from "../../types/collectionProduct.types";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Delete } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
@@ -14,18 +13,27 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-import { getAllProducts } from "../../api/collectionProduct";
+import { getCollectionById } from "../../api/collections";
 import { toggleProductStatus } from "../../api/collectionProduct";
 import BackArrow from "../../components/common/BackArrow";
+import {
+  CollectionProduct,
+  ApiResponse,
+  BaseRecord,
+  Collections,
+} from "../../types/collectionResponse.types";
+
+
 
 const ProductAddPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogSubtitle, setDialogSubtitle] = useState("");
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [currentProduct, setCurrentProduct] =
+    useState<CollectionProduct | null>(null);
   const [disabledProducts, setDisabledProducts] = useState<string[]>([]);
-  const [tableData, setTableData] = useState<Product[]>([]);
+  const [tableData, setTableData] = useState<CollectionProduct[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,19 +43,30 @@ const ProductAddPage: React.FC = () => {
   });
 
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
     const fetchProductData = async () => {
+      if (!id) {
+        setError("Collection ID is missing");
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await getAllProducts();
-        console.log("Fetched Products ResponseEWEWEEW:", response);
+        
+        const response: ApiResponse<Collections> = await getCollectionById(id);
+        console.log("Fetched Collection Response:", response);
 
-        // Make sure we're accessing the data properly
-        if (response && response.data && response.data.tableData) {
-          setTableData(response.data.tableData);
+        if (response?.data?.collectionProducts) {
+          setTableData(response.data.collectionProducts);
+                  const productIds = response.data.collectionProducts.map(
+                    (product) => product.productId
+                  );
+                  console.log("Product IDs in this collection:", productIds);
+
         } else {
           throw new Error("Invalid response format");
         }
@@ -60,29 +79,34 @@ const ProductAddPage: React.FC = () => {
     };
 
     fetchProductData();
-  }, []);
+  }, [id]);
 
   const handleAddNewProduct = () => {
-    navigate("/collection/collection-product/:id");
+    navigate(`/collections/collection-product/collectionAdd/${id}`);
   };
 
-  const handleToggleProduct = (item: Product) => {
+  const handleToggleProduct = (item: CollectionProduct) => {
     setCurrentProduct(item);
     if (disabledProducts.includes(String(item._id))) {
       setDialogTitle("Enable Product");
-      setDialogSubtitle(`Are you sure you want to enable "${item.name}"?`);
+      setDialogSubtitle(
+        `Are you sure you want to enable "${item.productDetails?.name}"?`
+      );
     } else {
       setDialogTitle("Disable Product");
-      setDialogSubtitle(`Are you sure you want to disable "${item.name}"?`);
+      setDialogSubtitle(
+        `Are you sure you want to disable "${item.productDetails?.name}"?`
+      );
     }
     setDialogOpen(true);
   };
 
-  const handleDeleteProduct = (item: Product) => {
+  const handleDeleteProduct = (item: CollectionProduct) => {
+    console.log(item);
     setCurrentProduct(item);
     setDialogTitle("Delete Product");
     setDialogSubtitle(
-      `Are you sure you want to delete the product "${item.name}"?`
+      `Are you sure you want to delete the product "${item.productDetails?.name}"?`
     );
     setDialogOpen(true);
   };
@@ -90,7 +114,6 @@ const ProductAddPage: React.FC = () => {
   const handleDialogClose = async (confirm: boolean) => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
-        // Existing delete logic
         setTableData((prevData) =>
           prevData.filter((product) => product._id !== currentProduct._id)
         );
@@ -112,7 +135,6 @@ const ProductAddPage: React.FC = () => {
         const isEnabling = dialogTitle === "Enable Product";
         const productIds = [currentProduct._id];
 
-        // Log the toggle action in the required format
         console.log(
           JSON.stringify(
             {
@@ -125,10 +147,8 @@ const ProductAddPage: React.FC = () => {
         );
 
         try {
-          // Call the API to toggle the product status
           await toggleProductStatus(currentProduct._id, isEnabling);
 
-          // Update the local state
           if (isEnabling) {
             setDisabledProducts((prev) =>
               prev.filter((id) => id !== String(currentProduct._id))
@@ -139,9 +159,6 @@ const ProductAddPage: React.FC = () => {
               String(currentProduct._id),
             ]);
           }
-
-          // Optionally refetch the products to get the updated data
-          // queryClient.invalidateQueries(['products']);
         } catch (error) {
           console.error("Error toggling product status:", error);
         }
@@ -150,13 +167,6 @@ const ProductAddPage: React.FC = () => {
     setDialogOpen(false);
     setCurrentProduct(null);
   };
-
-  // Filter products based on search value
-  // const filteredProducts = tableData.filter((product) =>
-  //   product && product.name
-  //     ? product.name.toLowerCase().includes(searchValue.toLowerCase())
-  //     : false
-  // );
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -167,16 +177,41 @@ const ProductAddPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const sortedProducts = useSortableData(tableData, sortConfig);
+  // Use BaseRecord instead of Record<string, unknown> for better type compatibility
+  const sortedProducts = useSortableData(
+    tableData as unknown as BaseRecord[],
+    sortConfig
+  );
 
-  const actionRenderer = (item: Product) => {
-    // Make sure we're using _id consistently, not id
-    const isDisabled = disabledProducts.includes(String(item._id));
+  // Type guard function to check if an item is a CollectionProduct
+  const isCollectionProduct = (item: any): item is CollectionProduct => {
+    return (
+      item !== null &&
+      typeof item === "object" &&
+      "_id" in item &&
+      "productDetails" in item
+    );
+  };
+
+  // Safely convert BaseRecord to CollectionProduct
+  const toCollectionProduct = (item: BaseRecord): CollectionProduct => {
+    if (isCollectionProduct(item)) {
+      return item;
+    }
+    // Return a default CollectionProduct if conversion fails
+    // This is a fallback and should rarely be triggered if data is correct
+    return item as unknown as CollectionProduct;
+  };
+
+  const actionRenderer = (item: BaseRecord) => {
+    const typedItem = toCollectionProduct(item);
+    const isDisabled = disabledProducts.includes(String(typedItem._id));
+
     return (
       <div className="flex justify-center items-center gap-4">
         <Switch
           checked={!isDisabled}
-          onChange={() => handleToggleProduct(item)}
+          onChange={() => handleToggleProduct(typedItem)}
           inputProps={{ "aria-label": "Toggle product status" }}
           sx={{
             "& .MuiSwitch-switchBase.Mui-checked": {
@@ -190,7 +225,7 @@ const ProductAddPage: React.FC = () => {
 
         <Delete
           sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-          onClick={() => handleDeleteProduct(item)}
+          onClick={() => handleDeleteProduct(typedItem)}
         />
       </div>
     );
@@ -200,14 +235,18 @@ const ProductAddPage: React.FC = () => {
     {
       header: "",
       key: "imageUrl",
-      render: (item: Product) => (
-        <div className="text-center flex-shrink-0 h-10 w-10">
-          <img
-            className="h-10 w-10 rounded-full"
-            src={item?.productDetails?.thumbnailImage} // Use appropriate image field
-          />
-        </div>
-      ),
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div className="text-center flex-shrink-0 h-10 w-10">
+            <img
+              className="h-10 w-10 rounded-full"
+              src={typedItem?.productDetails?.thumbnailImage}
+              alt={typedItem?.productDetails?.name || "Product thumbnail"}
+            />
+          </div>
+        );
+      },
     },
     {
       header: (
@@ -219,21 +258,24 @@ const ProductAddPage: React.FC = () => {
         />
       ),
       key: "name",
-      render: (item: Product) => (
-        <div className="flex text-left">
-          <div className="ml-0">
-            <div
-              className={`text-sm max-w-xs truncate ${
-                disabledProducts.includes(String(item._id))
-                  ? "text-gray-400"
-                  : "text-gray-900"
-              }`}
-            >
-              {item?.productDetails?.name}
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div className="flex text-left">
+            <div className="ml-0">
+              <div
+                className={`text-sm max-w-xs truncate ${
+                  disabledProducts.includes(String(typedItem._id))
+                    ? "text-gray-400"
+                    : "text-gray-900"
+                }`}
+              >
+                {typedItem?.productDetails?.name}
+              </div>
             </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: (
@@ -245,17 +287,20 @@ const ProductAddPage: React.FC = () => {
         />
       ),
       key: "description",
-      render: (item: Product) => (
-        <div
-          className={`text-sm max-w-xs truncate ${
-            disabledProducts.includes(String(item._id))
-              ? "text-gray-400"
-              : "text-gray-900"
-          }`}
-        >
-          {item?.productDetails?.description}
-        </div>
-      ),
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div
+            className={`text-sm max-w-xs truncate ${
+              disabledProducts.includes(String(typedItem._id))
+                ? "text-gray-400"
+                : "text-gray-900"
+            }`}
+          >
+            {typedItem?.productDetails?.description}
+          </div>
+        );
+      },
     },
     {
       header: (
@@ -267,28 +312,28 @@ const ProductAddPage: React.FC = () => {
         />
       ),
       key: "price",
-      render: (item: Product) => (
-        <div
-          className={`flex items-center ${
-            disabledProducts.includes(String(item._id)) ? "text-gray-400" : ""
-          }`}
-        >
-          <span
-            className={`text-sm font-medium ${
-              disabledProducts.includes(String(item._id))
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div
+            className={`flex items-center ${
+              disabledProducts.includes(String(typedItem._id))
                 ? "text-gray-400"
-                : "text-gray-900"
+                : ""
             }`}
           >
-            ${item?.productDetails?.price}
-          </span>
-          {item.slashedPrice && (
-            <span className="ml-2 text-sm text-gray-500 line-through">
-              ${item.slashedPrice.toFixed(2)}
+            <span
+              className={`text-sm font-medium ${
+                disabledProducts.includes(String(typedItem._id))
+                  ? "text-gray-400"
+                  : "text-gray-900"
+              }`}
+            >
+              ${typedItem?.productDetails?.price}
             </span>
-          )}
-        </div>
-      ),
+          </div>
+        );
+      },
     },
     {
       header: (
@@ -300,17 +345,20 @@ const ProductAddPage: React.FC = () => {
         />
       ),
       key: "quantity",
-      render: (item: Product) => (
-        <div
-          className={`text-sm ${
-            disabledProducts.includes(String(item._id))
-              ? "text-gray-400"
-              : "text-gray-900"
-          }`}
-        >
-          {item?.productDetails?.quantity}
-        </div>
-      ),
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div
+            className={`text-sm ${
+              disabledProducts.includes(String(typedItem._id))
+                ? "text-gray-400"
+                : "text-gray-900"
+            }`}
+          >
+            {typedItem?.productDetails?.quantity}
+          </div>
+        );
+      },
     },
     {
       header: <span>Actions</span>,
@@ -360,7 +408,7 @@ const ProductAddPage: React.FC = () => {
           <DataTable
             items={sortedProducts}
             columns={columns}
-            idKey="_id" // Changed from "id" to "_id" to match your data structure
+            idKey="_id"
             itemsPerPage={15}
             tableType="product"
             actionRenderer={actionRenderer}

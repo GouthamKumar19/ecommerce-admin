@@ -31,7 +31,7 @@ const CollectionsPage: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [, setError] = useState<string | null>(null);
-  const [page, ] = useState<number>(1);
+  const [page] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
@@ -170,7 +170,9 @@ const CollectionsPage: React.FC = () => {
             className="h-16 w-24 object-cover rounded cursor-pointer"
             src={getImage(item.bannerImage)}
             alt={item.name}
-            onClick={() => navigate(`/collections/collection-product`)}
+            onClick={() =>
+              navigate(`/collections/collection-product/${item._id}`)
+            }
           />
         </div>
       ),

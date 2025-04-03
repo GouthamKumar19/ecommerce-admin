@@ -43,22 +43,6 @@ const BackArrow = () => {
         return "Add Category";
       }
     }
-    if (path.includes("/collection/collection-product")) {
-      // Check if we have order data in state (viewing or editing)
-      if (state && state.Product) {
-        return "Edit Collection";
-      } else {
-        return "Add Collection";
-      }
-    }
-    if (path.includes("/collection/collection-product/")) {
-      // Check if we have order data in state (viewing or editing)
-      if (state && state.Product) {
-        return "Edit Category";
-      } else {
-        return "Add Category";
-      }
-    }
 
     if (path.includes("/collection/")) {
       // Check if we have order data in state (viewing or editing)
@@ -72,7 +56,7 @@ const BackArrow = () => {
     if (path.includes("/profile")) {
       return "Profile";
     }
-    if (path.includes("/collections/collection-product")) {
+    if (path.includes("/collections/collection-product/:id")) {
       return "Collection Products";
     }
 

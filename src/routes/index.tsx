@@ -10,7 +10,7 @@ import DashboardPage from "../pages/dashboard/dashboard";
 import UsersPage from "../pages/users/users";
 import { UserDetailsPage } from "../pages/users/user-details";
 import NotFoundPage from "../pages/not-found";
-import Version from "../pages/version"; 
+import Version from "../pages/version";
 import TestimonialsPage from "../pages/testimonials/Testimonials";
 import TestimonialsDetails from "../pages/testimonials/Testimonials-details";
 import ProductPage from "../pages/product/product";
@@ -110,11 +110,11 @@ const router = createBrowserRouter([
         element: <CollectionsPage />,
       },
       {
-        path: "/collections/collection-product",
+        path: "/collections/collection-product/:id",
         element: <ProductAddPage />,
       },
       {
-        path: "/collection/collection-product/:id",
+        path: "/collections/collection-product/collectionAdd/:id",
         element: <CollectionAddPage />,
       },
       {

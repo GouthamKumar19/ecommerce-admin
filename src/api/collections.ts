@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { Collection } from '../types/collections.types';
+import { Collection, } from '../types/collections.types';
+import { Collections } from '../types/collectionResponse.types';
 import axiosInstance from './axios';
 
 interface CollectionFormData {
@@ -94,7 +95,7 @@ export const createCollection = async (
 
 export const getCollectionById = async (
   id: string
-): Promise<ApiResponse<Collection>> => {
+): Promise<ApiResponse<Collections>> => {
   try {
     console.log("[API] Fetching collection with ID:", id);
 
