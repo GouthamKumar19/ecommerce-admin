@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React from "react";
 import {
   TextField,
   Typography,
@@ -7,16 +7,10 @@ import {
   Grid,
   InputAdornment,
   Box,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
-import VariantManager from "./VariantManager";
-import { ActionContext } from "../../context/ActionContext";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { getProductById, updateProduct, addProduct } from "../../api/product";
-import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
-import { Product } from "../../types/product.types";
+import VariantManager, { Variant } from "./VariantManager"; // Import Variant type from VariantManager
+import { Dispatch, SetStateAction } from "react";
 
 interface ProductImage {
   id: number;
@@ -24,304 +18,88 @@ interface ProductImage {
   selected: boolean;
 }
 
-const DEFAULT_CATEGORY_ID = "67ce9292891e6b7ec5df5831";
-const DEFAULT_SUBCATEGORY_ID = "67cc21365983b789b129c1f6";
+// Remove the duplicate Variant interface since we're importing it from VariantManager
 
-const ProductForm: React.FC = () => {
-  // Form state variables
-  const [productName, setProductName] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [price, setPrice] = useState<string>("");
-  const [slashedPrice, setSlashedPrice] = useState<string>("");
-  const [category, setCategory] = useState<string | null>(DEFAULT_CATEGORY_ID);
-  const [subCategory, setSubCategory] = useState<string | null>(
-    DEFAULT_SUBCATEGORY_ID
-  );
-  const [featured, setFeatured] = useState<boolean>(false);
-  const [images, setImages] = useState<ProductImage[]>([]);
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [productId, setProductId] = useState<string | null>(null);
-  const [, setIsLoading] = useState<boolean>(false);
-  const [, setUploadInProgress] = useState<boolean>(false);
-
-  // Add state for variants
-  const [variants, setVariants] = useState<any[]>([]);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
-  );
-
-  const navigate = useNavigate();
-  // Validation states
-  const [isProductNameValid, setIsProductNameValid] = useState<boolean>(true);
-  const [isPriceValid, setIsPriceValid] = useState<boolean>(true);
-  const [isSlashedPriceValid, setIsSlashedPriceValid] = useState<boolean>(true);
-  const [isDescriptionValid, setIsDescriptionValid] = useState<boolean>(true);
-  const [isCategoryValid, setIsCategoryValid] = useState<boolean>(true);
-  const [isSubCategoryValid, setIsSubCategoryValid] = useState<boolean>(true);
-  const [productNameErrorMessage, setProductNameErrorMessage] =
-    useState<string>("");
-  const [priceErrorMessage, setPriceErrorMessage] = useState<string>("");
-  const [slashedPriceErrorMessage, setSlashedPriceErrorMessage] =
-    useState<string>("");
-  const [descriptionErrorMessage, setDescriptionErrorMessage] =
-    useState<string>("");
-  const [categoryErrorMessage, setCategoryErrorMessage] = useState<string>("");
-  const [subCategoryErrorMessage, setSubCategoryErrorMessage] =
-    useState<string>("");
-
-  // Context and routing hooks
-  const { setActionHandlers } = useContext(ActionContext);
-  const params = useParams();
-  const location = useLocation();
-
-  // Check if we're in edit mode and fetch product data if necessary
-  useEffect(() => {
-    const id = params.id;
-    if (id && id !== "new") {
-      setIsEditMode(true);
-      setProductId(id);
-
-      // Fetch product data based on ID
-      if (location.state?.product) {
-        const product = location.state.product;
-        setProductName(product.name || "");
-        setDescription(product.description || "");
-        setPrice(product.price?.toString() || "");
-        setSlashedPrice(product.slashedPrice?.toString() || "");
-        setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
-        setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
-        setFeatured(product.featured || false);
-        setImages(
-          product.images.map((url: string, index: number) => ({
-            id: index,
-            url,
-            selected: true,
-          }))
-        );
-        setVariants(product.variants || []);
-      } else {
-        // Fetch product data from API if not available in location state
-        setIsLoading(true);
-        getProductById(id)
-          .then((response) => {
-            const product = response.data;
-            setProductName(product.name || "");
-            setDescription(product.description || "");
-            setPrice(product.price?.toString() || "");
-            setSlashedPrice(product.slashedPrice?.toString() || "");
-            setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
-            setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
-          setImages(
-          product.images.map((url: string, index: number) => ({
-            id: index,
-            url,
-            selected: true,
-          })))
-          })
-          .catch((error) => {
-            console.error("Error fetching product:", error);
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
-      }
-    }
-  }, [params.id, location.state]);
-
-  // Set up action handlers for the parent component
-  useEffect(() => {
-    setActionHandlers({
-      onConfirm: handleSaveProduct,
-      onCancel: () => {
-        console.log("Product form cancelled");
-      },
-    });
-
-    return () => {
-      // Reset action handlers when component unmounts
-      setActionHandlers({
-        onConfirm: () => console.warn("onConfirm is not implemented"),
-        onCancel: () => console.warn("onCancel is not implemented"),
-      });
-    };
-  }, [
-    productName,
-    description,
-    price,
-    slashedPrice,
-    category,
-    subCategory,
-    featured,
-    images,
-    variants,
-    isEditMode,
-    setActionHandlers,
-  ]);
-
-  const uploadPendingImages = async () => {
-    const selectedImages = images.filter((img) => img.selected);
-    if (selectedImages.length < 4) {
-      return null;
-    }
-
-    const uploadedImageUrls = await Promise.all(
-      selectedImages.map(async (selectedImage) => {
-        if (selectedImage.url.startsWith("data:image")) {
-          setUploadInProgress(true);
-          try {
-            // Convert base64 to blob
-            const response = await fetch(selectedImage.url);
-            const blob = await response.blob();
-
-            // Create a file from the blob
-            const fileName = `product_image_${Date.now()}.jpg`;
-            const imageFile = new File([blob], fileName, {
-              type: "image/jpeg",
-            });
-
-            // Store the formatted filename that will be sent to the server
-            const formattedFileName = `/public/ecommerce/product/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
-
-            // Get presigned URL and upload
-            const presignedUrl = await getPresignedUrl(fileName, "product");
-            await uploadFile(presignedUrl, imageFile);
-
-            // Return the formatted filename instead of the presigned URL
-            return formattedFileName;
-          } catch (error) {
-            console.error("Error uploading image:", error);
-            throw new Error("Failed to upload image");
-          } finally {
-            setUploadInProgress(false);
-          }
-        }
-
-        // If the image is already a URL, just return it
-        return selectedImage.url;
-      })
-    );
-
-    return uploadedImageUrls;
+interface ProductFormProps {
+  productName: string;
+  description: string;
+  price: string;
+  slashedPrice: string;
+  category: string | null;
+  subCategory: string | null;
+  featured: boolean;
+  images: ProductImage[];
+  variants: Variant[]; // Use the imported Variant type
+  isProductNameValid: boolean;
+  isPriceValid: boolean;
+  isSlashedPriceValid: boolean;
+  isDescriptionValid: boolean;
+  isCategoryValid: boolean;
+  isSubCategoryValid: boolean;
+  productNameErrorMessage: string;
+  priceErrorMessage: string;
+  slashedPriceErrorMessage: string;
+  descriptionErrorMessage: string;
+  categoryErrorMessage: string;
+  subCategoryErrorMessage: string;
+  updateForm: {
+    setProductName: (value: string) => void;
+    setDescription: (value: string) => void;
+    setPrice: (value: string) => void;
+    setSlashedPrice: (value: string) => void;
+    setCategory: (value: string | null) => void;
+    setSubCategory: (value: string | null) => void;
+    setFeatured: (value: boolean) => void;
+    setImages: Dispatch<SetStateAction<ProductImage[]>>;
+    setVariants: Dispatch<SetStateAction<Variant[]>>; // Use the imported Variant type
+    setIsProductNameValid: (value: boolean) => void;
+    setIsPriceValid: (value: boolean) => void;
+    setIsSlashedPriceValid: (value: boolean) => void;
+    setIsDescriptionValid: (value: boolean) => void;
+    setIsCategoryValid: (value: boolean) => void;
+    setIsSubCategoryValid: (value: boolean) => void;
+    setProductNameErrorMessage: (value: string) => void;
+    setPriceErrorMessage: (value: string) => void;
+    setSlashedPriceErrorMessage: (value: string) => void;
+    setDescriptionErrorMessage: (value: string) => void;
+    setCategoryErrorMessage: (value: string) => void;
+    setSubCategoryErrorMessage: (value: string) => void;
   };
+}
 
-  const handleSaveProduct = async () => {
-    // Validation checks
-    const validations = [
-      {
-        condition: isProductNameValid,
-        errorMessage: "Please enter a valid product name",
-      },
-      {
-        condition: isDescriptionValid,
-        errorMessage: "Please enter a valid description",
-      },
-      {
-        condition: isPriceValid,
-        errorMessage: "Please enter a valid price",
-      },
-      {
-        condition: isSlashedPriceValid,
-        errorMessage: "Please enter a valid slashed price",
-      },
-      {
-        condition: isCategoryValid,
-        errorMessage: "Please select a category",
-      },
-      {
-        condition: isSubCategoryValid,
-        errorMessage: "Please select a sub-category",
-      },
-    ];
-
-    const failedValidation = validations.find(
-      (validation) => !validation.condition
-    );
-
-    if (failedValidation) {
-      setSnackbarMessage(failedValidation.errorMessage);
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Upload images and get the URLs
-      const uploadedImageUrls = await uploadPendingImages();
-      if (!uploadedImageUrls || uploadedImageUrls.length < 4) {
-        throw new Error("Please select at least 4 images.");
-      }
-
-      // Prepare product data
-      const productData: Product = {
-        _id: isEditMode && productId ? productId : "",
-        name: productName,
-        description,
-        price: parseFloat(price) || 0,
-        slashedPrice: parseFloat(slashedPrice) || 0,
-        categoryId: category || DEFAULT_CATEGORY_ID,
-        subCategoryId: subCategory || DEFAULT_SUBCATEGORY_ID,
-        isFeatured: featured,
-        // Make sure we're sending an array of image URLs
-        images: uploadedImageUrls,
-        // Make sure we're setting a valid thumbnail image
-        thumbnailImage: uploadedImageUrls[0],
-        quantity: 0, // You might want to add a field for quantity
-        createdAt: isEditMode ? undefined : new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        // Include variants if they exist
-        //variants: variants.length > 0 ? variants : undefined,
-      };
-
-      let response;
-      if (isEditMode && productId) {
-        // Update existing product
-        response = await updateProduct(productId, productData);
-      } else {
-        // Add new product
-        response = await addProduct(productData);
-      }
-
-      if (response.status === 200) {
-        setSnackbarMessage(
-          isEditMode
-            ? "Product updated successfully"
-            : "Product added successfully"
-        );
-        setSnackbarSeverity("success");
-        setOpenSnackbar(true);
-
-        // Navigate back to product list or product details
-        setTimeout(() => {
-          navigate("/products");
-        }, 1500);
-      } else {
-        throw new Error(response.message || "Something went wrong");
-      }
-    } catch (error) {
-      console.error("Error saving product:", error);
-      setSnackbarMessage(
-        error instanceof Error ? error.message : "Failed to save product"
-      );
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Sample category and subcategory data
-  const categories = ["Footwear", "Clothing", "Accessories"];
-  const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
-
+const ProductForm: React.FC<ProductFormProps> = ({
+  productName,
+  description,
+  price,
+  slashedPrice,
+  category,
+  subCategory,
+  featured,
+  images,
+  variants,
+  isProductNameValid,
+  isPriceValid,
+  isSlashedPriceValid,
+  isDescriptionValid,
+  isCategoryValid,
+  isSubCategoryValid,
+  productNameErrorMessage,
+  priceErrorMessage,
+  slashedPriceErrorMessage,
+  descriptionErrorMessage,
+  categoryErrorMessage,
+  subCategoryErrorMessage,
+  updateForm,
+}) => {
   // Validation functions
   const validateProductName = (name: string) =>
     /^[a-zA-Z\s]*$/.test(name) && name.length <= 10;
   const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
   const validateDescription = (desc: string) => desc.length <= 60;
+
+  // Sample category and subcategory data
+  const categories = ["Footwear", "Clothing", "Accessories"];
+  const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
 
   return (
     <div>
@@ -338,15 +116,19 @@ const ProductForm: React.FC = () => {
             onChange={(e) => {
               const name = e.target.value;
               if (validateProductName(name)) {
-                setProductName(name);
-                setIsProductNameValid(true);
-                setProductNameErrorMessage("");
+                updateForm.setProductName(name);
+                updateForm.setIsProductNameValid(true);
+                updateForm.setProductNameErrorMessage("");
               } else {
-                setIsProductNameValid(false);
+                updateForm.setIsProductNameValid(false);
                 if (!/^[a-zA-Z\s]*$/.test(name)) {
-                  setProductNameErrorMessage("Only characters are allowed.");
+                  updateForm.setProductNameErrorMessage(
+                    "Only characters are allowed."
+                  );
                 } else if (name.length > 10) {
-                  setProductNameErrorMessage("Maximum 10 characters allowed.");
+                  updateForm.setProductNameErrorMessage(
+                    "Maximum 10 characters allowed."
+                  );
                 }
               }
             }}
@@ -398,12 +180,14 @@ const ProductForm: React.FC = () => {
             onChange={(e) => {
               const desc = e.target.value;
               if (validateDescription(desc)) {
-                setDescription(desc);
-                setIsDescriptionValid(true);
-                setDescriptionErrorMessage("");
+                updateForm.setDescription(desc);
+                updateForm.setIsDescriptionValid(true);
+                updateForm.setDescriptionErrorMessage("");
               } else {
-                setIsDescriptionValid(false);
-                setDescriptionErrorMessage("Maximum 60 characters allowed.");
+                updateForm.setIsDescriptionValid(false);
+                updateForm.setDescriptionErrorMessage(
+                  "Maximum 60 characters allowed."
+                );
               }
             }}
             placeholder="Description"
@@ -451,7 +235,7 @@ const ProductForm: React.FC = () => {
             <Typography variant="subtitle1">Featured</Typography>
             <Checkbox
               checked={featured}
-              onChange={(e) => setFeatured(e.target.checked)}
+              onChange={(e) => updateForm.setFeatured(e.target.checked)}
               style={{
                 color: "#4CAF50",
                 padding: "0 8px 0 0",
@@ -477,12 +261,12 @@ const ProductForm: React.FC = () => {
             onChange={(e) => {
               const priceValue = e.target.value;
               if (validatePrice(priceValue)) {
-                setPrice(priceValue);
-                setIsPriceValid(true);
-                setPriceErrorMessage("");
+                updateForm.setPrice(priceValue);
+                updateForm.setIsPriceValid(true);
+                updateForm.setPriceErrorMessage("");
               } else {
-                setIsPriceValid(false);
-                setPriceErrorMessage("Only numbers are allowed.");
+                updateForm.setIsPriceValid(false);
+                updateForm.setPriceErrorMessage("Only numbers are allowed.");
               }
             }}
             placeholder="Price"
@@ -517,12 +301,14 @@ const ProductForm: React.FC = () => {
             onChange={(e) => {
               const slashedPriceValue = e.target.value;
               if (validatePrice(slashedPriceValue)) {
-                setSlashedPrice(slashedPriceValue);
-                setIsSlashedPriceValid(true);
-                setSlashedPriceErrorMessage("");
+                updateForm.setSlashedPrice(slashedPriceValue);
+                updateForm.setIsSlashedPriceValid(true);
+                updateForm.setSlashedPriceErrorMessage("");
               } else {
-                setIsSlashedPriceValid(false);
-                setSlashedPriceErrorMessage("Only numbers are allowed.");
+                updateForm.setIsSlashedPriceValid(false);
+                updateForm.setSlashedPriceErrorMessage(
+                  "Only numbers are allowed."
+                );
               }
             }}
             placeholder="Slashed out price"
@@ -560,13 +346,13 @@ const ProductForm: React.FC = () => {
             options={categories}
             value={category}
             onChange={(_, newValue) => {
-              setCategory(newValue);
+              updateForm.setCategory(newValue);
               if (newValue) {
-                setIsCategoryValid(true);
-                setCategoryErrorMessage("");
+                updateForm.setIsCategoryValid(true);
+                updateForm.setCategoryErrorMessage("");
               } else {
-                setIsCategoryValid(false);
-                setCategoryErrorMessage("Category is required.");
+                updateForm.setIsCategoryValid(false);
+                updateForm.setCategoryErrorMessage("Category is required.");
               }
             }}
             fullWidth
@@ -599,13 +385,15 @@ const ProductForm: React.FC = () => {
             options={subCategories}
             value={subCategory}
             onChange={(_, newValue) => {
-              setSubCategory(newValue);
+              updateForm.setSubCategory(newValue);
               if (newValue) {
-                setIsSubCategoryValid(true);
-                setSubCategoryErrorMessage("");
+                updateForm.setIsSubCategoryValid(true);
+                updateForm.setSubCategoryErrorMessage("");
               } else {
-                setIsSubCategoryValid(false);
-                setSubCategoryErrorMessage("Sub category is required.");
+                updateForm.setIsSubCategoryValid(false);
+                updateForm.setSubCategoryErrorMessage(
+                  "Sub category is required."
+                );
               }
             }}
             fullWidth
@@ -652,7 +440,7 @@ const ProductForm: React.FC = () => {
           >
             <ImageSelection
               images={images}
-              setImages={setImages}
+              setImages={updateForm.setImages}
               type="product"
             />
           </Box>
@@ -668,18 +456,11 @@ const ProductForm: React.FC = () => {
           <Typography variant="subtitle1" gutterBottom align="left">
             Variants
           </Typography>
-          <VariantManager variants={variants} setVariants={setVariants} />
+          <VariantManager
+            variants={variants}
+            setVariants={updateForm.setVariants}
+          />
         </Grid>
-        <Snackbar
-          open={openSnackbar}
-          autoHideDuration={3000}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-          onClose={() => setOpenSnackbar(false)}
-        >
-          <Alert severity={snackbarSeverity} sx={{ width: "100%" }}>
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
       </Grid>
     </div>
   );
