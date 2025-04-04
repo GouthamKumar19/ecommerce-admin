@@ -71,9 +71,9 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
 
   const formatAddress = (address: OrderNew["shippingAddressDetails"]) => {
     return [
-      address.line1,
-      address.line2,
-      `${address.city}, ${address.state} ${address.pinCode}`,
+      address?.line1,
+      address?.line2,
+      `${address?.city}, ${address?.state} ${address?.pinCode}`,
     ]
       .filter(Boolean)
       .join(", ");

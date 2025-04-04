@@ -1,158 +1,55 @@
-import React, { useEffect, useState, useContext } from "react";
+import React from "react";
 import { Typography, Box, TextField } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import SubcategoryForm from "./SubcategoryForm";
-import {
-  createCategory,
-  getCategoryById,
-  updateCategory,
-} from "../../api/category";
-import { ActionContext } from "../../context/ActionContext";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
 
-// Define interface matching what ImageSelection expects
-interface CategoryImage {
+// Import or recreate the ProductImage type to match what ImageSelection expects
+interface ProductImage {
   id: number;
   url: string;
   selected: boolean;
 }
 
-const CategoryForm: React.FC = () => {
-  const [categoryName, setCategoryName] = useState("");
-  const [images, setImages] = useState<CategoryImage[]>([]);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: boolean }>({
-    categoryName: false,
-    images: false,
-  });
+// Update interface for the props
+interface CategoryFormProps {
+  categoryName: string;
+  images: ProductImage[];
+  errors: { [key: string]: boolean };
+  onNameChange: (name: string, isValid: boolean) => void;
+  onImagesChange: (images: ProductImage[]) => void;
+  isEditMode: boolean;
+}
 
-  // Context and routing hooks
-  const { setActionHandlers } = useContext(ActionContext);
-  const params = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
+const CategoryForm: React.FC<CategoryFormProps> = ({
+  categoryName,
+  images,
+  errors,
+  onNameChange,
+  onImagesChange,
 
-  // Check if we're in edit mode and load data if needed
-  useEffect(() => {
-    const fetchCategoryData = async () => {
-      const id = params.id;
-      if (id && id !== "new") {
-        setIsLoading(true);
-        setIsEditMode(true);
-        setCategoryId(id);
-
-        console.log("id", isLoading);
-
-        try {
-          // You would fetch category data here
-          const response = await getCategoryById(id);
-          if (response && response.data) {
-            setCategoryName(response.data.name || "");
-            // Set images if available in the response
-          }
-        } catch (error) {
-          console.error("Error fetching category:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      } else if (location.state?.category) {
-        // Handle data passed via location state
-        const category = location.state.category;
-        setIsEditMode(true);
-        setCategoryId(String(category.id || category._id));
-        setCategoryName(category.name || "");
-        // Set images if available
-      }
-    };
-
-    fetchCategoryData();
-  }, [params.id, location.state]);
-
-  // Set up action handlers for the parent component
-  useEffect(() => {
-    setActionHandlers({
-      onConfirm: handleSaveCategory,
-      onCancel: handleCancel,
-    });
-
-    return () => {
-      setActionHandlers({
-        onConfirm: () => console.warn("onConfirm is not implemented"),
-        onCancel: () => console.warn("onCancel is not implemented"),
-      });
-    };
-  }, [categoryName, images, isEditMode, setActionHandlers]);
-
+}) => {
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const regex = /^[A-Za-z\s]+$/;
-
-    if (!regex.test(value)) {
-      setErrors((prev) => ({ ...prev, categoryName: true }));
-    } else {
-      setErrors((prev) => ({ ...prev, categoryName: false }));
-    }
-    setCategoryName(value);
+    const isValid = regex.test(value) || value === "";
+    onNameChange(value, isValid);
   };
 
-  const handleSaveCategory = async () => {
-    const errorsCopy = { ...errors };
-
-    if (categoryName.trim() === "") {
-      errorsCopy.categoryName = true;
-    }
-
-    if (images.length === 0 || !images.some((img) => img.selected)) {
-      errorsCopy.images = true;
-    }
-
-    setErrors(errorsCopy);
-
-    if (errorsCopy.categoryName || errorsCopy.images) {
-      console.error("All fields are required and must be valid");
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Get the selected image URL or use empty string if none selected
-    const selectedImage =
-      images.find((img) => img.selected)?.url || "/ecommerce/categories/1.png";
-
-    // Prepare the payload
-    const payload = {
-      name: categoryName,
-      images: selectedImage,
-    };
-
-    try {
-      let response;
-      if (isEditMode && categoryId) {
-        // Update existing category
-        response = await updateCategory(categoryId, payload);
-        console.log("Update Category API Response:", response);
+  // Create a wrapper function that adapts onImagesChange to match the expected setState type
+  const handleImagesChange = React.useCallback(
+    (value: React.SetStateAction<ProductImage[]>) => {
+      // Handle both functional and direct updates
+      if (typeof value === "function") {
+        // If it's a function, we need to call it with the current images to get the new value
+        const newImages = value(images);
+        onImagesChange(newImages);
       } else {
-        // Create new category
-        response = await createCategory(payload);
-        console.log("Create Category API Response:", response);
+        // If it's a direct value, we can just pass it through
+        onImagesChange(value);
       }
-      // Success would be handled by the parent component
-    } catch (error) {
-      console.error(
-        `Error ${isEditMode ? "updating" : "creating"} category:`,
-        error
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    console.log("Category form cancelled");
-    navigate("/categories"); // Redirect to categories page or any other route
-  };
+    },
+    [images, onImagesChange]
+  );
 
   return (
     <div className="ml-8 mr-8 mb-6">
@@ -175,7 +72,6 @@ const CategoryForm: React.FC = () => {
               onChange={handleNameChange}
               placeholder="Category Name"
               variant="outlined"
-              //margin="normal"
               error={errors.categoryName}
               helperText={
                 errors.categoryName ? "Only letters and spaces are allowed" : ""
@@ -203,8 +99,8 @@ const CategoryForm: React.FC = () => {
           >
             <ImageSelection
               images={images}
-              setImages={setImages}
-              type="collection"
+              setImages={handleImagesChange}
+              type="category"
             />
             {errors.images && (
               <Typography variant="body2" color="error">

@@ -4,10 +4,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import OrdersForm from "../../components/OrdersForm";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
-import { getOrderById } from "../../api/orders"; // Import your API function
+import {
+  getOrderById,
+  updateOrderStatus,
+  updatePaymentStatus,
+} from "../../api/orders"; // Import your API functions
 import { OrderNew } from "../../types/orders.types";
 import { ActionContext } from "../../context/ActionContext";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 const OrderDetails = () => {
   const { setActionHandlers } = useContext(ActionContext);
@@ -18,8 +23,9 @@ const OrderDetails = () => {
   const [order, setOrder] = useState<OrderNew | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [orderStatus, setOrderStatus] = useState<string>();
-  const [paymentStatus, setPaymentStatus] = useState<string>();
+  const [orderStatus, setOrderStatus] = useState<OrderNew["status"]>();
+  const [paymentStatus, setPaymentStatus] =
+    useState<OrderNew["paymentDetails"]["status"]>();
 
   useEffect(() => {
     // Check if we're in edit mode
@@ -49,10 +55,11 @@ const OrderDetails = () => {
       try {
         if (id) {
           const response = await getOrderById(id);
-          console.log("Order details:", response.data.tableData[0]);
-          setOrder(response.data.tableData[0]);
-          setOrderStatus(response.data.tableData[0].status);
-          setPaymentStatus(response.data.tableData[0].paymentDetails.status);
+          console.log("Order details:", response.data);
+          const orderData: OrderNew = response.data as unknown as OrderNew;
+          setOrder(orderData);
+          setOrderStatus(orderData.status);
+          setPaymentStatus(orderData.paymentDetails.status);
         }
       } catch (err) {
         console.error("Failed to fetch order details:", err);
@@ -74,15 +81,28 @@ const OrderDetails = () => {
         paymentStatus,
       });
 
-      // Simulate successful operation
-      setTimeout(() => {
-        setIsLoading(false);
+      if (id) {
+        const statusResponse = await updateOrderStatus(id, orderStatus || "");
+        const paymentResponse = await updatePaymentStatus(
+          id,
+          paymentStatus || ""
+        );
+        console.log("Update responses:", statusResponse, paymentResponse);
         toast.success("Order updated successfully");
-        navigate("/orders");
-      }, 500);
+      }
+
+      setIsLoading(false);
+      navigate("/orders");
     } catch (error) {
       console.error("Failed to update order:", error);
-      toast.error("Failed to update order");
+
+      // Display the error message from the server response
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(`Failed to update order: ${error.response.data.message}`);
+      } else {
+        toast.error("Failed to update order");
+      }
+
       setIsLoading(false);
     }
   };
@@ -133,7 +153,11 @@ const OrderDetails = () => {
         ) : error ? (
           <div className="p-4 text-red-500">{error}</div>
         ) : order ? (
-          <OrdersForm order={order} setOrderStatus={setOrderStatus} setPaymentStatus={setPaymentStatus} />
+          <OrdersForm
+            order={order}
+            setOrderStatus={setOrderStatus}
+            setPaymentStatus={setPaymentStatus}
+          />
         ) : (
           <div className="p-4">Order not found</div>
         )}
