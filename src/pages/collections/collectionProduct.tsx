@@ -122,21 +122,20 @@ const ProductAddPage: React.FC = () => {
     if (confirm && currentProduct) {
       if (dialogTitle === "Delete Product") {
         try {
-          // Call the API to delete the product
-          await deleteProduct(currentProduct._id);
+          // 👇 Wrap the product ID in an array
+          await deleteProduct([currentProduct._id]);
 
-          // Remove the product from the table data
+          // Remove the deleted product from the UI
           setTableData((prevData) =>
             prevData.filter((product) => product._id !== currentProduct._id)
           );
 
-          // If the product was in the disabled list, remove it from there too
+          // Also clean up from disabled list
           setDisabledProducts((prev) =>
             prev.filter((id) => id !== String(currentProduct._id))
           );
         } catch (error) {
           console.error("Error deleting product:", error);
-          // Optionally add error handling/notification here
         }
       } else if (
         dialogTitle === "Disable Product" ||
