@@ -158,7 +158,7 @@ const OrderPage: React.FC = () => {
       key: "paymentDetails.status",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">
-          {item.paymentDetails.status}
+          {item?.paymentDetails?.status}
         </div>
       ),
     },
@@ -195,20 +195,24 @@ const OrderPage: React.FC = () => {
     setFilters(newFilters);
   };
 
-  const filterOrders = (orders: Order[]) => {
-    return orders
-      .filter((order) => {
-        if (filters.paymentStatus.length === 0) return true;
-        return filters.paymentStatus.includes(order.paymentDetails.status);
-      })
-      .filter((order) => {
-        if (filters.orderStatus.length === 0) return true;
-        return filters.orderStatus.includes(order.status);
-      })
-      .filter((order) =>
-        order.orderId.toLowerCase().includes(searchValue.toLowerCase())
-      );
-  };
+ const filterOrders = (orders: Order[]) => {
+   return orders
+     .filter((order) => {
+       if (filters.paymentStatus.length === 0) return true;
+       return (
+         order.paymentDetails?.status &&
+         filters.paymentStatus.includes(order.paymentDetails.status)
+       );
+     })
+     .filter((order) => {
+       if (filters.orderStatus.length === 0) return true;
+       return filters.orderStatus.includes(order.status);
+     })
+     .filter((order) =>
+       order.orderId.toLowerCase().includes(searchValue.toLowerCase())
+     );
+ };
+
 
   return (
     <div className="container mx-auto p-1">
