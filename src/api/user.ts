@@ -79,7 +79,8 @@ export interface UserFormData {
   gender: string;
   phone: string;
   countryCode: string;
-  addresses?: any[]; // Added to support addresses
+  addresses?: any[];
+  isEnabled?:boolean;
 }
 
 // Function to create a new user

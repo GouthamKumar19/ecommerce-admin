@@ -13,15 +13,18 @@ interface ApiResponse<T> {
 
 // Delete a product
 export const deleteProduct = async (
-  id: string
+  ids: string[]
 ): Promise<ApiResponse<{ deleted: boolean }>> => {
   try {
-    console.log("[API] Deleting product with ID:", id);
-    
-    const response = await axiosInstance.delete(`/admin/collectionProducts/delete${id}`);
-    return response.data;
-   } catch (error) {
-    console.error("[API] Error deleting product:", error);
+    console.log("[API] Deleting products with IDs:", ids);
+
+    const response = await axiosInstance.post(`/admin/collectionProducts/delete`, {
+       ids, // Sending body in DELETE request
+    });
+
+    return response.data.id;
+  } catch (error) {
+    console.error("[API] Error deleting products:", error);
     throw error;
   }
 };

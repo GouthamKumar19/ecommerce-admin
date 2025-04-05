@@ -10,7 +10,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
-import { getAllUser } from "../../api/user";
+import { getAllUser,updateUser } from "../../api/user";
 import { SortConfig } from "../../components/common/SortableHeader";
 import {
   useSortableData,
@@ -82,7 +82,43 @@ const UsersPage: React.FC = () => {
     }
     return <SwapVertIcon />;
   };
+  const handleToggleUserStatus = async (user: User) => {
+    if (!user._id) {
+      console.error("User ID is missing");
+      return;
+    }
 
+    try {
+      const isCurrentlyDisabled = disabledRows.includes(String(user._id));
+      const updatedStatus = isCurrentlyDisabled;
+
+      await updateUser(user._id as string, {
+        name: user.name,
+        email: user.email,
+        countryCode: user.countryCode,
+        phone: user.phone,
+        gender: user.gender,
+        isEnabled: updatedStatus,
+      });
+
+      setDisabledRows((prev) => {
+        if (prev.includes(String(user._id))) {
+          return prev.filter((rowId) => rowId !== String(user._id));
+        } else {
+          return [...prev, String(user._id)];
+        }
+      });
+    } catch (error) {
+      console.error("Failed to toggle user status:", error);
+    } finally {
+      setDialogOpen(false);
+      setCurrentRow(null);
+    }
+  };
+
+
+
+  
   const handleSearch = () => {
     if (!searchValue) return sortedUsers;
 
@@ -182,16 +218,11 @@ const UsersPage: React.FC = () => {
 
   const handleDialogClose = (confirm: boolean) => {
     if (confirm && currentRow) {
-      setDisabledRows((prev) => {
-        if (prev.includes(String(currentRow._id))) {
-          return prev.filter((rowId) => rowId !== String(currentRow._id));
-        } else {
-          return [...prev, String(currentRow._id)];
-        }
-      });
+      handleToggleUserStatus(currentRow);
+    } else {
+      setDialogOpen(false);
+      setCurrentRow(null);
     }
-    setDialogOpen(false);
-    setCurrentRow(null);
   };
 
   const filteredUsers = React.useMemo(() => {
