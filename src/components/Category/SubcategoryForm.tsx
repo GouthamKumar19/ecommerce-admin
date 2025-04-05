@@ -53,7 +53,7 @@ const SubcategoryForm: React.FC = () => {
 
     setSubcategories([...subcategories, { id: newId, name: "", images: [] }]);
     setCurrentSubcategoryId(newId);
-    setCurrentImages([]);
+    setCurrentImages([]); // Reset currentImages for new subcategory
   };
 
   const handleRemoveSubcategory = (id: number) => {
