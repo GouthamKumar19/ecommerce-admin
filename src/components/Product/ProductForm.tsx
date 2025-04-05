@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useEffect} from "react";
 import {
   TextField,
   Typography,
@@ -91,6 +91,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
   subCategoryErrorMessage,
   updateForm,
 }) => {
+  useEffect(() => {
+    console.log("ProductForm - Variants received:", variants);
+  }, [variants]);
   // Validation functions
   const validateProductName = (name: string) =>
     /^[a-zA-Z\s]*$/.test(name) && name.length <= 10;
@@ -100,6 +103,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // Sample category and subcategory data
   const categories = ["Footwear", "Clothing", "Accessories"];
   const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
+ 
 
   return (
     <div>
@@ -458,7 +462,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
           </Typography>
           <VariantManager
             variants={variants}
-            setVariants={updateForm.setVariants}
+            setVariants={(newVariants) => {
+              console.log("VariantManager callback - New variants:", newVariants);
+              updateForm.setVariants(newVariants);
+            }}
           />
         </Grid>
       </Grid>
