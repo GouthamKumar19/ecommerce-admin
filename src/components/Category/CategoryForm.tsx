@@ -2,22 +2,23 @@ import React from "react";
 import { Typography, Box, TextField } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import SubcategoryForm from "./SubcategoryForm";
+import { Subcategory } from "../../types/category.types";
 
-// Import or recreate the ProductImage type to match what ImageSelection expects
 interface ProductImage {
   id: number;
   url: string;
   selected: boolean;
 }
 
-// Update interface for the props
 interface CategoryFormProps {
   categoryName: string;
   images: ProductImage[];
   errors: { [key: string]: boolean };
   onNameChange: (name: string, isValid: boolean) => void;
   onImagesChange: (images: ProductImage[]) => void;
+  onSubcategoryChange: (updatedSubcategories: Subcategory[]) => void;
   isEditMode: boolean;
+  subcategories: Subcategory[]; // Add subcategories prop
 }
 
 const CategoryForm: React.FC<CategoryFormProps> = ({
@@ -26,34 +27,41 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   errors,
   onNameChange,
   onImagesChange,
-
+  onSubcategoryChange,
+  subcategories, // Add subcategories prop
 }) => {
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const regex = /^[A-Za-z\s]+$/;
     const isValid = regex.test(value) || value === "";
     onNameChange(value, isValid);
+    console.log("Category Name:", value);
   };
 
-  // Create a wrapper function that adapts onImagesChange to match the expected setState type
   const handleImagesChange = React.useCallback(
     (value: React.SetStateAction<ProductImage[]>) => {
-      // Handle both functional and direct updates
       if (typeof value === "function") {
-        // If it's a function, we need to call it with the current images to get the new value
         const newImages = value(images);
         onImagesChange(newImages);
       } else {
-        // If it's a direct value, we can just pass it through
         onImagesChange(value);
       }
     },
     [images, onImagesChange]
   );
 
+  const handleSaveSuccess = () => {
+    if (!categoryName) {
+      console.error("Category name is required");
+      return;
+    }
+    console.log("Category and subcategories saved successfully.");
+  };
+
+  console.log(subcategories, "Subcategories in CategoryForm");
+
   return (
     <div className="ml-8 mr-8 mb-6">
-      {/* Main Form Content */}
       <div className="space-y-6">
         <div>
           <Typography variant="subtitle1" gutterBottom align="left">
@@ -63,7 +71,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
             sx={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start", // Align items to the start (left)
+              alignItems: "flex-start",
             }}
           >
             <TextField
@@ -76,8 +84,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               helperText={
                 errors.categoryName ? "Only letters and spaces are allowed" : ""
               }
-              size="small" // Set the size to small
-              style={{ width: "50%" }} // Adjust the width as needed
+              size="small"
+              style={{ width: "50%" }}
             />
           </Box>
         </div>
@@ -93,7 +101,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
               p: 4,
               width: "100%",
-              borderColor: errors.images ? "red" : "inherit", // Add red border if there's an error
+              borderColor: errors.images ? "red" : "inherit",
               borderWidth: errors.images ? "2px" : "1px",
             }}
           >
@@ -110,8 +118,13 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
           </Box>
         </div>
 
-        {/* Subcategory Form */}
-        <SubcategoryForm />
+        <SubcategoryForm
+          categoryName={categoryName}
+          categoryImages={images}
+          onSaveSuccess={handleSaveSuccess}
+          onSubcategoryChange={onSubcategoryChange}
+          subcategories={subcategories} // Pass the subcategories prop
+        />
       </div>
     </div>
   );

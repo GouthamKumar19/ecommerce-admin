@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Grid,
@@ -9,34 +9,83 @@ import {
 } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { createSubCategory } from "../../api/category"; // Adjust the import path as necessary
+import { Subcategory } from "../../types/category.types";
 
-// Use the same interface as your CategoryForm
 interface ProductImage {
   id: number;
   url: string;
   selected: boolean;
 }
 
-interface Subcategory {
-  id: number;
-  name: string;
+// Make sure the Subcategory type allows for ProductImage[] in the images field
+// If you can't modify the original type, create a local interface that extends it
+interface SubcategoryWithImages extends Omit<Subcategory, "images"> {
   images: ProductImage[];
 }
 
-const SubcategoryForm: React.FC = () => {
+interface SubcategoryFormProps {
+  categoryName: string;
+  categoryImages: ProductImage[];
+  onSaveSuccess: () => void;
+  onSubcategoryChange: (updatedSubcategories: Subcategory[]) => void;
+  subcategories: Subcategory[]; // Add subcategories prop
+}
+
+const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
+  
+  onSaveSuccess,
+  onSubcategoryChange,
+  subcategories: initialSubcategories, // Add subcategories prop
+}) => {
   const [currentSubcategoryId, setCurrentSubcategoryId] = useState<number>(1);
   const [currentImages, setCurrentImages] = useState<ProductImage[]>([]);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([
-    { id: 1, name: "", images: [] },
-  ]);
+  const [subcategories, setSubcategories] = useState<SubcategoryWithImages[]>(
+    initialSubcategories.map((subcategory, index) => ({
+      ...subcategory,
+      id: index + 1,
+      images: subcategory.images.map((image, idx) => ({
+        id: idx + 1,
+        url: image.url,
+        selected: image.selected,
+      })), // Map images to the expected format
+    }))
+  );
   const [errors, setErrors] = useState<{ [key: number]: boolean }>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [touched, setTouched] = useState<{ [key: number]: boolean }>({});
 
+  useEffect(() => {
+    console.log(initialSubcategories, "INIIIL SUBCATEGORIES");
+    // Set initial subcategory images
+    const initialCurrentSubcategory = subcategories.find(
+      (sc) => sc.id === currentSubcategoryId
+    );
+    setCurrentImages(initialCurrentSubcategory?.images || []);
+  }, [subcategories, currentSubcategoryId]);
+
+  // Helper function to extract proper path from image URL or return empty string
+  const getProperImagePath = (url: string): string => {
+    console.log(url, "URL IN GET PROPER IMAGE PATH");
+    // If the URL already has the correct format, return it
+    if (url.startsWith("/public/ecommerce/category/")) {
+      return url;
+    }
+
+    // Extract the filename from the URL if possible
+    const parts = url.split("/");
+    const filename = parts[parts.length - 1];
+
+    // Generate a timestamp-based filename if needed
+    const timestamp = Date.now();
+    const newFilename = filename || `category_image_${timestamp}.jpg`;
+
+    // Return the properly formatted path
+    return `/public/ecommerce/category/${newFilename}`;
+  };
+
   const updateSubcategoryImages = () => {
-    setSubcategories(
-      subcategories.map((sc) =>
+    setSubcategories((prevSubcategories) =>
+      prevSubcategories.map((sc) =>
         sc.id === currentSubcategoryId ? { ...sc, images: currentImages } : sc
       )
     );
@@ -51,28 +100,70 @@ const SubcategoryForm: React.FC = () => {
         ? Math.max(...subcategories.map((sc) => sc.id)) + 1
         : 1;
 
-    setSubcategories([...subcategories, { id: newId, name: "", images: [] }]);
+    const newSubcategories = [
+      ...subcategories,
+      {
+        id: newId,
+        name: "",
+        images: [],
+        _id: "",
+        image: "",
+        createdAt: "",
+        updatedAt: "",
+      },
+    ];
+
+    setSubcategories(newSubcategories);
     setCurrentSubcategoryId(newId);
-    setCurrentImages([]); // Reset currentImages for new subcategory
+    setCurrentImages([]);
+    onSubcategoryChange(convertToSubcategories(newSubcategories));
+  };
+
+  // Helper function to convert SubcategoryWithImages to Subcategory
+  const convertToSubcategories = (
+    items: SubcategoryWithImages[]
+  ): Subcategory[] => {
+    return items.map((item) => {
+      // Extract the images array
+      const { images, ...rest } = item;
+
+      // Set the main image to the first selected image URL (properly formatted) or empty string
+      const mainImage =
+        images.length > 0 ? getProperImagePath(images[0].url) : "";
+
+      // Create a new object with the Subcategory shape
+      const subcategory: Subcategory = {
+        ...rest,
+        // Set the single image property to the main image
+        image: mainImage,
+        // Convert the images array to the format expected by the Subcategory type
+        images: images.map((image) => ({
+          id: image.id,
+          url: getProperImagePath(image.url),
+          selected: image.selected,
+        })),
+      };
+      return subcategory;
+    });
   };
 
   const handleRemoveSubcategory = (id: number) => {
     if (subcategories.length > 1) {
-      setSubcategories(subcategories.filter((sc) => sc.id !== id));
+      const newSubcategories = subcategories.filter((sc) => sc.id !== id);
+
+      setSubcategories(newSubcategories);
 
       if (id === currentSubcategoryId) {
-        const firstRemainingId =
-          subcategories.find((sc) => sc.id !== id)?.id || 1;
+        const firstRemainingId = newSubcategories[0].id;
         setCurrentSubcategoryId(firstRemainingId);
-        setCurrentImages(
-          subcategories.find((sc) => sc.id === firstRemainingId)?.images || []
-        );
+        setCurrentImages(newSubcategories[0].images);
       }
+
+      onSubcategoryChange(convertToSubcategories(newSubcategories));
     }
   };
 
   const handleNameChange = (id: number, name: string) => {
-    // Mark this field as touched
     setTouched((prev) => ({ ...prev, [id]: true }));
 
     const regex = /^[A-Za-z\s]*$/;
@@ -81,9 +172,14 @@ const SubcategoryForm: React.FC = () => {
     } else {
       setErrors((prev) => ({ ...prev, [id]: false }));
     }
-    setSubcategories(
-      subcategories.map((sc) => (sc.id === id ? { ...sc, name } : sc))
+
+    const newSubcategories = subcategories.map((sc) =>
+      sc.id === id ? { ...sc, name } : sc
     );
+    console.log(subcategories, "SUBCATEGORIES IN NAME CHANGE");
+    setSubcategories(newSubcategories);
+    onSubcategoryChange(convertToSubcategories(newSubcategories));
+    console.log(`Subcategory ID ${id} Name:`, name); // Debugging line
   };
 
   const handleSelectSubcategory = (id: number) => {
@@ -111,7 +207,6 @@ const SubcategoryForm: React.FC = () => {
   };
 
   const handleSaveCategory = async () => {
-    // Mark all fields as touched when saving
     const allTouched: { [key: number]: boolean } = {};
     subcategories.forEach((sc) => {
       allTouched[sc.id] = true;
@@ -124,27 +219,7 @@ const SubcategoryForm: React.FC = () => {
       return;
     }
 
-    const payload = subcategories.map((subcategory) => {
-      const { name, images } = subcategory;
-      const selectedImage = images.find((img) => img.selected)?.url || "";
-
-      return {
-        name: name || "Default Subcategory Name", // Provide a default name if undefined
-        categoryId: "67cbd3f910f8a7e83ac9e3a0", // Replace with the appropriate category ID
-        image: selectedImage,
-      };
-    });
-
-    console.log("Payload to create subcategories:", payload); // Log the entire payload
-
-    try {
-      for (const subcategoryData of payload) {
-        const response = await createSubCategory(subcategoryData);
-        console.log("Create Subcategory API Response:", response);
-      }
-    } catch (error) {
-      console.error("Error creating subcategory:", error);
-    }
+    onSaveSuccess();
   };
 
   return (
@@ -208,7 +283,7 @@ const SubcategoryForm: React.FC = () => {
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "flex-start", // Align items to the start (left)
+                alignItems: "flex-start",
               }}
             >
               <TextField
@@ -223,15 +298,13 @@ const SubcategoryForm: React.FC = () => {
                   setTouched((prev) => ({ ...prev, [subcategory.id]: true }))
                 }
                 placeholder="Subcategory Name"
-                // margin="normal"
                 error={touched[subcategory.id] && errors[subcategory.id]}
                 helperText={
                   touched[subcategory.id] && errors[subcategory.id]
                     ? "Only letters and spaces are allowed"
                     : ""
                 }
-                // Set the size to small
-                style={{ height: "40px", width: "50%" }} // Adjust the width as needed
+                style={{ height: "40px", width: "50%" }}
               />
             </Box>
           </div>
@@ -272,17 +345,31 @@ const SubcategoryForm: React.FC = () => {
                   <ImageSelection
                     images={currentImages}
                     setImages={(newImages) => {
-                      setCurrentImages(newImages);
+                      const imagesList = newImages as ProductImage[];
+                      setCurrentImages(imagesList);
                       setTouched((prev) => ({
                         ...prev,
                         [subcategory.id]: true,
                       }));
-                      setSubcategories(
-                        subcategories.map((sc) =>
-                          sc.id === currentSubcategoryId
-                            ? { ...sc, images: newImages as ProductImage[] }
-                            : sc
-                        )
+
+                      // Get the proper formatted path for the main image
+                      const mainImagePath =
+                        imagesList.length > 0
+                          ? getProperImagePath(imagesList[0].url)
+                          : "";
+
+                      const newSubcategories = subcategories.map((sc) =>
+                        sc.id === currentSubcategoryId
+                          ? {
+                              ...sc,
+                              images: imagesList,
+                              image: mainImagePath,
+                            }
+                          : sc
+                      );
+                      setSubcategories(newSubcategories);
+                      onSubcategoryChange(
+                        convertToSubcategories(newSubcategories)
                       );
                     }}
                     type="collection"

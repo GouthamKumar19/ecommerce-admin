@@ -16,6 +16,9 @@ import {
 import { getAllCategory, deleteCategoryById } from "../../api/category";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import TableSkeletonLoader
 
+// New type extending Category and Record<string, unknown>
+interface CategoryRecord extends Category, Record<string, unknown> {}
+
 const SubcategoryCell: React.FC<{ subcategories: Subcategory[] }> = ({
   subcategories,
 }) => {
@@ -51,12 +54,11 @@ const SubcategoryCell: React.FC<{ subcategories: Subcategory[] }> = ({
 };
 
 const CategoryPage: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
-  );
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryRecord | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "updatedAt",
     direction: "descending",
@@ -94,7 +96,7 @@ const CategoryPage: React.FC = () => {
         console.log("Fetched Categories Response:", response); // Log the entire response
         console.log("Fetched Categories Data:", response.data); // Log the fetched data
         if (response.data && Array.isArray(response.data.tableData)) {
-          setCategories(response.data.tableData); // Set the categories from fetched data
+          setCategories(response.data.tableData as CategoryRecord[]); // Set the categories from fetched data
         } else {
           throw new Error("Data is not an array");
         }
@@ -139,17 +141,15 @@ const CategoryPage: React.FC = () => {
     setSelectedCategory(null);
   };
 
-  const handleEditUser = (item: Category) => {
-    navigate(`/category/${item._id}`, {
-      state: { Category: item },
-    });
+  const handleEditCategory = (categoryId: string) => {
+    navigate(`/category/${categoryId}`);
   };
 
-  const actionRenderer = (item: Category) => (
+  const actionRenderer = (item: CategoryRecord) => (
     <div className="flex justify-center items-center gap-2">
       <Edit
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleEditUser(item)}
+        onClick={() => handleEditCategory(item._id)}
       />
       <Delete
         sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
@@ -174,7 +174,7 @@ const CategoryPage: React.FC = () => {
         />
       ),
       key: "name",
-      render: (item: Category) => (
+      render: (item: CategoryRecord) => (
         <div className="text-sm text-gray-900 capitalize">{item.name}</div>
       ),
     },
@@ -188,7 +188,7 @@ const CategoryPage: React.FC = () => {
         />
       ),
       key: "subcategories",
-      render: (item: Category) => (
+      render: (item: CategoryRecord) => (
         <SubcategoryCell subcategories={item.subcategories} />
       ),
     },
@@ -225,7 +225,7 @@ const CategoryPage: React.FC = () => {
         {isLoading ? (
           <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
-          <DataTable<Category>
+          <DataTable<CategoryRecord>
             items={filteredCategories}
             columns={columns}
             idKey="_id"

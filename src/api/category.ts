@@ -1,5 +1,4 @@
 import { CategoryResponse } from "../types/category.types";
-import { mockCategoryData } from "../config/mock/categoryTable";
 import { SortConfig } from "../types/category.types";
 import axiosInstance from "./axios";
 import axios from "axios";
@@ -54,7 +53,6 @@ export const getAllCategory = async (
   }
 };
 
-// Define the API response structure for creating a category
 export const createCategory = async (payload: {
   name: string;
   image: string;
@@ -67,13 +65,8 @@ export const createCategory = async (payload: {
       payload
     );
 
-    // The API response is expected to be structured like this:
-    // { status: 200, message: "Category created successfully.", data: { id: "some_id" }, toastMessage: "Category created successfully." }
-
-    // Return the response.data directly
     return response.data;
   } catch (error) {
-    // Log the error response properly
     if (axios.isAxiosError(error)) {
       console.error("Error creating category:", error.response?.data);
       throw new Error(
@@ -92,23 +85,8 @@ export const getCategoryById = async (
   console.log("Getting category with ID:", id);
 
   try {
-    const category = mockCategoryData.find(
-      (item) => item.id?.toString() === id || item._id === id
-    );
-
-    if (category) {
-      return {
-        status: 200,
-        message: "Category found successfully",
-        data: category,
-      };
-    } else {
-      return {
-        status: 404,
-        message: "Category not found",
-        data: null,
-      };
-    }
+    const response = await axiosInstance.post(`/admin/categories/getOne/${id}`);
+    return response.data;
   } catch (error) {
     console.error("Error fetching category:", error);
     throw error;
@@ -122,33 +100,75 @@ export const updateCategory = async (
   console.log(`Updating category with ID: ${id}`, payload);
 
   try {
-    return {
-      status: 200,
-      message: "Category updated successfully",
-      data: {
-        id,
-        ...payload,
-        updatedAt: new Date().toISOString(),
-      },
-    };
+    const response = await axiosInstance.post(`/admin/categories/create`, {
+      ...payload,
+      id,
+    });
+
+    return response.data;
   } catch (error) {
-    console.error("Error updating category:", error);
-    throw error;
+    if (axios.isAxiosError(error)) {
+      console.error("Error updating category:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error updating category"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error updating category");
+    }
   }
 };
-
-export const createSubCategory = async (payload: {
-  name: string;
-  categoryId: string;
-  image: string;
-}): Promise<ApiResponse<any>> => {
+// Modified createSubCategory function
+export const createSubCategory = async (
+  payload: {
+    name: string;
+    categoryId: string;
+    image: string;
+  }[]
+): Promise<ApiResponse<{ id: string }>> => {
   console.log("Create Subcategory payload:", payload);
 
-  return {
-    status: 200,
-    message: "Subcategory created successfully",
-    data: payload,
-  };
+  try {
+    const response = await axiosInstance.post(
+      "/admin/subcategories/addMany",
+      payload
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error creating subcategory:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error creating subcategory"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error creating subcategory");
+    }
+  }
+};
+export const updateSubcategories = async (
+  payload: any
+): Promise<ApiResponse<any>> => {
+  console.log(`Updating subcategories with payload:`, payload);
+
+  try {
+    const response = await axiosInstance.put(
+      `/admin/subcategories/update`, // Confirm this endpoint is correct.
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error updating subcategories:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error updating subcategories"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error updating subcategories");
+    }
+  }
 };
 
 export const deleteCategoryById = async (
