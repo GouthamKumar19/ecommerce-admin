@@ -5,8 +5,6 @@ import { getAllProducts } from "../../api/product";
 import {
   addProductsToCollection,
   getProductsByCollectionId,
-  // Import the function for removing products from collection
-  updateProductsInCollection
 } from "../../api/collectionProduct";
 import { Product } from "../../types/product.types";
 import SearchBar from "../../components/common/SearchBar";
@@ -21,8 +19,6 @@ import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import { getImage } from "../../utils/imagePreview";
-
-
 
 const CollectionAddPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -42,9 +38,7 @@ const CollectionAddPage: React.FC = () => {
   const [existingCollectionProducts, setExistingCollectionProducts] = useState<
     string[]
   >([]);
-  const [, setInitialCheckedState] = useState<
-    Record<string, boolean>
-  >({});
+  const [, setInitialCheckedState] = useState<Record<string, boolean>>({});
   const [isLoadingCollection, setIsLoadingCollection] = useState(true);
 
   const navigate = useNavigate();
@@ -168,73 +162,61 @@ const CollectionAddPage: React.FC = () => {
     navigate(-1);
   };
 
-const handleAdd = async () => {
-  try {
-    if (!collectionId) {
-      setSnackbarMessage("Collection ID is missing");
-      return;
-    }
-
-    // Get selected product IDs
-    const selectedProductIds = Object.entries(checkedProducts)
-      .filter(([, isChecked]) => isChecked)
-      .map(([productId]) => productId);
-
-    console.log("Selected products:", selectedProductIds);
-    console.log("Existing collection products:", existingCollectionProducts);
-
-    // Identify new products that are not already in the collection
-    const newProductIds = selectedProductIds.filter(
-      (id) => !existingCollectionProducts.includes(id)
-    );
-
-    console.log("New products to add:", newProductIds);
-
-    if (newProductIds.length > 0) {
-      // Prepare the payload in the required format
-      const addPayload = newProductIds.map((productId) => ({
-        collectionId: collectionId,
-        productId: productId,
-      }));
-
-      console.log("Payload for adding products:", addPayload);
-
-      // Add new products to the collection
-      const addResponse = await addProductsToCollection(addPayload);
-
-      if (addResponse.status === 200 && addResponse.data.success) {
-        setSnackbarMessage("New products added to collection successfully");
-      } else {
-        setSnackbarMessage("Failed to add new products");
+  const handleAdd = async () => {
+    try {
+      if (!collectionId) {
+        setSnackbarMessage("Collection ID is missing");
         return;
       }
-    } else {
-      console.log("No new products to add.");
+
+      // Get selected product IDs
+      const selectedProductIds = Object.entries(checkedProducts)
+        .filter(([, isChecked]) => isChecked)
+        .map(([productId]) => productId);
+
+      // Identify new products that are not already in the collection
+      const newProductIds = selectedProductIds.filter(
+        (id) => !existingCollectionProducts.includes(id)
+      );
+
+      // Identify products that were previously in the collection but are now unchecked
+      const removedProductIds = existingCollectionProducts.filter(
+        (id) => !selectedProductIds.includes(id)
+      );
+
+      console.log("Selected Product IDs:", selectedProductIds);
+      console.log("New Product IDs to add:", newProductIds);
+      console.log("Removed Product IDs to remove:", removedProductIds);
+
+      if (newProductIds.length > 0) {
+        // Prepare the payload in the required format
+        const addPayload = newProductIds.map((productId) => ({
+          collectionId: collectionId,
+          productId: productId,
+        }));
+
+        console.log("Payload for adding products:", addPayload);
+
+        // Add new products to the collection
+        const addResponse = await addProductsToCollection(addPayload);
+        console.log("Add Response:", addResponse);
+
+        if (addResponse.status === 200 && addResponse.data.success) {
+          setSnackbarMessage("New products added to collection successfully");
+        } else {
+          setSnackbarMessage("Failed to add new products");
+        }
+      }
+
+      // Navigate to the ProductAddPage after attempting to update the collection
+      navigate(`/collections/collection-product/${collectionId}`);
+    } catch (error) {
+      setSnackbarMessage("Error updating collection products");
+      console.error("Error updating collection products:", error);
+      // Navigate to the ProductAddPage even if there is an error
+      navigate(`/collections/collection-product/${collectionId}`);
     }
-
-    // Update existing collection products
-    const updateResponse = await updateProductsInCollection({
-      ids: selectedProductIds,
-      isEnabled: true,
-    });
-
-    if (updateResponse.status === 200 && updateResponse.data.success) {
-      setSnackbarMessage("Collection products updated successfully");
-    } else {
-      setSnackbarMessage("Failed to update collection products");
-      return;
-    }
-
-    sessionStorage.removeItem("existingProductIds");
-    navigate(-1);
-  } catch (error) {
-    setSnackbarMessage("Error updating collection products");
-    console.error("Error updating collection products:", error);
-  }
-};
-
-
-
+  };
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(

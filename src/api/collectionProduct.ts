@@ -1,15 +1,11 @@
-import { Product  } from "../types/collectionProduct.types";
+import { Product } from "../types/collectionProduct.types";
 import axiosInstance from "./axios";
-
 
 interface ApiResponse<T> {
   status: number;
   message: string;
   data: T;
 }
-
-
-
 
 // Delete a product
 export const deleteProduct = async (
@@ -18,9 +14,12 @@ export const deleteProduct = async (
   try {
     console.log("[API] Deleting products with IDs:", ids);
 
-    const response = await axiosInstance.post(`/admin/collectionProducts/delete`, {
-       ids, // Sending body in DELETE request
-    });
+    const response = await axiosInstance.post(
+      `/admin/collectionProducts/delete`,
+      {
+        ids, // Sending body in DELETE request
+      }
+    );
 
     return response.data.id;
   } catch (error) {
@@ -32,14 +31,17 @@ export const deleteProduct = async (
 // Toggle product status
 export const toggleProductStatus = async (
   id: string,
-  enabled: boolean
-): Promise<ApiResponse<Product>> => {
+  isEnabled: boolean
+): Promise<ApiResponse<{ updatedProductId: string }>> => {
   try {
-    console.log("[API] Toggling product status:", { id, enabled });
-    
-    const response = await axiosInstance.patch(`/admin/products/toggle-status/${id}`, { enabled });
+    console.log("[API] Toggling product status:", { id, isEnabled });
+
+    const response = await axiosInstance.put(
+      `/admin/collectionProducts/update/${id}`,
+      { isEnabled }
+    );
     return response.data;
-   } catch (error) {
+  } catch (error) {
     console.error("[API] Error toggling product status:", error);
     throw error;
   }
@@ -51,7 +53,10 @@ export const addProductsToCollection = async (
 ): Promise<ApiResponse<{ success: boolean }>> => {
   try {
     console.log("[API] Adding products to collection with payload:", payload);
-    const response = await axiosInstance.post('/admin/collectionProducts/addMany', payload);
+    const response = await axiosInstance.post(
+      "/admin/collectionProducts/addMany",
+      payload
+    );
     return response.data;
   } catch (error) {
     console.error("[API] Error adding products to collection:", error);
@@ -59,16 +64,16 @@ export const addProductsToCollection = async (
   }
 };
 
-
-
 // Get products by collection ID
 export const getProductsByCollectionId = async (
   collectionId: string
 ): Promise<ApiResponse<{ products: Product[] }>> => {
   try {
     console.log("[API] Fetching products by collection ID:", collectionId);
-    
-    const response = await axiosInstance.get(`/admin/collectionProducts/getByCollection/${collectionId}`);
+
+    const response = await axiosInstance.get(
+      `/admin/collectionProducts/getByCollection/${collectionId}`
+    );
     return response.data;
   } catch (error) {
     console.error("[API] Error fetching products by collection ID:", error);
@@ -76,12 +81,16 @@ export const getProductsByCollectionId = async (
   }
 };
 
-export const updateProductsInCollection = async (
-  payload: { ids: string[]; isEnabled: boolean }
-): Promise<ApiResponse<{ success: boolean }>> => {
+export const updateProductsInCollection = async (payload: {
+  ids: string[];
+  isEnabled: boolean;
+}): Promise<ApiResponse<{ success: boolean }>> => {
   try {
     console.log("[API] Updating products in collection with payload:", payload);
-    const response = await axiosInstance.put('/admin/collectionProducts/updateMany', payload);
+    const response = await axiosInstance.put(
+      "/admin/collectionProducts/updateMany",
+      payload
+    );
     return response.data;
   } catch (error) {
     console.error("[API] Error updating products in collection:", error);

@@ -63,9 +63,9 @@ const ProductAddPage: React.FC = () => {
         if (response?.data?.collectionProducts) {
           setTableData(response.data.collectionProducts);
           // Extract product IDs for later use when adding new products
-          const productIds = response.data.collectionProducts.map(
-            (product) => product.productId
-          );
+          const productIds = response.data.collectionProducts
+            .filter((product) => product.isEnabled) // Filter out disabled products
+            .map((product) => product.productId);
           console.log("Product IDs in this collection:", productIds);
 
           // Store these IDs in sessionStorage for use in the CollectionAddPage
@@ -94,7 +94,7 @@ const ProductAddPage: React.FC = () => {
 
   const handleToggleProduct = (item: CollectionProduct) => {
     setCurrentProduct(item);
-    if (disabledProducts.includes(String(item._id))) {
+    if (!item.isEnabled) {
       setDialogTitle("Enable Product");
       setDialogSubtitle(
         `Are you sure you want to enable "${item.productDetails?.name}"?`
@@ -142,9 +142,14 @@ const ProductAddPage: React.FC = () => {
         dialogTitle === "Enable Product"
       ) {
         const isEnabling = dialogTitle === "Enable Product";
+        console.log("Current Product ID:", isEnabling);
 
         try {
-          await toggleProductStatus(currentProduct._id, isEnabling);
+          const response = await toggleProductStatus(
+            currentProduct._id,
+            isEnabling
+          );
+          console.log("Toggle Response:", response);
 
           if (isEnabling) {
             setDisabledProducts((prev) =>
@@ -156,6 +161,15 @@ const ProductAddPage: React.FC = () => {
               String(currentProduct._id),
             ]);
           }
+
+          // Update the product status in the table data
+          setTableData((prevData) =>
+            prevData.map((product) =>
+              product._id === currentProduct._id
+                ? { ...product, isEnabled: isEnabling }
+                : product
+            )
+          );
         } catch (error) {
           console.error("Error toggling product status:", error);
         }
@@ -202,12 +216,11 @@ const ProductAddPage: React.FC = () => {
 
   const actionRenderer = (item: BaseRecord) => {
     const typedItem = toCollectionProduct(item);
-    const isDisabled = disabledProducts.includes(String(typedItem._id));
 
     return (
       <div className="flex justify-center items-center gap-4">
         <Switch
-          checked={!isDisabled}
+          checked={!!typedItem.isEnabled}
           onChange={() => handleToggleProduct(typedItem)}
           inputProps={{ "aria-label": "Toggle product status" }}
           sx={{
