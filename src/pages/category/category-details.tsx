@@ -567,8 +567,7 @@ export const CategoryDetails = () => {
           },
         }}
       >
-        // In the CategoryDetails return statement, update the CategoryForm
-        props:
+       
         <CategoryForm
           categoryName={categoryName}
           images={images}
