@@ -10,7 +10,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
-import { getAllUser,updateUser } from "../../api/user";
+import { getAllUser, updateUser } from "../../api/user";
 import { SortConfig } from "../../components/common/SortableHeader";
 import {
   useSortableData,
@@ -28,36 +28,34 @@ const UsersPage: React.FC = () => {
   const [, setError] = useState<string | null>(null); // Error state
   const [page, setPage] = useState<number>(1); // Pagination state
   const [itemsPerPage] = useState<number>(10); // Items per page
-  const [disabledRows, setDisabledRows] = useState<string[]>([]);
+  const [, setDisabledRows] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogSubtitle, setDialogSubtitle] = useState("");
   const [currentRow, setCurrentRow] = useState<User | null>(null);
   const navigate = useNavigate();
-
+  const fetchUserData = async () => {
+    setIsLoading(true);
+    setError(null);
+    setTimeout(async () => {
+      try {
+        const response = await getAllUser(
+          page,
+          itemsPerPage,
+          searchValue,
+          sortConfig
+        );
+        setUsers(response.data.tableData);
+        console.log("User Details:", response.data);
+      } catch (err: any) {
+        console.error("Error fetching users:", err);
+        setError(err.message || "Failed to fetch users");
+      } finally {
+        setIsLoading(false);
+      }
+    });
+  };
   useEffect(() => {
-    const fetchUserData = async () => {
-      setIsLoading(true);
-      setError(null);
-      setTimeout(async () => {
-        try {
-          const response = await getAllUser(
-            page,
-            itemsPerPage,
-            searchValue,
-            sortConfig
-          );
-          setUsers(response.data.tableData);
-          console.log("User Details:", response.data);
-        } catch (err: any) {
-          console.error("Error fetching users:", err);
-          setError(err.message || "Failed to fetch users");
-        } finally {
-          setIsLoading(false);
-        }
-      });
-    };
-
     fetchUserData();
   }, [page, itemsPerPage, searchValue, sortConfig]);
 
@@ -89,8 +87,8 @@ const UsersPage: React.FC = () => {
     }
 
     try {
-      const isCurrentlyDisabled = disabledRows.includes(String(user._id));
-      const updatedStatus = isCurrentlyDisabled;
+      const isCurrentlyDisabled = dialogTitle === "Disable User";
+      const updatedStatus = !isCurrentlyDisabled;
 
       await updateUser(user._id as string, {
         name: user.name,
@@ -108,6 +106,7 @@ const UsersPage: React.FC = () => {
           return [...prev, String(user._id)];
         }
       });
+      fetchUserData();
     } catch (error) {
       console.error("Failed to toggle user status:", error);
     } finally {
@@ -116,9 +115,6 @@ const UsersPage: React.FC = () => {
     }
   };
 
-
-
-  
   const handleSearch = () => {
     if (!searchValue) return sortedUsers;
 
@@ -202,7 +198,7 @@ const UsersPage: React.FC = () => {
 
   const handleToggleRow = (item: User) => {
     setCurrentRow(item);
-    if (disabledRows.includes(String(item._id))) {
+    if (!item.isEnabled) {
       setDialogTitle("Enable User");
       setDialogSubtitle("Are you sure you want to enable this user?");
     } else {
@@ -230,7 +226,6 @@ const UsersPage: React.FC = () => {
   }, [sortedUsers, searchValue]);
 
   const actionRenderer = (item: User) => {
-    const isDisabled = disabledRows.includes(String(item._id));
     return (
       <div className="flex justify-center items-center gap-4">
         <Edit
@@ -238,7 +233,7 @@ const UsersPage: React.FC = () => {
           onClick={() => handleEditUser(item)}
         />
         <Switch
-          checked={!isDisabled}
+          checked={item.isEnabled}
           onChange={() => handleToggleRow(item)}
           inputProps={{ "aria-label": "Toggle user status" }}
           sx={{
