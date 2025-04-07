@@ -2,6 +2,7 @@ import { Product } from "../types/collectionProduct.types";
 import axiosInstance from "./axios";
 
 interface ApiResponse<T> {
+  toastMessage: string;
   status: number;
   message: string;
   data: T;
@@ -21,7 +22,7 @@ export const deleteProduct = async (
       }
     );
 
-    return response.data.id;
+    return response.data;
   } catch (error) {
     console.error("[API] Error deleting products:", error);
     throw error;
@@ -43,6 +44,28 @@ export const toggleProductStatus = async (
     return response.data;
   } catch (error) {
     console.error("[API] Error toggling product status:", error);
+    throw error;
+  }
+};
+
+// Update many products' status
+export const updateManyProducts = async (
+  ids: string[],
+  isEnabled: boolean
+): Promise<ApiResponse<{ success: boolean }>> => {
+  try {
+    console.log("[API] Updating products' status:", { ids, isEnabled });
+
+    const response = await axiosInstance.put(
+      `/admin/collectionProducts/updateMany`,
+      {
+        ids,
+        isEnabled,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[API] Error updating products' status:", error);
     throw error;
   }
 };
@@ -77,23 +100,6 @@ export const getProductsByCollectionId = async (
     return response.data;
   } catch (error) {
     console.error("[API] Error fetching products by collection ID:", error);
-    throw error;
-  }
-};
-
-export const updateProductsInCollection = async (payload: {
-  ids: string[];
-  isEnabled: boolean;
-}): Promise<ApiResponse<{ success: boolean }>> => {
-  try {
-    console.log("[API] Updating products in collection with payload:", payload);
-    const response = await axiosInstance.put(
-      "/admin/collectionProducts/updateMany",
-      payload
-    );
-    return response.data;
-  } catch (error) {
-    console.error("[API] Error updating products in collection:", error);
     throw error;
   }
 };

@@ -5,6 +5,7 @@ import { getAllProducts } from "../../api/product";
 import {
   addProductsToCollection,
   getProductsByCollectionId,
+  updateManyProducts,
 } from "../../api/collectionProduct";
 import { Product } from "../../types/product.types";
 import SearchBar from "../../components/common/SearchBar";
@@ -44,7 +45,6 @@ const CollectionAddPage: React.FC = () => {
   const navigate = useNavigate();
   const { id: collectionId } = useParams<{ id: string }>();
 
-  // Read saved product IDs from the previous screen
   useEffect(() => {
     const loadSavedProductIds = () => {
       const savedIds = sessionStorage.getItem("existingProductIds");
@@ -57,7 +57,6 @@ const CollectionAddPage: React.FC = () => {
             parsedIds
           );
 
-          // Initialize checked products state with existing collection products
           const initialCheckedProducts: Record<string, boolean> = {};
           parsedIds.forEach((id: string) => {
             initialCheckedProducts[id] = true;
@@ -85,7 +84,6 @@ const CollectionAddPage: React.FC = () => {
         );
         setExistingCollectionProducts(productIds);
 
-        // Initialize checked products state with existing collection products
         const initialCheckedProducts: Record<string, boolean> = {};
         productIds.forEach((id) => {
           initialCheckedProducts[id] = true;
@@ -118,7 +116,6 @@ const CollectionAddPage: React.FC = () => {
         console.log(response, "Fetched products");
         setProducts(response.data.tableData);
 
-        // Mark existing product IDs as checked once they load
         if (!isLoadingCollection && existingCollectionProducts.length > 0) {
           const updatedCheckedProducts = { ...checkedProducts };
           response.data.tableData.forEach((product: Product) => {
@@ -157,7 +154,6 @@ const CollectionAddPage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // Clear session storage before navigating back
     sessionStorage.removeItem("existingProductIds");
     navigate(-1);
   };
@@ -169,17 +165,14 @@ const CollectionAddPage: React.FC = () => {
         return;
       }
 
-      // Get selected product IDs
       const selectedProductIds = Object.entries(checkedProducts)
         .filter(([, isChecked]) => isChecked)
         .map(([productId]) => productId);
 
-      // Identify new products that are not already in the collection
       const newProductIds = selectedProductIds.filter(
         (id) => !existingCollectionProducts.includes(id)
       );
 
-      // Identify products that were previously in the collection but are now unchecked
       const removedProductIds = existingCollectionProducts.filter(
         (id) => !selectedProductIds.includes(id)
       );
@@ -188,8 +181,8 @@ const CollectionAddPage: React.FC = () => {
       console.log("New Product IDs to add:", newProductIds);
       console.log("Removed Product IDs to remove:", removedProductIds);
 
+      // Updating product statuses for the newly selected products
       if (newProductIds.length > 0) {
-        // Prepare the payload in the required format
         const addPayload = newProductIds.map((productId) => ({
           collectionId: collectionId,
           productId: productId,
@@ -197,7 +190,6 @@ const CollectionAddPage: React.FC = () => {
 
         console.log("Payload for adding products:", addPayload);
 
-        // Add new products to the collection
         const addResponse = await addProductsToCollection(addPayload);
         console.log("Add Response:", addResponse);
 
@@ -208,12 +200,23 @@ const CollectionAddPage: React.FC = () => {
         }
       }
 
-      // Navigate to the ProductAddPage after attempting to update the collection
+      // Update the status of removed products (if necessary)
+      if (removedProductIds.length > 0) {
+        const updateResponse = await updateManyProducts(
+          removedProductIds,
+          false
+        );
+        if (updateResponse.status === 200 && updateResponse.data.success) {
+          setSnackbarMessage("Removed products updated successfully");
+        } else {
+          setSnackbarMessage("Failed to update removed products");
+        }
+      }
+
       navigate(`/collections/collection-product/${collectionId}`);
     } catch (error) {
       setSnackbarMessage("Error updating collection products");
       console.error("Error updating collection products:", error);
-      // Navigate to the ProductAddPage even if there is an error
       navigate(`/collections/collection-product/${collectionId}`);
     }
   };

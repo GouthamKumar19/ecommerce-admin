@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DataTable from "../../components/common/DataTable";
 import { useNavigate, useParams } from "react-router-dom";
 import { Delete } from "@mui/icons-material";
 import Switch from "@mui/material/Switch";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
-
 import SortableHeader, {
   SortConfig,
 } from "../../components/common/SortableHeader";
@@ -25,6 +24,7 @@ import {
   BaseRecord,
   Collections,
 } from "../../types/collectionResponse.types";
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 
 const ProductAddPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -42,21 +42,54 @@ const ProductAddPage: React.FC = () => {
     key: "",
     direction: null,
   });
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isInitialMount = useRef(true);
 
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     const fetchProductData = async () => {
       if (!id) {
         setError("Collection ID is missing");
         return;
       }
 
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
       setIsLoading(true);
       setError(null);
 
       try {
+        const payload = {
+          search: [
+            {
+              term: searchValue,
+              fields: ["productDetails.name"],
+              startsWith: true,
+              endsWith: false,
+            },
+          ],
+          options: {
+            sortBy: [sortConfig.key],
+            sortDesc: [sortConfig.direction === "descending"],
+            page: page,
+            itemsPerPage: itemsPerPage,
+          },
+        };
+        console.log("Payload:", payload);
+
         const response: ApiResponse<Collections> = await getCollectionById(id);
         console.log("Fetched Collection Response:", response);
 
@@ -77,15 +110,17 @@ const ProductAddPage: React.FC = () => {
           throw new Error("Invalid response format");
         }
       } catch (err: any) {
-        setError(err.message || "Failed to fetch products");
-        console.error("Error fetching products:", err);
+        if (!signal.aborted) {
+          setError(err.message || "Failed to fetch products");
+          console.error("Error fetching products:", err);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchProductData();
-  }, [id]);
+  }, [id, searchValue, sortConfig, page, itemsPerPage]);
 
   const handleAddNewProduct = () => {
     // When navigating, we're already storing the existing product IDs in sessionStorage
@@ -411,7 +446,7 @@ const ProductAddPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <div className="p-4 text-center">Loading products...</div>
+          <TableSkeletonLoader columns={6} rows={10} /> // Show the skeleton loader while loading
         ) : tableData.length === 0 ? (
           <div className="p-4 text-center">No products found</div>
         ) : (
@@ -419,11 +454,13 @@ const ProductAddPage: React.FC = () => {
             items={sortedProducts}
             columns={columns}
             idKey="_id"
-            itemsPerPage={15}
+            itemsPerPage={itemsPerPage}
             tableType="product"
             actionRenderer={actionRenderer}
             disabledRows={disabledProducts}
             loading={isLoading}
+            currentPage={page}
+            onPageChange={setPage}
           />
         )}
       </div>
