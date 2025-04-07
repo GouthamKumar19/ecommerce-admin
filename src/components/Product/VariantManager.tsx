@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { VariantComponent } from "./Variant";
 
-export interface Variant {
+export // Update your Variant type to include optionIds
+interface Variant {
   id: string;
   optionName: string;
   optionValues: string[];
+  optionIds?: string[]; // Add this field to store variant IDs
   isComplete: boolean;
 }
 
@@ -22,7 +24,7 @@ const VariantManager: React.FC<VariantManagerProps> = ({
   // Functions to handle variants
   const addVariant = () => {
     const newVariant: Variant = {
-      id: `variant-${Date.now()}`,
+      id: `variant-${Date.now()}`, // Ensure unique ID
       optionName: "",
       optionValues: [],
       isComplete: false,
@@ -37,33 +39,20 @@ const VariantManager: React.FC<VariantManagerProps> = ({
   const completeVariant = (updatedVariant: Variant) => {
     setVariants(
       variants.map((variant) =>
-        variant.id === updatedVariant.id ? updatedVariant : variant
+        variant.id === updatedVariant.id ? { ...updatedVariant } : variant
       )
     );
   };
 
-  // Group variants by completion status
-  const completedVariants = variants.filter((v) => v.isComplete);
-  const incompleteVariants = variants.filter((v) => !v.isComplete);
+  // Log the variants whenever they change
+  useEffect(() => {
+    console.log("Current variants:", variants);
+  }, [variants]);
 
   return (
     <Box sx={{ width: "100%" }}>
-      {/* Display completed variants first */}
-      {completedVariants.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          {completedVariants.map((variant) => (
-            <VariantComponent
-              key={variant.id}
-              variant={variant}
-              onDelete={() => deleteVariant(variant.id)}
-              onComplete={completeVariant}
-            />
-          ))}
-        </Box>
-      )}
-
-      {/* Display incomplete variants */}
-      {incompleteVariants.map((variant) => (
+      {/* Map variants to the VariantComponent */}
+      {variants.map((variant) => (
         <VariantComponent
           key={variant.id}
           variant={variant}
@@ -72,7 +61,7 @@ const VariantManager: React.FC<VariantManagerProps> = ({
         />
       ))}
 
-      {/* Add variants button now appears below all variants */}
+      {/* Add variants button */}
       <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-start" }}>
         <Button
           startIcon={<AddIcon />}

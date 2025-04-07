@@ -5,9 +5,10 @@ import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
 import { ActionContext } from "../../context/ActionContext";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { getProductById, updateProduct, addProduct } from "../../api/product";
+import { getProductById, updateProduct, addProduct, addProductVariants,updateProductVariants } from "../../api/product";
 import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
 import { Product } from "../../types/product.types";
+import { Variant } from "../../components/Product/VariantManager"; // Import Variant type
 
 interface ProductImage {
   id: number;
@@ -30,7 +31,7 @@ export const ProductDetails = () => {
   );
   const [featured, setFeatured] = useState<boolean>(false);
   const [images, setImages] = useState<ProductImage[]>([]);
-  const [variants, setVariants] = useState<any[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
 
   // UI state variables
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +67,63 @@ export const ProductDetails = () => {
   const { id } = useParams();
   const location = useLocation();
 
+  // Helper function to process variants from API response
+  // Helper function to process variants from API response
+  // Helper function to process variants from API response
+  // Helper function to process variants from API response
+  const processVariantsFromAPI = (apiResponse: any): Variant[] => {
+    // Get the product ID from the response
+    const productId = apiResponse._id || "";
+
+    // Check if we have variantDetails array in the response
+    if (
+      apiResponse.variantDetails &&
+      Array.isArray(apiResponse.variantDetails)
+    ) {
+      // Group variants by optionName
+      const variantGroups: {
+        [key: string]: { values: string[]; ids: string[] };
+      } = {};
+
+      apiResponse.variantDetails.forEach((variant: any) => {
+        const { _id, name, value } = variant;
+        if (!variantGroups[name]) {
+          variantGroups[name] = { values: [], ids: [] };
+        }
+        // Only add unique values
+        if (!variantGroups[name].values.includes(value)) {
+          variantGroups[name].values.push(value);
+          variantGroups[name].ids.push(_id);
+        }
+      });
+
+      // Convert to Variant array format preserving IDs
+      return Object.entries(variantGroups).map(([optionName, data]) => ({
+        id: productId, // Keep the product ID
+        optionName,
+        optionValues: data.values,
+        optionIds: data.ids, // Store variant IDs
+        isComplete: true,
+      }));
+    }
+    // Check if we have structured variants data in the response
+    else if (apiResponse.variants && typeof apiResponse.variants === "object") {
+      // Handle the case where variants are already grouped
+      return Object.entries(apiResponse.variants).map(
+        ([optionName, optionValues]) => ({
+          id: productId,
+          optionName,
+          optionValues: Array.isArray(optionValues) ? optionValues : [],
+          optionIds: [], // No IDs available in this format
+          isComplete: true,
+        })
+      );
+    }
+
+    // Return empty array if no variants found
+    return [];
+  };
+
   // Check if we're in edit mode and fetch product data if necessary
   useEffect(() => {
     if (id && id !== "new") {
@@ -80,7 +138,7 @@ export const ProductDetails = () => {
         setSlashedPrice(product.slashedPrice?.toString() || "");
         setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
         setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
-        setFeatured(product.featured || false);
+        setFeatured(product.isFeatured || false);
         setImages(
           product.images.map((url: string, index: number) => ({
             id: index,
@@ -88,20 +146,26 @@ export const ProductDetails = () => {
             selected: true,
           }))
         );
-        setVariants(product.variants || []);
+
+        setVariants(processVariantsFromAPI(product));
       } else {
         // Fetch product data from API if not available in location state
         setIsLoading(true);
         getProductById(id)
           .then((response) => {
             const product = response.data;
+            console.log("API Response:", response.data);
+            console.log(
+              "Processed Variants:",
+              processVariantsFromAPI(response.data)
+            );
             setProductName(product.name || "");
             setDescription(product.description || "");
             setPrice(product.price?.toString() || "");
             setSlashedPrice(product.slashedPrice?.toString() || "");
             setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
             setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
-            //setFeatured(product.featured || false);
+            setFeatured(product.isFeatured || false);
             setImages(
               product.images.map((url: string, index: number) => ({
                 id: index,
@@ -109,7 +173,9 @@ export const ProductDetails = () => {
                 selected: true,
               }))
             );
-            //setVariants(product.variants || []);
+
+            // Process variants if they exist
+            setVariants(processVariantsFromAPI(product));
           })
           .catch((error) => {
             console.error("Error fetching product:", error);
@@ -168,13 +234,13 @@ export const ProductDetails = () => {
             const blob = await response.blob();
 
             // Create a file from the blob
-            const fileName = `product_image_${Date.now()}.jpg`;
+            const fileName = `image_${Date.now()}.jpg`;
             const imageFile = new File([blob], fileName, {
               type: "image/jpeg",
             });
 
             // Store the formatted filename that will be sent to the server
-            const formattedFileName = `/public/ecommerce/product/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+            const formattedFileName = `/public/ecommerce/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
             // Get presigned URL and upload
             const presignedUrl = await getPresignedUrl(fileName, "product");
@@ -241,6 +307,100 @@ export const ProductDetails = () => {
     return true;
   };
 
+  // Function to add product variants after the product is saved
+ const saveProductVariants = async (productId: string) => {
+   // Only process completed variants that have values
+   const completedVariants = variants.filter(
+     (variant) => variant.isComplete && variant.optionValues.length > 0
+   );
+
+   if (completedVariants.length === 0) {
+     return; // No variants to add or update
+   }
+
+   try {
+     if (isEdit) {
+       // For edit mode, we need to be careful to only update existing variants and only add new ones
+       const updatePayload: Array<{
+         _id: string;
+         name: string;
+         value: string;
+       }> = [];
+       const newVariantsPayload: Array<{
+         productId: string;
+         name: string;
+         value: string;
+       }> = [];
+
+       // Process each variant
+       completedVariants.forEach((variant) => {
+         // Track which values have matching IDs to avoid duplicates
+         const processedValues = new Set<string>();
+
+         // First process existing variants (with IDs)
+         if (variant.optionIds && variant.optionIds.length > 0) {
+           variant.optionIds.forEach((id, idIndex) => {
+             if (id && idIndex < variant.optionValues.length) {
+               const value = variant.optionValues[idIndex];
+               updatePayload.push({
+                 _id: id,
+                 name: variant.optionName,
+                 value: value,
+               });
+               processedValues.add(value);
+             }
+           });
+         }
+
+         // Then add only truly new values (that weren't processed above)
+         variant.optionValues.forEach((value) => {
+           if (!processedValues.has(value)) {
+             newVariantsPayload.push({
+               productId: productId,
+               name: variant.optionName,
+               value: value,
+             });
+           }
+         });
+       });
+
+       // Update existing variants only if there are any
+       if (updatePayload.length > 0) {
+         console.log("Updating existing variants:", updatePayload);
+         await updateProductVariants(updatePayload);
+       }
+
+       // Add new variants only if there are any
+       if (newVariantsPayload.length > 0) {
+         console.log("Adding new variant values:", newVariantsPayload);
+         await addProductVariants(newVariantsPayload);
+       }
+
+       console.log("Product variants processed successfully");
+     } else {
+       // For new products, use the existing addProductVariants function
+       const variantPayload = completedVariants.flatMap((variant) =>
+         variant.optionValues.map((value) => ({
+           productId: productId,
+           name: variant.optionName,
+           value: value,
+         }))
+       );
+
+       await addProductVariants(variantPayload);
+       console.log("Product variants added successfully");
+     }
+   } catch (error) {
+     console.error(`Error handling product variants:`, error);
+     // Still consider the product save successful even if variants fail
+     setSnackbarMessage(
+       `Product saved, but there was an issue with the variants`
+     );
+     setSnackbarSeverity("error");
+     setOpenSnackbar(true);
+   }
+ };
+
   const handleSave = async () => {
     if (!validateForm()) {
       return;
@@ -272,27 +432,35 @@ export const ProductDetails = () => {
         quantity: 0, // You might want to add a field for quantity
         createdAt: isEdit ? undefined : new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        // Include variants if they exist
-        //variants: variants.length > 0 ? variants : undefined,
       };
 
       let response;
+      let productId = "";
+
       if (isEdit && id) {
         // Update existing product
         response = await updateProduct(id, productData);
+        productId = id;
       } else {
         // Add new product
         response = await addProduct(productData);
+        // Extract the ID from the response
+        productId = response.data?._id || "";
       }
 
       if (response.status === 200) {
+        // If we have a product ID and variants, save them
+        if (productId && variants.length > 0) {
+          await saveProductVariants(productId);
+        }
+
         setSnackbarMessage(
           isEdit ? "Product updated successfully" : "Product added successfully"
         );
         setSnackbarSeverity("success");
         setOpenSnackbar(true);
 
-        // Navigate back to product list or product details
+        // Navigate back to product list after a short delay
         setTimeout(() => {
           navigate("/products");
         }, 1500);
