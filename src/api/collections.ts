@@ -1,7 +1,9 @@
 import axios from 'axios';
-import { Collection, } from '../types/collections.types';
+import { Collection } from '../types/collections.types';
 import { Collections } from '../types/collectionResponse.types';
 import axiosInstance from './axios';
+
+
 
 interface CollectionFormData {
   name: string;
@@ -101,8 +103,7 @@ export const getCollectionById = async (
     console.log("[API] Fetching collection with ID:", id);
 
     const response = await axiosInstance.post(`/admin/collections/getOne/${id}`);
-
-    console.log("[API] Get collection response:", response.data);
+    
     
     return {
       status: response.status,

@@ -103,3 +103,24 @@ export const getProductsByCollectionId = async (
     throw error;
   }
 };
+
+
+export const deleteCollectionProducts = async (
+  ids: string[]
+): Promise<ApiResponse<{ success: boolean }>> => {
+  try {
+    console.log("[API] Deleting collection products with IDs:", ids);
+
+    const response = await axiosInstance.post(
+      `/admin/collectionProducts/delete`,
+      {
+        ids
+      } 
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("[API] Error deleting collection products:", error);
+    throw error;
+  }
+};

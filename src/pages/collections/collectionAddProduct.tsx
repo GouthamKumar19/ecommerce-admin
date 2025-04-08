@@ -5,8 +5,9 @@ import { getAllProducts } from "../../api/product";
 import {
   addProductsToCollection,
   getProductsByCollectionId,
-  updateManyProducts,
+  deleteCollectionProducts,
 } from "../../api/collectionProduct";
+import { getCollectionById } from "../../api/collections";
 import { Product } from "../../types/product.types";
 import SearchBar from "../../components/common/SearchBar";
 import SortableHeader, {
@@ -29,7 +30,6 @@ const CollectionAddPage: React.FC = () => {
   });
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
@@ -37,9 +37,8 @@ const CollectionAddPage: React.FC = () => {
     Record<string, boolean>
   >({});
   const [existingCollectionProducts, setExistingCollectionProducts] = useState<
-    string[]
+    { _id: string; productId: string }[]
   >([]);
-  const [, setInitialCheckedState] = useState<Record<string, boolean>>({});
   const [isLoadingCollection, setIsLoadingCollection] = useState(true);
 
   const navigate = useNavigate();
@@ -58,11 +57,10 @@ const CollectionAddPage: React.FC = () => {
           );
 
           const initialCheckedProducts: Record<string, boolean> = {};
-          parsedIds.forEach((id: string) => {
-            initialCheckedProducts[id] = true;
+          parsedIds.forEach((item: { productId: string }) => {
+            initialCheckedProducts[item.productId] = true;
           });
           setCheckedProducts(initialCheckedProducts);
-          setInitialCheckedState({ ...initialCheckedProducts });
           setIsLoadingCollection(false);
         } catch (error) {
           console.error("Error parsing saved product IDs:", error);
@@ -79,17 +77,17 @@ const CollectionAddPage: React.FC = () => {
       setIsLoadingCollection(true);
       try {
         const response = await getProductsByCollectionId(collectionId);
-        const productIds = response.data.products.map(
-          (product) => product._id || ""
-        );
-        setExistingCollectionProducts(productIds);
+        const productMappings = response.data.products.map((product: any) => ({
+          _id: product._id || "",
+          productId: product.productId || "",
+        }));
+        setExistingCollectionProducts(productMappings);
 
         const initialCheckedProducts: Record<string, boolean> = {};
-        productIds.forEach((id) => {
-          initialCheckedProducts[id] = true;
+        productMappings.forEach((mapping) => {
+          initialCheckedProducts[mapping.productId] = true;
         });
         setCheckedProducts(initialCheckedProducts);
-        setInitialCheckedState({ ...initialCheckedProducts });
       } catch (error) {
         console.error("Failed to fetch collection products", error);
         setSnackbarMessage("Failed to fetch existing collection products");
@@ -104,7 +102,6 @@ const CollectionAddPage: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
-      setError(null);
 
       try {
         const response = await getAllProducts(
@@ -116,20 +113,52 @@ const CollectionAddPage: React.FC = () => {
         console.log(response, "Fetched products");
         setProducts(response.data.tableData);
 
-        if (!isLoadingCollection && existingCollectionProducts.length > 0) {
-          const updatedCheckedProducts = { ...checkedProducts };
-          response.data.tableData.forEach((product: Product) => {
-            if (
-              product._id &&
-              existingCollectionProducts.includes(product._id)
-            ) {
-              updatedCheckedProducts[product._id] = true;
-            }
-          });
-          setCheckedProducts(updatedCheckedProducts);
+        // Call getCollectionById immediately after getAllProducts
+        if (collectionId) {
+          console.log("Fetching collection details after products");
+          const collectionResponse = await getCollectionById(collectionId);
+          console.log("Collection data:", collectionResponse);
+
+          // Extract product mappings from collection response
+          if (
+            collectionResponse?.data?.collectionProducts &&
+            Array.isArray(collectionResponse.data.collectionProducts)
+          ) {
+            const productMappings =
+              collectionResponse.data.collectionProducts.map(
+                (product: any) => ({
+                  _id: product._id,
+                  productId: product.productId,
+                })
+              );
+
+            console.log(
+              "Collection Products Mapping (_id -> productId):",
+              productMappings
+            );
+            console.table(productMappings);
+
+            // Update the existingCollectionProducts with actual IDs
+            setExistingCollectionProducts(productMappings);
+
+            // Update the checked state based on these product IDs
+            const updatedCheckedProducts: Record<string, boolean> = {
+              ...checkedProducts,
+            };
+            response.data.tableData.forEach((product: Product) => {
+              if (
+                product._id &&
+                productMappings.some(
+                  (mapping) => mapping.productId === product._id
+                )
+              ) {
+                updatedCheckedProducts[product._id] = true;
+              }
+            });
+            setCheckedProducts(updatedCheckedProducts);
+          }
         }
       } catch (error) {
-        setError("Failed to fetch products");
         console.error("Failed to fetch products", error);
       } finally {
         setIsLoading(false);
@@ -137,14 +166,7 @@ const CollectionAddPage: React.FC = () => {
     };
 
     fetchProducts();
-  }, [
-    page,
-    itemsPerPage,
-    searchValue,
-    sortConfig,
-    isLoadingCollection,
-    existingCollectionProducts,
-  ]);
+  }, [page, itemsPerPage, searchValue, sortConfig, collectionId]);
 
   const handleCheckboxChange = (productId: string) => {
     setCheckedProducts((prev) => ({
@@ -170,16 +192,22 @@ const CollectionAddPage: React.FC = () => {
         .map(([productId]) => productId);
 
       const newProductIds = selectedProductIds.filter(
-        (id) => !existingCollectionProducts.includes(id)
+        (id) =>
+          !existingCollectionProducts.some(
+            (mapping) => mapping.productId === id
+          )
       );
 
-      const removedProductIds = existingCollectionProducts.filter(
-        (id) => !selectedProductIds.includes(id)
+      const removedProductMappings = existingCollectionProducts.filter(
+        (mapping) => !selectedProductIds.includes(mapping.productId)
       );
 
       console.log("Selected Product IDs:", selectedProductIds);
       console.log("New Product IDs to add:", newProductIds);
-      console.log("Removed Product IDs to remove:", removedProductIds);
+      console.log(
+        "Removed Product Mappings to remove:",
+        removedProductMappings
+      );
 
       // Updating product statuses for the newly selected products
       if (newProductIds.length > 0) {
@@ -200,16 +228,19 @@ const CollectionAddPage: React.FC = () => {
         }
       }
 
-      // Update the status of removed products (if necessary)
-      if (removedProductIds.length > 0) {
-        const updateResponse = await updateManyProducts(
-          removedProductIds,
-          false
+      // Delete removed products - now using deleteCollectionProducts API
+      if (removedProductMappings.length > 0) {
+        const deletePayload = removedProductMappings.map(
+          (mapping) => mapping._id
         );
-        if (updateResponse.status === 200 && updateResponse.data.success) {
-          setSnackbarMessage("Removed products updated successfully");
+
+        console.log("Payload for deleting products:", deletePayload);
+
+        const deleteResponse = await deleteCollectionProducts(deletePayload);
+        if (deleteResponse.status === 200 && deleteResponse.data.success) {
+          setSnackbarMessage("Removed products deleted successfully");
         } else {
-          setSnackbarMessage("Failed to update removed products");
+          setSnackbarMessage("Failed to delete removed products");
         }
       }
 
