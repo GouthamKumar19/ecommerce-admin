@@ -18,8 +18,7 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
+
 import { getImage } from "../../utils/imagePreview";
 
 const CollectionAddPage: React.FC = () => {
@@ -32,7 +31,7 @@ const CollectionAddPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
-  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  //const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [checkedProducts, setCheckedProducts] = useState<
     Record<string, boolean>
   >({});
@@ -90,7 +89,7 @@ const CollectionAddPage: React.FC = () => {
         setCheckedProducts(initialCheckedProducts);
       } catch (error) {
         console.error("Failed to fetch collection products", error);
-        setSnackbarMessage("Failed to fetch existing collection products");
+        //setSnackbarMessage("Failed to fetch existing collection products");
       } finally {
         setIsLoadingCollection(false);
       }
@@ -161,7 +160,7 @@ const CollectionAddPage: React.FC = () => {
       } catch (error) {
         console.error("Failed to fetch products", error);
       } finally {
-        setIsLoading(false);
+        setTimeout(() => setIsLoading(false), 1000);
       }
     };
 
@@ -183,7 +182,7 @@ const CollectionAddPage: React.FC = () => {
   const handleAdd = async () => {
     try {
       if (!collectionId) {
-        setSnackbarMessage("Collection ID is missing");
+        //setSnackbarMessage("Collection ID is missing");
         return;
       }
 
@@ -221,11 +220,7 @@ const CollectionAddPage: React.FC = () => {
         const addResponse = await addProductsToCollection(addPayload);
         console.log("Add Response:", addResponse);
 
-        if (addResponse.status === 200 && addResponse.data.success) {
-          setSnackbarMessage("New products added to collection successfully");
-        } else {
-          setSnackbarMessage("Failed to add new products");
-        }
+        
       }
 
       // Delete removed products - now using deleteCollectionProducts API
@@ -238,15 +233,15 @@ const CollectionAddPage: React.FC = () => {
 
         const deleteResponse = await deleteCollectionProducts(deletePayload);
         if (deleteResponse.status === 200 && deleteResponse.data.success) {
-          setSnackbarMessage("Removed products deleted successfully");
+          console.log("Removed products deleted successfully");
         } else {
-          setSnackbarMessage("Failed to delete removed products");
+          console.log("Failed to delete removed products");
         }
       }
 
       navigate(`/collections/collection-product/${collectionId}`);
     } catch (error) {
-      setSnackbarMessage("Error updating collection products");
+      //setSnackbarMessage("Error updating collection products");
       console.error("Error updating collection products:", error);
       navigate(`/collections/collection-product/${collectionId}`);
     }
@@ -427,19 +422,7 @@ const CollectionAddPage: React.FC = () => {
         )}
       </div>
 
-      <Snackbar
-        open={!!snackbarMessage}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarMessage(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setSnackbarMessage(null)}
-          severity={snackbarMessage?.includes("Failed") ? "error" : "success"}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      
     </div>
   );
 };

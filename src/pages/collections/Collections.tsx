@@ -61,7 +61,6 @@ const CollectionsPage: React.FC = () => {
             sortDesc: [sortConfig.direction === "descending"],
             page: page,
             itemsPerPage: itemsPerPage,
-           
           },
         };
         console.log("Payload:", payload);
@@ -82,7 +81,8 @@ const CollectionsPage: React.FC = () => {
           setError(err.message || "Failed to fetch collections");
         }
       } finally {
-        setIsLoading(false);
+        // Add a delay to display the skeleton loader for longer
+        setTimeout(() => setIsLoading(false), 1000); // 1 second delay
       }
     };
 
@@ -228,7 +228,8 @@ const CollectionsPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+          <TableSkeletonLoader columns={3} rows={10} />
+        
         ) : (
           <DataTable
             items={sortedCollections}
