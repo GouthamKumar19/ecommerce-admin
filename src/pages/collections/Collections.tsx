@@ -61,6 +61,7 @@ const CollectionsPage: React.FC = () => {
             sortDesc: [sortConfig.direction === "descending"],
             page: page,
             itemsPerPage: itemsPerPage,
+           
           },
         };
         console.log("Payload:", payload);

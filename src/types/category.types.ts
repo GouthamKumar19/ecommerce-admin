@@ -1,10 +1,7 @@
-
-
 // Base interface for records
 
-
 // Subcategory interface for individual subcategories
-export interface Subcategory  {
+export interface Subcategory {
   _id: string; // Unique identifier for the subcategory
   id: number; // Numeric identifier for the subcategory
   name: string; // Name of the subcategory
@@ -19,7 +16,7 @@ export interface Subcategory  {
 }
 
 // Main Category interface for categories and their subcategories
-export interface Category  {
+export interface Category {
   _id: string; // Unique identifier for the category
   name: string; // Name of the category
   image: string; // Image URL for the category

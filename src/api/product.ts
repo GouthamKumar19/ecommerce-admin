@@ -34,8 +34,7 @@ export const getAllProducts = async (
     const response = await axiosInstance.post(
       "/admin/products/getAll",
       {
-        page,
-        itemsPerPage,
+       
         search: [
           {
             term: searchTerm,
@@ -47,6 +46,8 @@ export const getAllProducts = async (
         options: {
           sortBy: [sortConfig.key],
           sortDesc: [sortConfig.direction === "descending"],
+          page,
+          itemsPerPage,
         },
       },
       {

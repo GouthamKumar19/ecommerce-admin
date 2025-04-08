@@ -58,7 +58,8 @@ axiosInstance.interceptors.response.use(
     console.log("response in axios instance", response);
     if (
       response.data?.toastMessage &&
-      response.data.toastMessage !== "User details fetched successfully"
+      response.data.toastMessage !== "User details fetched successfully",
+      response.data.toastMessage!== "An unexpected error occurred"
     ) {
       console.log("response in axios instance inside if", response);
       toast.success(response?.data?.toastMessage);
@@ -67,7 +68,6 @@ axiosInstance.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as ExtendedAxiosRequestConfig;
-    const response = error.response?.data;
     console.log("error in axios instance", error);
 
     // Handle network errors
@@ -142,9 +142,7 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    // Handle other errors
-    // @ts-expect-error non fixable error
-    toast.error(response?.toastMessage || "An unexpected error occurred");
+    
     return Promise.reject(error);
   }
 );
