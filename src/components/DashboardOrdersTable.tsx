@@ -174,8 +174,10 @@ const DashboardOrdersTable: React.FC = () => {
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-4">
-        <SearchBar searchValue={searchValue} onSearchChange={setSearchValue} />
+      <div className="p-4 flex justify-center">
+        <div className="w-full max-w-md">
+          <SearchBar searchValue={searchValue} onSearchChange={setSearchValue} />
+        </div>
       </div>
       {isLoading ? (
         <TableSkeletonLoader columns={7} rows={5} />

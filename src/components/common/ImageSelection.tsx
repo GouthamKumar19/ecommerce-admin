@@ -7,7 +7,7 @@ import ImagePopup from "./ImagePopup";
 import ImageUploader from "./ImageUploader";
 import ConfirmationDialog from "./Dialog"; // Importing the ConfirmationDialog
 import "yet-another-react-lightbox/styles.css";
-import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
+// import { getPresignedUrl } from "../../api/collectionImage";
 // Types
 export interface ProductImage {
   id: number;
@@ -114,7 +114,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
 const ImageSelection: React.FC<ImageSelectionProps> = ({
   images,
   setImages,
-  type,
+  // type,
 }) => {
   // State
   const [cropOpen, setCropOpen] = useState(false);
@@ -136,16 +136,16 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
       // Create a file from the blob
       const fileName = `image_${Date.now()}.jpg`;
       const fileType = "image/jpeg";
-      const imageFile = new File([croppedImageBlob], fileName, {
+      new File([croppedImageBlob], fileName, {
         type: fileType,
       });
 
       // Get the presigned URL for upload
-      const typeFolder = type || "general"; // Use the type prop or default to "general"
-      const presignedUrl = await getPresignedUrl(fileName, typeFolder);
-      console.log(presignedUrl, "PRESIGNEDURL");
+      // const typeFolder = type || "general"; // Use the type prop or default to "general"
+      // const presignedUrl = await getPresignedUrl(fileName, typeFolder);
+      // console.log(presignedUrl, "PRESIGNEDURL");
       // Upload the file
-      await uploadFile(presignedUrl, imageFile);
+      // await uploadFile(presignedUrl, imageFile);
       
       // Create a local URL for preview while waiting for server response
       const reader = new FileReader();

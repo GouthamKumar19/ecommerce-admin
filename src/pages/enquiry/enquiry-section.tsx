@@ -40,8 +40,7 @@ const EnquiryPage: React.FC = () => {
 
       try {
         const payload = {
-          page: page,
-          itemsPerPage: itemsPerPage,
+        
           search: [
             {
               term: searchValue,
@@ -53,6 +52,8 @@ const EnquiryPage: React.FC = () => {
           options: {
             sortBy: [sortConfig.key],
             sortDesc: [sortConfig.direction === "descending"],
+            page: page,
+            itemsPerPage: itemsPerPage,
           },
         };
         console.log("Payload:", payload); // Log the payload for debugging

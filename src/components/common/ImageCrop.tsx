@@ -95,8 +95,24 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     if (aspect) {
       const newCrop = centerAspectCrop(width, height, aspect);
       setCrop(newCrop);
+      // Set the completed crop as soon as the image loads
+      setCompletedCrop({
+        x: (newCrop.x * width) / 100,
+        y: (newCrop.y * height) / 100,
+        width: (newCrop.width * width) / 100,
+        height: (newCrop.height * height) / 100,
+        unit: 'px'
+      });
     } else {
       setCrop(defaultCrop);
+      // Set the completed crop for default crop as well
+      setCompletedCrop({
+        x: (defaultCrop.x * width) / 100,
+        y: (defaultCrop.y * height) / 100,
+        width: (defaultCrop.width * width) / 100,
+        height: (defaultCrop.height * height) / 100,
+        unit: 'px'
+      });
     }
   };
 
