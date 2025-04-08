@@ -68,7 +68,7 @@ const EnquiryPage: React.FC = () => {
           console.error(err.message || "Failed to fetch enquiries"); // Handle any errors
         }
       } finally {
-        setIsLoading(false); // End loading
+         setTimeout(() => setIsLoading(false), 1000); // End loading
       }
     };
 
