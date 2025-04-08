@@ -58,9 +58,7 @@ const DashboardPage = () => {
 
       {/* Recent Orders Table */}
       <div className="mt-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Recent Orders
-        </h3>
+        
         <DashboardOrdersTable />
       </div>
     </div>
