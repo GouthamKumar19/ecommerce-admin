@@ -18,22 +18,23 @@ import { getAllOrders } from "../../api/orders";
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  const [filters, setFilters] = useState<OrderFilters>({
-    paymentStatus: [],
-    orderStatus: [],
-    date: "",
-  });
-
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "createdAt",
     direction: "descending",
   });
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Loading state
-  const [, setError] = useState<string | null>(null); // Error state
-  const [page, setPage] = useState<number>(1); // Pagination state
-  const [itemsPerPage] = useState<number>(10); // Items per page
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
+  const [activeFilters, setActiveFilters] = useState<{
+    filter?: {
+      status?: string;
+      paymentStatus?: string;
+    };
+    date?: string;
+  }>({});
 
   const navigate = useNavigate();
 
@@ -52,19 +53,19 @@ const OrderPage: React.FC = () => {
 
   useEffect(() => {
     const fetchOrderData = async () => {
-      setIsLoading(true); // Start loading
-      setError(null); // Reset error
+      setIsLoading(true);
+      setError(null);
 
       try {
         const response = await getAllOrders(
           page,
           itemsPerPage,
           searchValue,
-          sortConfig
+          sortConfig,
+          activeFilters
         );
-        console.log("Fetched Orders Response:", response); // Log the entire response
-        console.log("Fetched Orders Data:", response.data); // Log the fetched data
-        setOrders(response.data.tableData); // Ensure the correct data structure is passed
+        console.log("API Response:", response);
+        setOrders(response.data.tableData);
       } catch (err: any) {
         setError(err.message || "Failed to fetch orders");
         console.error("Error fetching orders:", err);
@@ -74,7 +75,7 @@ const OrderPage: React.FC = () => {
     };
 
     fetchOrderData();
-  }, [page, itemsPerPage, searchValue, sortConfig]); // Dependencies updated
+  }, [page, itemsPerPage, searchValue, sortConfig, activeFilters]);
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -83,6 +84,32 @@ const OrderPage: React.FC = () => {
       sortConfig.direction
     );
     setSortConfig({ key, direction });
+  };
+
+  const handleFilterClick = () => {
+    setOpenFilterDialog(true);
+  };
+
+  const handleFilterApply = (filters: OrderFilters) => {
+    const newFilters: any = {
+      filter: {}
+    };
+
+    if (filters.paymentStatus.length > 0) {
+      newFilters.filter["paymentDetails.status"] = filters.paymentStatus[0].toUpperCase();
+    }
+
+    if (filters.orderStatus.length > 0) {
+      newFilters.filter["status"] = filters.orderStatus[0].toUpperCase();
+    }
+
+    if (filters.date) {
+      newFilters.date = filters.date;
+    }
+
+    console.log("Applied Filters:", newFilters);
+    setActiveFilters(newFilters);
+    setPage(1);
   };
 
   const sortedOrders = useSortableData(orders, sortConfig);
@@ -187,32 +214,7 @@ const OrderPage: React.FC = () => {
     },
   ];
 
-  const handleFilterClick = () => {
-    setOpenFilterDialog(true);
-  };
-
-  const applyFilters = (newFilters: OrderFilters) => {
-    setFilters(newFilters);
-  };
-
- const filterOrders = (orders: Order[]) => {
-   return orders
-     .filter((order) => {
-       if (filters.paymentStatus.length === 0) return true;
-       return (
-         order.paymentDetails?.status &&
-         filters.paymentStatus.includes(order.paymentDetails.status)
-       );
-     })
-     .filter((order) => {
-       if (filters.orderStatus.length === 0) return true;
-       return filters.orderStatus.includes(order.status);
-     })
-     .filter((order) =>
-       order.orderId.toLowerCase().includes(searchValue.toLowerCase())
-     );
- };
-
+  // Remove duplicate handleFilterClick and applyFilters functions
 
   return (
     <div className="container mx-auto p-1">
@@ -224,7 +226,7 @@ const OrderPage: React.FC = () => {
               onSearchChange={setSearchValue}
             />
           </div>
-
+  
           <div className="flex ml-auto">
             <Button
               variant="contained"
@@ -241,11 +243,11 @@ const OrderPage: React.FC = () => {
           </div>
         </div>
       </div>
-
+  
       <OrderFilterDialog
         open={openFilterDialog}
         onClose={() => setOpenFilterDialog(false)}
-        onApply={applyFilters}
+        onApply={handleFilterApply}
       />
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
@@ -253,7 +255,7 @@ const OrderPage: React.FC = () => {
           <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
           <DataTable<Order>
-            items={filterOrders(sortedOrders)}
+            items={sortedOrders}
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
