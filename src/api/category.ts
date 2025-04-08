@@ -27,8 +27,7 @@ export const getAllCategory = async (
     const response = await axiosInstance.post(
       "/admin/categories/getAll",
       {
-        page,
-        itemsPerPage,
+       
         search: [
           {
             term: searchTerm,
@@ -40,6 +39,8 @@ export const getAllCategory = async (
         options: {
           sortBy: [sortConfig.key],
           sortDesc: [sortConfig.direction === "descending"],
+          page,
+          itemsPerPage,
         },
       },
       {

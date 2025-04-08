@@ -83,8 +83,7 @@ export const getAllTestimonials = async (
     const response = await axiosInstance.post(
       "/admin/testimonials/getAll",
       {
-        page,
-        itemsPerPage,
+       
         search: [
           {
             term: searchTerm,
@@ -96,6 +95,8 @@ export const getAllTestimonials = async (
         options: {
           sortBy: [sortConfig.key],
           sortDesc: [sortConfig.direction === "descending"],
+          page,
+          itemsPerPage,
         },
       },
       {

@@ -20,6 +20,7 @@ export const getAllCollection = async (
   payload: any
 ): Promise<ApiResponse<Collection[]> | undefined> => {
   console.log("Payload received:", payload); // Log the payload for debugging
+  
   try {
     if (currentController) {
       currentController.abort();
