@@ -70,7 +70,7 @@ const TestimonialsPage: React.FC = () => {
         setError("");
         console.error("Error fetching testimonials:", error);
       } finally {
-        setIsLoading(false);
+         setTimeout(() => setIsLoading(false), 1000);
       }
     };
 
