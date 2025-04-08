@@ -17,19 +17,25 @@ export const getAllOrders = async (
   page: number,
   itemsPerPage: number,
   searchTerm: string,
-  sortConfig: SortConfig
+  sortConfig: SortConfig,
+  filters?: {
+    filter?: {
+      status?: string;
+      paymentStatus?: string;
+    };
+    date?: string;
+  }
 ): Promise<ApiResponse<{ totalCount: number; tableData: Order[] }>> => {
   try {
     if (currentController) {
       currentController.abort();
     }
     currentController = new AbortController();
-    console.log("[API] Fetching all orders");
+    console.log("[API] Fetching all orders with filters:", filters);
 
     const response = await axiosInstance.post(
       "/admin/orders/getAll",
       {
-      
         search: [
           {
             term: searchTerm,
@@ -40,10 +46,11 @@ export const getAllOrders = async (
         ],
         options: {
           sortBy: [sortConfig.key],
-          sortDesc: [sortConfig.direction === "descending"], 
-           page,
+          sortDesc: [sortConfig.direction === "descending"],
+          page,
           itemsPerPage,
         },
+        ...filters, // Add filters to the request payload
       },
       {
         signal: currentController.signal,
