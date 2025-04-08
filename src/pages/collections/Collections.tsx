@@ -48,8 +48,6 @@ const CollectionsPage: React.FC = () => {
 
       try {
         const payload = {
-          page: page,
-          itemsPerPage: itemsPerPage,
           search: [
             {
               term: searchValue,
@@ -61,6 +59,8 @@ const CollectionsPage: React.FC = () => {
           options: {
             sortBy: [sortConfig.key],
             sortDesc: [sortConfig.direction === "descending"],
+            page: page,
+            itemsPerPage: itemsPerPage,
           },
         };
         console.log("Payload:", payload);

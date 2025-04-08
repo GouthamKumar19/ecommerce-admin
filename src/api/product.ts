@@ -195,7 +195,7 @@ export const addProductVariants = async (
 ): Promise<ApiResponse<{ _id: string }[]>> => {
   try {
     console.log("[API] Adding product variants with data:", variants);
-
+    
     const response = await axiosInstance.post(
       "/admin/productVariants/add",
       variants
@@ -203,6 +203,44 @@ export const addProductVariants = async (
     return response.data;
   } catch (error) {
     console.error("[API] Error adding product variants:", error);
+    throw error;
+  }
+};
+
+export const updateProductVariants = async (
+  variants: { _id: string; name: string; value: string }[]
+): Promise<ApiResponse<any>> => {
+  try {
+    console.log("[API] Updating product variants with data:", variants);
+    
+    const response = await axiosInstance.put(
+      "/admin/productVariants/update",
+      variants
+    );
+    
+    console.log("[API] Update variants response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("[API] Error updating product variants:", error);
+    throw error;
+  }
+};
+
+
+export const getProductVariantById = async (
+  productId: string
+): Promise<ApiResponse<any>> => {
+  try {
+    console.log("[API] Fetching variants for product ID:", productId);
+    
+    const response = await axiosInstance.post(`/admin/productVariants/getOne/${productId}`, {
+      productId: productId
+    });
+    
+    console.log("[API] Product variants response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("[API] Error fetching product variants:", error);
     throw error;
   }
 };
