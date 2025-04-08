@@ -4,16 +4,17 @@ import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
 import CategoryForm from "../../components/Category/CategoryForm";
 import { ActionContext } from "../../context/ActionContext";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   createCategory,
   getCategoryById,
   updateCategory,
   createSubCategory,
   updateSubcategories,
+  deleteSubcategories,
 } from "../../api/category";
 import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
-import { Subcategory } from "../../types/category.types"; // Import Subcategory type
+import { Subcategory } from "../../types/category.types";
 
 export const CategoryDetails = () => {
   const { setActionHandlers } = useContext(ActionContext);
@@ -24,6 +25,9 @@ export const CategoryDetails = () => {
     { id: number; url: string; selected: boolean }[]
   >([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [subcategoryIdsToDelete, setSubcategoryIdsToDelete] = useState<
+    string[]
+  >([]);
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({
     categoryName: false,
     images: false,
@@ -31,7 +35,9 @@ export const CategoryDetails = () => {
   const [uploadInProgress, setUploadInProgress] = useState<boolean>(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
+  const previousPath = location.state?.from || "/category";
 
   useEffect(() => {
     // Check if we're in edit mode and fetch category data
@@ -44,7 +50,7 @@ export const CategoryDetails = () => {
           const response = await getCategoryById(id);
 
           if (response && response.status === 200) {
-            console.log("API Response:", response); // Log the API response
+            console.log("API Response:", response);
 
             // Set category name
             setCategoryName(response.data.name || "");
@@ -139,7 +145,7 @@ export const CategoryDetails = () => {
         onCancel: () => console.warn("onCancel is not implemented"),
       });
     };
-  }, [setActionHandlers, categoryName, images, isEdit, subcategories]);
+  }, [categoryName, images, isEdit, subcategories, subcategoryIdsToDelete]);
 
   const uploadPendingImages = async () => {
     const selectedImages = images.filter(
@@ -149,111 +155,117 @@ export const CategoryDetails = () => {
       return null;
     }
 
-    const uploadedImageUrls = await Promise.all(
-      selectedImages.map(
-        async (selectedImage: {
-          id: number;
-          url: string;
-          selected: boolean;
-        }) => {
-          if (selectedImage.url.startsWith("data:image")) {
-            setUploadInProgress(true);
-            try {
-              // Convert base64 to blob
-              const response = await fetch(selectedImage.url);
-              const blob = await response.blob();
+    try {
+      const uploadedImageUrls = await Promise.all(
+        selectedImages.map(
+          async (selectedImage: {
+            id: number;
+            url: string;
+            selected: boolean;
+          }) => {
+            if (selectedImage.url.startsWith("data:image")) {
+              setUploadInProgress(true);
+              try {
+                // Convert base64 to blob
+                const response = await fetch(selectedImage.url);
+                const blob = await response.blob();
 
-              // Create a file from the blob
-              const fileName = `category_image_${Date.now()}.jpg`;
-              const imageFile = new File([blob], fileName, {
-                type: "image/jpeg",
-              });
+                // Create a file from the blob
+                const fileName = `category_image_${Date.now()}.jpg`;
+                const imageFile = new File([blob], fileName, {
+                  type: "image/jpeg",
+                });
 
-              // Store the formatted filename that will be sent to the server
-              const formattedFileName = `/public/ecommerce/category/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+                // Store the formatted filename that will be sent to the server
+                const formattedFileName = `/public/ecommerce/category/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
-              // Get presigned URL and upload
-              const presignedUrl = await getPresignedUrl(fileName, "category");
-              await uploadFile(presignedUrl, imageFile);
+                // Get presigned URL and upload
+                const presignedUrl = await getPresignedUrl(
+                  fileName,
+                  "category"
+                );
+                await uploadFile(presignedUrl, imageFile);
 
-              // Return the formatted filename instead of the presigned URL
-              return formattedFileName;
-            } catch (error) {
-              console.error("Error uploading image:", error);
-              throw new Error("Failed to upload image");
-            } finally {
-              setUploadInProgress(false);
+                // Return the formatted filename instead of the presigned URL
+                return formattedFileName;
+              } catch (error) {
+                console.error("Error uploading image:", error);
+                // Return a default image URL in case of error
+                return "/ecommerce/categories/default.png";
+              } finally {
+                setUploadInProgress(false);
+              }
             }
+
+            // If the image is already a URL, just return it
+            return selectedImage.url;
           }
+        )
+      );
 
-          // If the image is already a URL, just return it
-          return selectedImage.url;
-        }
-      )
-    );
-
-    return uploadedImageUrls;
+      return uploadedImageUrls;
+    } catch (error) {
+      console.error("Error in uploadPendingImages:", error);
+      return ["/ecommerce/categories/default.png"];
+    }
   };
 
   // Helper function to upload subcategory images
   const uploadSubcategoryImages = async (subcategory: Subcategory) => {
-    const selectedImages = (subcategory.images || []).filter(
-      (img: { id: number; url: string; selected: boolean }) => img.selected
-    );
-
-    if (selectedImages.length < 1) {
+    // Fix: Check if subcategory has images and if there's a selected image
+    if (!subcategory.images || subcategory.images.length === 0) {
       return subcategory.image || "/ecommerce/categories/default.png";
     }
 
-    const uploadedImageUrls = await Promise.all(
-      selectedImages.map(
-        async (selectedImage: {
-          id: number;
-          url: string;
-          selected: boolean;
-        }) => {
-          if (selectedImage.url.startsWith("data:image")) {
-            setUploadInProgress(true);
-            try {
-              // Convert base64 to blob
-              const response = await fetch(selectedImage.url);
-              const blob = await response.blob();
+    // Find selected image or use the first one
+    const selectedImage =
+      subcategory.images.find((img) => img.selected) || subcategory.images[0];
 
-              // Create a file from the blob
-              const fileName = `subcategory_image_${Date.now()}_${subcategory.id}.jpg`;
-              const imageFile = new File([blob], fileName, {
-                type: "image/jpeg",
-              });
+    if (!selectedImage) {
+      return subcategory.image || "/ecommerce/categories/default.png";
+    }
 
-              // Store the formatted filename
-              const formattedFileName = `/public/ecommerce/subcategory/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+    // If the image is already a URL that's not a data URL, just return it
+    if (!selectedImage.url.startsWith("data:image")) {
+      return selectedImage.url;
+    }
 
-              // Get presigned URL and upload
-              const presignedUrl = await getPresignedUrl(
-                fileName,
-                "subcategory"
-              );
-              await uploadFile(presignedUrl, imageFile);
+    // Handle data URL images that need to be uploaded
+    setUploadInProgress(true);
+    try {
+      // Convert base64 to blob
+      const response = await fetch(selectedImage.url);
+      const blob = await response.blob();
 
-              return formattedFileName;
-            } catch (error) {
-              console.error("Error uploading subcategory image:", error);
-              return subcategory.image || "/ecommerce/categories/default.png";
-            } finally {
-              setUploadInProgress(false);
-            }
-          }
+      // Create a file from the blob
+      const fileName = `subcategory_image_${Date.now()}_${subcategory.id}.jpg`;
+      const imageFile = new File([blob], fileName, {
+        type: "image/jpeg",
+      });
 
-          // If the image is already a URL, just return it
-          return selectedImage.url;
-        }
-      )
-    );
+      // Store the formatted filename
+      const formattedFileName = `/public/ecommerce/subcategory/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
-    return uploadedImageUrls;
+      // Get presigned URL and upload
+      const presignedUrl = await getPresignedUrl(fileName, "subcategory");
+      await uploadFile(presignedUrl, imageFile);
+
+      return formattedFileName;
+    } catch (error) {
+      console.error("Error uploading subcategory image:", error);
+      return subcategory.image || "/ecommerce/categories/default.png";
+    } finally {
+      setUploadInProgress(false);
+    }
   };
 
   const handleSave = async () => {
+    // Prevent multiple clicks by checking if already loading
+    if (isLoading || uploadInProgress) {
+      console.log("Save operation already in progress, ignoring click");
+      return;
+    }
+
     const errorsCopy = { ...errors };
 
     if (categoryName.trim() === "") {
@@ -276,9 +288,34 @@ export const CategoryDetails = () => {
       return;
     }
 
+    // Set loading state immediately to prevent multiple clicks
     setIsLoading(true);
 
     try {
+      let operationsSuccessful = true;
+
+      // First, handle subcategory deletions if we're in edit mode
+      if (isEdit && subcategoryIdsToDelete.length > 0) {
+        console.log("Deleting subcategories:", subcategoryIdsToDelete);
+        try {
+          const deleteResponse = await deleteSubcategories(
+            subcategoryIdsToDelete
+          );
+          console.log("Delete Subcategories API Response:", deleteResponse);
+
+          if (!deleteResponse || deleteResponse.status !== 200) {
+            console.error("Failed to delete subcategories");
+            operationsSuccessful = false;
+          } else {
+            // Clear the deletion array after successful deletion
+            setSubcategoryIdsToDelete([]);
+          }
+        } catch (error) {
+          console.error("Error deleting subcategories:", error);
+          operationsSuccessful = false;
+        }
+      }
+
       // Upload images and get the URLs
       const uploadedImageUrls = await uploadPendingImages();
 
@@ -290,53 +327,93 @@ export const CategoryDetails = () => {
             : "/ecommerce/categories/default.png",
       };
 
-      console.log("Category Payload:", categoryPayload); // Debugging line
+      console.log("Category Payload:", categoryPayload);
+
+      // Process all subcategories first to ensure images are uploaded and urls are captured
+      const processedSubcategories = await Promise.all(
+        subcategories
+          .filter((subcategory) => subcategory.name.trim() !== "")
+          .map(async (subcategory) => {
+            // Upload and get the image URL
+            const imageUrl = await uploadSubcategoryImages(subcategory);
+
+            // Return subcategory with updated image URL
+            return {
+              ...subcategory,
+              image: imageUrl,
+            };
+          })
+      );
+
+      // Log processed subcategories for debugging
+      console.log(
+        "Processed subcategories with images:",
+        processedSubcategories
+      );
 
       let categoryResponse: any;
+
       if (isEdit && id && id !== "new") {
         // Update existing category
         categoryResponse = await updateCategory(id, categoryPayload);
         console.log("Update Category API Response:", categoryResponse);
 
         if (categoryResponse && categoryResponse.status === 200) {
-          // Prepare subcategory payloads with processed images
-          const validSubcategories = subcategories.filter(
-            (subcategory) => subcategory.name.trim() !== ""
+          // Separate subcategories into existing ones and new ones
+          const existingSubcategories = processedSubcategories.filter(
+            (subcategory) => subcategory._id && subcategory._id.trim() !== ""
           );
 
-          const subcategoryPayloadsPromises = validSubcategories.map(
-            async (subcategory) => {
-              // Upload subcategory image if needed
-              const subcategoryImageUrls =
-                await uploadSubcategoryImages(subcategory);
-
-              return {
-                _id: subcategory._id,
-                name: subcategory.name,
-                categoryId: id,
-                image:
-                  subcategoryImageUrls && subcategoryImageUrls.length > 0
-                    ? subcategoryImageUrls[0]
-                    : "/ecommerce/categories/default.png",
-              };
-            }
+          const newSubcategories = processedSubcategories.filter(
+            (subcategory) => !subcategory._id || subcategory._id.trim() === ""
           );
 
-          const subcategoryPayloads = await Promise.all(
-            subcategoryPayloadsPromises
-          );
-          console.log("Payload to update subcategories:", subcategoryPayloads);
+          // Handle existing subcategories (update)
+          if (existingSubcategories.length > 0) {
+            const updatePayloads = existingSubcategories.map((subcategory) => ({
+              _id: subcategory._id,
+              name: subcategory.name,
+              categoryId: id,
+              image: subcategory.image,
+            }));
 
-          if (subcategoryPayloads.length > 0) {
+            console.log("Payload to update subcategories:", updatePayloads);
+
             try {
-              const response = await updateSubcategories(subcategoryPayloads);
+              const response = await updateSubcategories(updatePayloads);
               console.log("Update Subcategory API Response:", response);
+              if (!response || response.status !== 200) {
+                operationsSuccessful = false;
+              }
             } catch (error) {
-              console.error("Error updating subcategory:", error);
+              console.error("Error updating subcategories:", error);
+              operationsSuccessful = false;
             }
           }
 
-          navigate("/category");
+          // Handle new subcategories (create)
+          if (newSubcategories.length > 0) {
+            const createPayloads = newSubcategories.map((subcategory) => ({
+              name: subcategory.name,
+              categoryId: id, // Use the category ID from URL params
+              image: subcategory.image,
+            }));
+
+            console.log("Payload to create new subcategories:", createPayloads);
+
+            try {
+              const response = await createSubCategory(createPayloads);
+              console.log("Create New Subcategory API Response:", response);
+              if (!response || response.status !== 200) {
+                operationsSuccessful = false;
+              }
+            } catch (error) {
+              console.error("Error creating new subcategories:", error);
+              operationsSuccessful = false;
+            }
+          }
+        } else {
+          operationsSuccessful = false;
         }
       } else {
         // Create new category
@@ -347,47 +424,45 @@ export const CategoryDetails = () => {
         if (categoryResponse && categoryResponse.status === 200) {
           console.log("New Category ID:", categoryResponse.data.id);
 
-          // Prepare subcategory payloads with processed images
-          const validSubcategories = subcategories.filter(
-            (subcategory) => subcategory.name.trim() !== ""
+          // Create subcategory payloads for API
+          const subcategoryPayloads = processedSubcategories.map(
+            (subcategory) => ({
+              name: subcategory.name,
+              categoryId: categoryResponse.data.id,
+              image: subcategory.image, // Use the processed image URL
+            })
           );
 
-          const subcategoryPayloadsPromises = validSubcategories.map(
-            async (subcategory) => {
-              // Upload subcategory image if needed
-              const subcategoryImageUrls =
-                await uploadSubcategoryImages(subcategory);
-
-              return {
-                name: subcategory.name,
-                categoryId: categoryResponse.data.id,
-                image:
-                  subcategoryImageUrls && subcategoryImageUrls.length > 0
-                    ? subcategoryImageUrls[0]
-                    : "/ecommerce/categories/default.png",
-              };
-            }
-          );
-
-          const subcategoryPayloads = await Promise.all(
-            subcategoryPayloadsPromises
-          );
           console.log("Payload to create subcategories:", subcategoryPayloads);
 
           if (subcategoryPayloads.length > 0) {
             try {
               const response = await createSubCategory(subcategoryPayloads);
               console.log("Create Subcategory API Response:", response);
+              // If creation fails, prevent navigation
+              if (!response || response.status !== 200) {
+                operationsSuccessful = false;
+              }
             } catch (error) {
               console.error("Error creating subcategory:", error);
+              operationsSuccessful = false;
             }
           }
-
-          navigate("/category");
         } else {
-          console.error("Failed to create category:", categoryResponse.message);
-          throw new Error(categoryResponse.message);
+          console.error(
+            "Failed to create category:",
+            categoryResponse?.message
+          );
+          operationsSuccessful = false;
         }
+      }
+
+      // Only navigate if all operations were successful
+      if (operationsSuccessful) {
+        console.log("All operations successful. Navigating to:", previousPath);
+        navigate(previousPath, { replace: true });
+      } else {
+        console.error("Some operations failed, not navigating");
       }
     } catch (error) {
       console.error("Error during category save operation:", error);
@@ -397,15 +472,15 @@ export const CategoryDetails = () => {
   };
 
   const handleCancel = () => {
-    console.log("Category form cancelled");
-    navigate("/category");
+    console.log("Category form cancelled, navigating to:", previousPath);
+    navigate(previousPath);
   };
 
   // Handlers to update state from form
   const handleNameChange = (name: string, isValid: boolean) => {
     setCategoryName(name);
     setErrors((prev) => ({ ...prev, categoryName: !isValid }));
-    console.log("Category Name Updated:", name); // Debugging line
+    console.log("Category Name Updated:", name);
   };
 
   const handleImagesChange = (
@@ -418,13 +493,26 @@ export const CategoryDetails = () => {
         updatedImages.length === 0 ||
         !updatedImages.some((img) => img.selected),
     }));
-    console.log("Images Updated:", updatedImages); // Debugging line
+    console.log("Images Updated:", updatedImages);
   };
 
   const handleSubcategoryChange = (updatedSubcategories: Subcategory[]) => {
-    console.log(updateSubcategories, "Subcategories in CategoryDetails"); // Debugging line
-    setSubcategories(updatedSubcategories);
-    console.log("Subcategories Updated:", updatedSubcategories); // Debugging line
+    // Only update if there's an actual change to prevent infinite loops
+    if (
+      JSON.stringify(updatedSubcategories) !== JSON.stringify(subcategories)
+    ) {
+      console.log(
+        "Subcategories update received in CategoryDetails:",
+        updatedSubcategories
+      );
+      setSubcategories(updatedSubcategories);
+    }
+  };
+
+  // Handler for collecting subcategory IDs to delete
+  const handleDeleteSubcategories = (subcategoryIds: string[]) => {
+    console.log("Collecting subcategory IDs to delete:", subcategoryIds);
+    setSubcategoryIdsToDelete((prev) => [...prev, ...subcategoryIds]);
   };
 
   if (isLoading) {
@@ -479,6 +567,7 @@ export const CategoryDetails = () => {
           },
         }}
       >
+       
         <CategoryForm
           categoryName={categoryName}
           images={images}
@@ -486,9 +575,9 @@ export const CategoryDetails = () => {
           onNameChange={handleNameChange}
           onImagesChange={handleImagesChange}
           onSubcategoryChange={handleSubcategoryChange}
+          onDeleteSubcategories={handleDeleteSubcategories} // Add this prop
           isEditMode={isEdit}
-          subcategories={subcategories} // Pass the subcategories prop
-          // Pass loading state to disable form interaction during loading
+          subcategories={subcategories}
         />
       </Box>
 

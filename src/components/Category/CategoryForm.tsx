@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Typography, Box, TextField } from "@mui/material";
 import ImageSelection from "../common/ImageSelection";
 import SubcategoryForm from "./SubcategoryForm";
@@ -17,8 +17,9 @@ interface CategoryFormProps {
   onNameChange: (name: string, isValid: boolean) => void;
   onImagesChange: (images: ProductImage[]) => void;
   onSubcategoryChange: (updatedSubcategories: Subcategory[]) => void;
+  onDeleteSubcategories: (subcategoryIds: string[]) => void;
   isEditMode: boolean;
-  subcategories: Subcategory[]; // Add subcategories prop
+  subcategories: Subcategory[];
 }
 
 const CategoryForm: React.FC<CategoryFormProps> = ({
@@ -28,14 +29,41 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   onNameChange,
   onImagesChange,
   onSubcategoryChange,
-  subcategories, // Add subcategories prop
+  onDeleteSubcategories,
+  subcategories,
 }) => {
+  // Process subcategories on initial render to ensure images are properly set
+  useEffect(() => {
+    if (subcategories && subcategories.length > 0) {
+      // Make sure each subcategory has proper image handling
+      const processedSubcategories = subcategories.map((subcategory) => {
+        // Ensure image is set from images array if available
+        if (subcategory.images && subcategory.images.length > 0) {
+          const selectedImage =
+            subcategory.images.find((img) => img.selected) ||
+            subcategory.images[0];
+          return {
+            ...subcategory,
+            image: selectedImage ? selectedImage.url : subcategory.image,
+          };
+        }
+        return subcategory;
+      });
+
+      // Only update if there are changes
+      if (
+        JSON.stringify(processedSubcategories) !== JSON.stringify(subcategories)
+      ) {
+        onSubcategoryChange(processedSubcategories);
+      }
+    }
+  }, []);
+
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const regex = /^[A-Za-z\s]+$/;
     const isValid = regex.test(value) || value === "";
     onNameChange(value, isValid);
-    console.log("Category Name:", value);
   };
 
   const handleImagesChange = React.useCallback(
@@ -51,14 +79,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   );
 
   const handleSaveSuccess = () => {
-    if (!categoryName) {
-      console.error("Category name is required");
-      return;
-    }
     console.log("Category and subcategories saved successfully.");
   };
-
-  console.log(subcategories, "Subcategories in CategoryForm");
 
   return (
     <div className="ml-8 mr-8 mb-6">
@@ -117,13 +139,13 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
             )}
           </Box>
         </div>
-
         <SubcategoryForm
           categoryName={categoryName}
           categoryImages={images}
           onSaveSuccess={handleSaveSuccess}
           onSubcategoryChange={onSubcategoryChange}
-          subcategories={subcategories} // Pass the subcategories prop
+          onDeleteSubcategories={onDeleteSubcategories} // Make sure this is passed through
+          subcategories={subcategories}
         />
       </div>
     </div>

@@ -127,6 +127,9 @@ export const createSubCategory = async (
   }[]
 ): Promise<ApiResponse<{ id: string }>> => {
   console.log("Create Subcategory payload:", payload);
+  
+
+  console.log("Formatted Subcategory payload:", payload);
 
   try {
     const response = await axiosInstance.post(
@@ -197,5 +200,29 @@ export const deleteCategoryById = async (
   } catch (error) {
     console.error("Error deleting category:", error);
     throw error;
+  }
+};
+export const deleteSubcategories = async (
+  subcategoryIds: string[]
+): Promise<ApiResponse<any>> => {
+  console.log("Deleting subcategories with IDs:", subcategoryIds);
+
+  try {
+    const response = await axiosInstance.post(
+      "/admin/subcategories/deleteMany",
+      { ids: subcategoryIds }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error deleting subcategories:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error deleting subcategories"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error deleting subcategories");
+    }
   }
 };

@@ -15,7 +15,7 @@ export interface ProductImage {
   selected: boolean;
 }
 
-type ImageType = "product" | "general" | "collection" |"category" | undefined; // Update the type to include "collection"
+type ImageType = "product" | "general" | "collection" |"category" | "subcategory" |undefined; // Update the type to include "collection"
 
 interface ImageSelectionProps {
   images: ProductImage[];
@@ -300,7 +300,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
         }}
         imageUrl={currentImage}
         onCropComplete={handleCropComplete}
-        type={type} // Pass the type prop here
+        //type={type} // Pass the type prop here
       />
 
       {/* Image Popup */}
