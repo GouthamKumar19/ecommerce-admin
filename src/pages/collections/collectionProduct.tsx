@@ -73,13 +73,14 @@ const ProductAddPage: React.FC = () => {
       setError(null);
 
       try {
+        // Update the search payload to allow partial matches anywhere in the string
         const payload = {
           search: [
             {
               term: searchValue,
               fields: ["productDetails.name"],
-              startsWith: true,
-              endsWith: false,
+              startsWith: false, // Allow matches anywhere in the string
+              endsWith: false,   // Allow matches anywhere in the string
             },
           ],
           options: {
@@ -95,10 +96,18 @@ const ProductAddPage: React.FC = () => {
         console.log("Fetched Collection Response:", response);
 
         if (response?.data?.collectionProducts) {
-          setTableData(response.data.collectionProducts);
-          console.log("Fetched Collection Products:", response.data.collectionProducts);
+          // Filter the products based on the searchValue
+          const filteredProducts = response.data.collectionProducts.filter((product) =>
+            product.productDetails?.name
+              ?.toLowerCase()
+              .includes(searchValue.toLowerCase())
+          );
+
+          setTableData(filteredProducts);
+          console.log("Filtered Collection Products:", filteredProducts);
+
           // Extract product IDs for later use when adding new products
-          const productIds = response.data.collectionProducts
+          const productIds = filteredProducts
             .filter((product) => product.isEnabled) // Filter out disabled products
             .map((product) => product.productId);
           console.log("Product IDs in this collection:", productIds);
