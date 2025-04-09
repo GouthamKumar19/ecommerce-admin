@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Star, StarBorder } from "@mui/icons-material";
+
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import Pagination from "./Pagination";
 import TableSkeletonLoader from "./TableSkeletonLoader";
+
 
 // Define a base interface for data objects
 interface BaseRecord {
@@ -24,37 +25,22 @@ interface TableColumn<T> {
 }
 
 // Generic DataTable Props
+// Update the DataTableProps interface to include totalCount
 interface DataTableProps<T extends BaseRecord> {
-  items: T[];
+  items: T[];  // Array of items of generic type T
   columns: TableColumn<T>[];
   idKey: string;
   itemsPerPage?: number;
   actionRenderer?: (item: T) => React.ReactNode;
   disabledRows?: string[];
-  tableType?: string;
+  pageCount: number;
+  totalCount?: number; // Add totalCount prop
   loading?: boolean;
   currentPage?: number;
   onPageChange?: (page: number) => void;
 }
 
-// Star Rating Component for testimonials
-export const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
-  return (
-    <div className="flex justify-center">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span key={star}>
-          {star <= rating ? (
-            <Star sx={{ fontSize: 20, color: "#FFD700" }} />
-          ) : (
-            <StarBorder sx={{ fontSize: 20, color: "#FFD700" }} />
-          )}
-        </span>
-      ))}
-    </div>
-  );
-};
-
-// Generic DataTable Component
+// Update the DataTable component parameters to include totalCount
 const DataTable = <T extends BaseRecord>({
   items,
   columns,
@@ -64,6 +50,8 @@ const DataTable = <T extends BaseRecord>({
   disabledRows = [],
   loading = false,
   currentPage = 1,
+  pageCount,
+  totalCount, // Add totalCount to destructuring
   onPageChange,
 }: DataTableProps<T>) => {
   const [pagination, setPagination] = useState<PaginationState>({
@@ -126,14 +114,15 @@ const DataTable = <T extends BaseRecord>({
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: false,
-    pageCount: Math.ceil(items.length / pagination.pageSize),
+    manualPagination: true, // Set to true for manual pagination
+    pageCount, // Set the pageCount from props
   });
 
   if (loading) {
     return <TableSkeletonLoader columns={columns.length} rows={itemsPerPage} />;
   }
 
+  // Update the Pagination component to pass totalCount
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto max-h-[70vh]">
@@ -190,6 +179,7 @@ const DataTable = <T extends BaseRecord>({
         itemsCount={items.length}
         currentPage={currentPage}
         onPageChange={handlePageChange}
+        totalCount={totalCount} // Pass totalCount to Pagination
       />
     </div>
   );

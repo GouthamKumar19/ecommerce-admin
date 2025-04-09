@@ -16,6 +16,13 @@ import { getAllCollection, deleteCollection } from "../../api/collections";
 import type { Collection } from "../../types/collections.types";
 import { getImage } from "../../utils/imagePreview";
 
+
+// Add this interface near your other imports
+// interface CollectionResponse {
+//   collections: Collection[];
+//   totalCount: number;
+// }
+
 const CollectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -25,13 +32,15 @@ const CollectionsPage: React.FC = () => {
     null
   );
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0); // Total number of items
+  const [pageCount, setPageCount] = useState<number>(0); // Total number of pages
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "updatedAt",
     direction: "descending",
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [, setError] = useState<string | null>(null);
-  const [page] = useState<number>(1);
+  const [page, setPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
@@ -61,17 +70,22 @@ const CollectionsPage: React.FC = () => {
             sortDesc: [sortConfig.direction === "descending"],
             page: page,
             itemsPerPage: itemsPerPage,
-           
           },
         };
         console.log("Payload:", payload);
         const response = await getAllCollection(payload);
 
-        console.log("API Response:", response); // Log the entire response object
+        if (response && response.data) {
+          console.log("Fetched Collections Response:", response);
+// / Double type assertion for 
 
-        if (response && Array.isArray(response.data)) {
-          console.log("Fetched Collections:", response.data);
-          setCollections(response.data);
+          console.log("Fetched Collections Data:", response.data);
+          // @ts-expect-error non fix tommroow
+          setCollections( response.data.tableData);
+          // @ts-expect-error non fix tommroow
+
+          setTotalCount(response.data.totalCount); // Set total count
+          // setPageCount(response.data.totalCount ); // Calculate page count
         } else {
           console.error("Invalid response format:", response);
           throw new Error("Invalid response format");
@@ -119,6 +133,8 @@ const CollectionsPage: React.FC = () => {
                 (collection) => collection._id !== currentCollection._id
               )
             );
+            setTotalCount((prev) => prev - 1); // Update total count after deletion
+            setPageCount(Math.ceil((totalCount - 1) / itemsPerPage)); // Recalculate page count
             console.log(
               `Collection deleted successfully: ${currentCollection._id}`
             );
@@ -228,14 +244,17 @@ const CollectionsPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+          <TableSkeletonLoader columns={3} rows={10} />
         ) : (
           <DataTable
             items={sortedCollections}
             columns={columns}
             idKey="_id"
-            itemsPerPage={15}
-            tableType="collection"
+            itemsPerPage={itemsPerPage}
+            totalCount={totalCount} // Pass the total count
+            pageCount={pageCount} // Pass the total page count
+            currentPage={page}
+            onPageChange={(newPage) => setPage(newPage)}
             actionRenderer={actionRenderer}
             loading={isLoading}
           />

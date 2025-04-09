@@ -189,16 +189,21 @@ const DashboardOrdersTable: React.FC = () => {
         <TableSkeletonLoader columns={7} rows={5} />
       ) : (
         <DataTable<Order>
-          items={sortedOrders}
-          columns={columns}
-          idKey="_id"
-          itemsPerPage={itemsPerPage}
-          tableType="order"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-          currentPage={page}
-          onPageChange={setPage}
-        />
+        items={sortedOrders}
+        columns={columns}
+        idKey="_id"
+        itemsPerPage={itemsPerPage}
+       
+        actionRenderer={actionRenderer}
+        loading={isLoading}
+        currentPage={page}
+        onPageChange={(newPage) => {
+          console.log("Changing page to:", newPage);
+          setPage(newPage);
+        }}
+        pageCount={1} // Pass the calculated page count
+        totalCount={10} // Pass the total count to DataTable
+      />
       )}
     </div>
   );

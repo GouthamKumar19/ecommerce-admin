@@ -28,12 +28,14 @@ const UsersPage: React.FC = () => {
   const [, setError] = useState<string | null>(null); // Error state
   const [page, setPage] = useState<number>(1); // Pagination state
   const [itemsPerPage] = useState<number>(10); // Items per page
+  const [pageCount, setPageCount] = useState<number>(0); // Page count state
   const [, setDisabledRows] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogSubtitle, setDialogSubtitle] = useState("");
   const [currentRow, setCurrentRow] = useState<User | null>(null);
   const navigate = useNavigate();
+
   const fetchUserData = async () => {
     setIsLoading(true);
     setError(null);
@@ -46,6 +48,9 @@ const UsersPage: React.FC = () => {
           sortConfig
         );
         setUsers(response.data.tableData);
+        // @ts-expect-error non fix tommroow
+        
+        setPageCount(response.data.totalCount); // Set the page count based on totalCount
         console.log("User Details:", response.data);
       } catch (err: any) {
         console.error("Error fetching users:", err);
@@ -55,6 +60,7 @@ const UsersPage: React.FC = () => {
       }
     });
   };
+
   useEffect(() => {
     fetchUserData();
   }, [page, itemsPerPage, searchValue, sortConfig]);
@@ -80,6 +86,7 @@ const UsersPage: React.FC = () => {
     }
     return <SwapVertIcon />;
   };
+
   const handleToggleUserStatus = async (user: User) => {
     if (!user._id) {
       console.error("User ID is missing");
@@ -283,7 +290,12 @@ const UsersPage: React.FC = () => {
             actionRenderer={actionRenderer}
             loading={isLoading}
             currentPage={page}
-            onPageChange={setPage}
+            onPageChange={(newPage) => {
+              console.log("Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount}
+            totalCount={pageCount} // Add this line to pass the total count
           />
         )}
       </div>
@@ -300,3 +312,5 @@ const UsersPage: React.FC = () => {
 };
 
 export default UsersPage;
+
+// Define AddressData interface first so we can reference it

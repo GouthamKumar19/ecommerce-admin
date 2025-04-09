@@ -67,6 +67,9 @@ const CategoryPage: React.FC = () => {
   const [, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1); // Pagination state
   const [itemsPerPage] = useState<number>(10); // Items per page
+  const [totalCount, setTotalCount] = useState<number>(0); // Total category count
+  const [pageCount, setPageCount] = useState<number>(0); // Page count
+
   const navigate = useNavigate();
 
   const handleAddNewCategory = () => {
@@ -95,8 +98,11 @@ const CategoryPage: React.FC = () => {
         );
         console.log("Fetched Categories Response:", response); // Log the entire response
         console.log("Fetched Categories Data:", response.data); // Log the fetched data
+
         if (response.data && Array.isArray(response.data.tableData)) {
           setCategories(response.data.tableData as CategoryRecord[]); // Set the categories from fetched data
+          setTotalCount(response.data.totalCount); // Update total category count
+          setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate total pages
         } else {
           throw new Error("Data is not an array");
         }
@@ -129,6 +135,8 @@ const CategoryPage: React.FC = () => {
               (category) => category._id !== selectedCategory._id
             )
           );
+          setTotalCount((prev) => prev - 1); // Decrement total category count
+          setPageCount((prev) => Math.ceil((prev - 1) / itemsPerPage)); // Recalculate page count
           console.log("Category deleted successfully:", response.message);
         } else {
           console.error("Error deleting category:", response.message);
@@ -230,9 +238,14 @@ const CategoryPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            currentPage={page}
-            onPageChange={setPage}
             actionRenderer={actionRenderer}
+            currentPage={page}
+            onPageChange={(newPage) => {
+              console.log("Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount}
+            totalCount={totalCount} // Pass total category count
           />
         )}
       </div>

@@ -24,6 +24,7 @@ import {
   BaseRecord,
   Collections,
 } from "../../types/collectionResponse.types";
+import { getImage } from "../../utils/imagePreview";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 
 const ProductAddPage: React.FC = () => {
@@ -95,6 +96,7 @@ const ProductAddPage: React.FC = () => {
 
         if (response?.data?.collectionProducts) {
           setTableData(response.data.collectionProducts);
+          console.log("Fetched Collection Products:", response.data.collectionProducts);
           // Extract product IDs for later use when adding new products
           const productIds = response.data.collectionProducts
             .filter((product) => product.isEnabled) // Filter out disabled products
@@ -286,7 +288,7 @@ const ProductAddPage: React.FC = () => {
           <div className="text-center flex-shrink-0 h-10 w-10">
             <img
               className="h-10 w-10 rounded-full"
-              src={typedItem?.productDetails?.thumbnailImage}
+              src={getImage(typedItem?.productDetails?.thumbnailImage)}
               alt={typedItem?.productDetails?.name || "Product thumbnail"}
             />
           </div>
@@ -455,12 +457,12 @@ const ProductAddPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            tableType="product"
-            actionRenderer={actionRenderer}
-            disabledRows={disabledProducts}
-            loading={isLoading}
+            totalCount={8} // Pass the total count
+            pageCount={1} // Pass the total page count
             currentPage={page}
-            onPageChange={setPage}
+            onPageChange={(newPage) => setPage(newPage)}
+            actionRenderer={actionRenderer}
+            loading={isLoading}
           />
         )}
       </div>

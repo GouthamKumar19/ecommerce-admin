@@ -1,4 +1,3 @@
-
 import { Table } from "@tanstack/react-table";
 
 interface PaginationProps<T> {
@@ -6,6 +5,7 @@ interface PaginationProps<T> {
   itemsCount: number;
   currentPage: number;
   onPageChange: (page: number) => void;
+  totalCount?: number; // Add optional totalCount prop
 }
 
 const Pagination = <T,>({
@@ -13,11 +13,15 @@ const Pagination = <T,>({
   itemsCount,
   currentPage,
   onPageChange,
+  totalCount, // Add totalCount to destructuring
 }: PaginationProps<T>) => {
   const goToPage = (page: number) => {
     onPageChange(page);
   };
 
+  // Use totalCount if provided, otherwise fall back to itemsCount
+  const displayTotalCount = totalCount !== undefined ? totalCount : itemsCount;
+  
   return (
     <div className="px-6 py-4 flex items-center justify-center border-t border-gray-200 bg-gray-50">
       <div className="flex items-center justify-between w-full">
@@ -25,21 +29,18 @@ const Pagination = <T,>({
           <p className="text-sm text-gray-700 text-center">
             Showing{" "}
             <span className="font-medium">
-              {itemsCount > 0
-                ? table.getState().pagination.pageIndex *
-                    table.getState().pagination.pageSize +
-                  1
+              {displayTotalCount > 0
+                ? (currentPage - 1) * table.getState().pagination.pageSize + 1
                 : 0}
             </span>{" "}
             to{" "}
             <span className="font-medium">
               {Math.min(
-                (table.getState().pagination.pageIndex + 1) *
-                  table.getState().pagination.pageSize,
-                itemsCount
+                currentPage * table.getState().pagination.pageSize,
+                displayTotalCount
               )}
             </span>{" "}
-            of <span className="font-medium">{itemsCount}</span> results
+            of <span className="font-medium">{totalCount}</span> results
           </p>
         </div>
 
@@ -70,9 +71,9 @@ const Pagination = <T,>({
             {/* Next Button */}
             <button
               onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === table.getPageCount()}
+              disabled={currentPage >= Math.ceil(displayTotalCount / table.getState().pagination.pageSize)}
               className={`relative inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium ${
-                currentPage === table.getPageCount()
+                currentPage >= Math.ceil(displayTotalCount / table.getState().pagination.pageSize)
                   ? "text-gray-300 cursor-not-allowed border border-gray-200"
                   : "text-gray-700 hover:bg-gray-100 border border-gray-300"
               }`}

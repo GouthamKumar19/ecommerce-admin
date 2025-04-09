@@ -12,7 +12,7 @@ import {
 } from "../../components/common/SortUtils";
 import EnquiryPopup from "../../components/EnquiryPopup";
 import { getAllEnquiry } from "../../api/enquiry"; // Import the API call
-import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; 
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 
 const EnquiryPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -20,12 +20,14 @@ const EnquiryPage: React.FC = () => {
     key: "createdAt",
     direction: "descending",
   });
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
-  const [itemsPerPage] = useState<number>(3); // Set items per page to 3
+  const [itemsPerPage] = useState<number>(10); // Items per page
+  const [totalEnquiries, setTotalEnquiries] = useState<number>(0);
+  const [pageCount, setPageCount] = useState<number>(0);
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -36,11 +38,10 @@ const EnquiryPage: React.FC = () => {
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
 
-      setIsLoading(true); // Start loading
+      setIsLoading(true);
 
       try {
         const payload = {
-        
           search: [
             {
               term: searchValue,
@@ -56,28 +57,49 @@ const EnquiryPage: React.FC = () => {
             itemsPerPage: itemsPerPage,
           },
         };
-        console.log("Payload:", payload); // Log the payload for debugging
-        const response = await getAllEnquiry(payload); // Call the API
 
-        if (response) {
-          console.log("Fetched Enquiries:", response.data);
-          setEnquiries(response.data); // Set the enquiries data
+        console.log("[DEBUG] Payload:", payload); // Debugging
+
+        const response = await getAllEnquiry(payload); // Fetch data from API
+
+        if (response && response.data) {
+          console.log("[DEBUG] API Response:", response.data);
+          setEnquiries(response.data.totalData || []);
+          setTotalEnquiries(response.data.totalCount || 0);
+          setPageCount(Math.ceil((response.data.totalCount || 0) / itemsPerPage));
+        } else {
+          console.warn("[DEBUG] No data received from API");
+          setEnquiries([]);
+          setTotalEnquiries(0);
         }
-      } catch (err: any) {
+      } catch (error) {
         if (!signal.aborted) {
-          console.error(err.message || "Failed to fetch enquiries"); // Handle any errors
+          console.error("[DEBUG] Error fetching enquiries:", error);
         }
+        setEnquiries([]);
+        setTotalEnquiries(0);
       } finally {
-        setIsLoading(false); // End loading
+        setIsLoading(false);
       }
     };
 
-    fetchEnquiries(); // Execute fetching function
+    fetchEnquiries();
   }, [searchValue, sortConfig, page, itemsPerPage]);
+
+  const handleSort = (key: string) => {
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
+    setSortConfig({ key, direction });
+  };
 
   const handleClosePopup = () => {
     setIsPopupOpen(false);
   };
+
+  const sortedEnquiries = useSortableData(enquiries, sortConfig);
 
   const actionRenderer = (item: Enquiry) => (
     <div className="flex justify-center items-center gap-4">
@@ -90,17 +112,6 @@ const EnquiryPage: React.FC = () => {
       />
     </div>
   );
-
-  const handleSort = (key: string) => {
-    const direction = getNextSortDirection(
-      sortConfig.key,
-      key,
-      sortConfig.direction
-    );
-    setSortConfig({ key, direction });
-  };
-
-  const sortedEnquiries = useSortableData(enquiries, sortConfig);
 
   const columns = [
     {
@@ -148,18 +159,15 @@ const EnquiryPage: React.FC = () => {
       ),
     },
     {
-      header: (
-        <div className="flex items-center justify-center">
-          <span>Actions</span>
-        </div>
-      ),
+      header: <span>Actions</span>,
       key: "actions",
       render: actionRenderer,
     },
   ];
 
   return (
-    <div className="container mx-auto p-1">
+    <div>
+      {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex justify-center w-full md:w-auto flex-grow">
@@ -171,35 +179,31 @@ const EnquiryPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Enquiries Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
           <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
           <DataTable<Enquiry>
-            items={sortedEnquiries.filter(
-              (enquiry) =>
-                enquiry.name
-                  .toLowerCase()
-                  .includes(searchValue.toLowerCase()) ||
-                enquiry.email
-                  .toLowerCase()
-                  .includes(searchValue.toLowerCase()) ||
-                enquiry.message
-                  .toLowerCase()
-                  .includes(searchValue.toLowerCase())
-            )}
+            items={sortedEnquiries}
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            actionRenderer={actionRenderer}
+            actionRenderer= {actionRenderer}
+            
             loading={isLoading}
             currentPage={page}
-            onPageChange={setPage}
+            onPageChange={(newPage) => {
+              console.log("[DEBUG] Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount}
+            totalCount={totalEnquiries}
           />
         )}
       </div>
 
-      {/* Enquiry Popup Dialog */}
+      {/* Enquiry Popup */}
       <EnquiryPopup
         open={isPopupOpen}
         onClose={handleClosePopup}

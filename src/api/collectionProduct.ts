@@ -97,7 +97,7 @@ export const getProductsByCollectionId = async (
     const response = await axiosInstance.get(
       `/admin/collectionProducts/getByCollection/${collectionId}`
     );
-    return response.data;
+    return response.data.tableData;
   } catch (error) {
     console.error("[API] Error fetching products by collection ID:", error);
     throw error;

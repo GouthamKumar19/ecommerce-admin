@@ -43,7 +43,7 @@ export const getAllCollection = async (
       return {
         status: response.status,
         message: response.data.message,
-        data: response?.data?.data?.tableData,
+        data: response?.data?.data,
       };
     } else {
       throw new Error("Failed to fetch enquiries");

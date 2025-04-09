@@ -1,5 +1,3 @@
-// types/enquiry.types.ts
-
 // Define possible value types that can be stored in the record
 type RecordValue = string | number | boolean | null | undefined;
 
@@ -7,9 +5,9 @@ export interface BaseRecord {
   [key: string]: RecordValue; // More specific index signature
 }
 
-// Updated Enquiry interface reflecting the structure of a single enquiry
+// Enquiry interface reflecting the structure of a single enquiry
 export interface Enquiry extends BaseRecord {
-  _id: string; // Changed to _id to match the provided JSON
+  _id: string;
   name: string;
   email: string;
   message: string;
@@ -18,9 +16,10 @@ export interface Enquiry extends BaseRecord {
 }
 
 // Interface for the response structure
-export interface EnquiryResponse {
+export interface ApiResponse<T> {
+  status: number;
   message: string;
-  data: EnquiryData; // Reference to the EnquiryData interface
+  data: T;
 }
 
 // Interface for the data structure containing totalCount and totalData

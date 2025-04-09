@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
-import { StarRating } from "../../components/common/DataTable";
 import { Edit } from "@mui/icons-material";
+import { Star, StarBorder } from "@mui/icons-material"; // Import Star and StarBorder icons
 import { Testimonial } from "../../types/testimonials.types";
 import SearchBar from "../../components/common/SearchBar";
 import SortableHeader, {
@@ -15,7 +15,6 @@ import {
 import { getAllTestimonials } from "../../api/tesstimonial";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import TableSkeletonLoader
 
-
 const TestimonialsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -24,9 +23,11 @@ const TestimonialsPage: React.FC = () => {
   });
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isLoading, setIsLoading] = useState(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [, setError] = useState<string | null>(null); // Error state
   const [page, setPage] = useState<number>(1); // Pagination state
   const [itemsPerPage] = useState<number>(10); // Items per page
+  const [totalCount, setTotalCount] = useState<number>(0); // Total count
+  const [pageCount, setPageCount] = useState<number>(0); // Page count
 
   const navigate = useNavigate();
 
@@ -65,9 +66,16 @@ const TestimonialsPage: React.FC = () => {
         );
         console.log("Fetched Testimonials Response:", response); // Log the entire response
         console.log("Fetched Testimonials Data:", response.data); // Log the fetched data
-        setTestimonials(response.data.tableData); // Ensure the correct data structure is passed
+
+        if (response.data && Array.isArray(response.data.tableData)) {
+          setTestimonials(response.data.tableData); // Ensure the correct data structure is passed
+          setTotalCount(response.data.totalCount); // Set total testimonials count
+          setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate the total pages
+        } else {
+          throw new Error("Invalid API response structure");
+        }
       } catch (error) {
-        setError("");
+        setError("Failed to fetch testimonials");
         console.error("Error fetching testimonials:", error);
       } finally {
         setIsLoading(false);
@@ -83,6 +91,21 @@ const TestimonialsPage: React.FC = () => {
     console.log("Sorted Testimonials:", sortedTestimonials);
   }, [sortedTestimonials]);
 
+  const renderStarRating = (rating: number) => {
+    const maxStars = 5; // Maximum number of stars
+    const stars = [];
+    for (let i = 1; i <= maxStars; i++) {
+      stars.push(
+        i <= rating ? (
+          <Star key={i} sx={{ color: "#ffc107", fontSize: 20 }} /> // Filled star
+        ) : (
+          <StarBorder key={i} sx={{ color: "#ffc107", fontSize: 20 }} /> // Empty star
+        )
+      );
+    }
+    return <div className="flex">{stars}</div>;
+  };
+
   const columns = [
     {
       header: (
@@ -94,6 +117,9 @@ const TestimonialsPage: React.FC = () => {
         />
       ),
       key: "name",
+      render: (item: Testimonial) => (
+        <div className="text-sm text-gray-900">{item.name}</div>
+      ),
     },
     {
       header: (
@@ -105,7 +131,7 @@ const TestimonialsPage: React.FC = () => {
         />
       ),
       key: "rating",
-      render: (item: Testimonial) => <StarRating rating={item.ratings} />, // Use item.ratings
+      render: (item: Testimonial) => renderStarRating(item.ratings), // Render star rating
     },
     {
       header: (
@@ -117,6 +143,9 @@ const TestimonialsPage: React.FC = () => {
         />
       ),
       key: "description",
+      render: (item: Testimonial) => (
+        <div className="text-sm text-gray-900">{item.description}</div>
+      ),
     },
     {
       header: <span>Actions</span>,
@@ -150,7 +179,7 @@ const TestimonialsPage: React.FC = () => {
           </div>
         </div>
       </div>
-      {error && <div className="text-red-600 text-center mb-4">{error}</div>}{" "}
+    
       {/* Displaying the error message */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {isLoading ? (
@@ -164,7 +193,12 @@ const TestimonialsPage: React.FC = () => {
             actionRenderer={actionRenderer}
             loading={isLoading}
             currentPage={page}
-            onPageChange={setPage}
+            onPageChange={(newPage) => {
+              console.log("Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount} // Pass the calculated page count
+            totalCount={totalCount} // Pass the total count to DataTable
           />
         )}
       </div>

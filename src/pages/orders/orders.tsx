@@ -28,6 +28,8 @@ const OrderPage: React.FC = () => {
   const [, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
+  const [totalCount, setTotalCount] = useState<number>(0); // Total order count
+  const [pageCount, setPageCount] = useState<number>(0); // Total page count
   const [activeFilters, setActiveFilters] = useState<{
     filter?: {
       status?: string;
@@ -65,7 +67,14 @@ const OrderPage: React.FC = () => {
           activeFilters
         );
         console.log("API Response:", response);
-        setOrders(response.data.tableData);
+
+        if (response.data && Array.isArray(response.data.tableData)) {
+          setOrders(response.data.tableData); // Populate orders
+          setTotalCount(response.data.totalCount); // Set total count
+          setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate total pages
+        } else {
+          throw new Error("Invalid API response structure");
+        }
       } catch (err: any) {
         setError(err.message || "Failed to fetch orders");
         console.error("Error fetching orders:", err);
@@ -214,8 +223,6 @@ const OrderPage: React.FC = () => {
     },
   ];
 
-  // Remove duplicate handleFilterClick and applyFilters functions
-
   return (
     <div className="container mx-auto p-1">
       <div className="bg-white p-4 rounded-lg shadow mb-4">
@@ -259,11 +266,16 @@ const OrderPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            tableType="order"
+           
             actionRenderer={actionRenderer}
             loading={isLoading}
             currentPage={page}
-            onPageChange={setPage}
+            onPageChange={(newPage) => {
+              console.log("Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount} // Pass the calculated page count
+            totalCount={totalCount} // Pass the total count to DataTable
           />
         )}
       </div>

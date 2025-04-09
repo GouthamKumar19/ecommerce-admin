@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import DataTable from "../../components/common/DataTable";
-import { getAllProducts, deleteProduct } from "../../api/product"; // Import your API fetching function
+import { getAllProducts, deleteProduct } from "../../api/product";
 import { Product } from "../../types/product.types";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
@@ -25,10 +25,12 @@ const ProductPage: React.FC = () => {
     direction: "descending",
   });
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  const [, setError] = useState<string | null>(null); // Error state
-  const [page, setPage] = useState<number>(1); // Pagination state
-  const [itemsPerPage] = useState<number>(10); // Items per page
+  const [isLoading, setIsLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
+  const [totalProducts, setTotalProducts] = useState<number>(0);
+  const [pageCount, setPageCount] = useState<number>(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
@@ -41,34 +43,41 @@ const ProductPage: React.FC = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setIsLoading(true); // Set loading state to true
-      setError(null); // Reset error state
-      setTimeout(async () => {
-        try {
-          const response = await getAllProducts(
-            page,
-            itemsPerPage,
-            searchValue,
-            sortConfig
-          );
-          console.log(response,"Newws");
-          setProducts(response.data.tableData); // Assuming response.data.tableData is an array of products
-        } catch (error) {
-          setError("Failed to fetch products");
-          console.error("Failed to fetch products", error);
-        } finally {
-          setIsLoading(false); // Loading is finished
-        }
-      });
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await getAllProducts(
+          page,
+          itemsPerPage,
+          searchValue,
+          sortConfig
+        );
+
+        // Debugging: Log the entire API response
+        console.log("[DEBUG] API Response:", response);
+
+        // Debugging: Log the totalCount and tableData from the response
+        console.log("[DEBUG] totalCount from API:", response.data.totalCount);
+        console.log("[DEBUG] tableData from API:", response.data.tableData);
+
+        setProducts(response.data.tableData);
+        setTotalProducts(response.data.totalCount); // Set the total product count
+        setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate total pages
+      } catch (error) {
+        setError("Failed to fetch products");
+        console.error("[DEBUG] Error fetching products:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchProducts();
-  }, [page, itemsPerPage, searchValue, sortConfig]); // Dependencies updated
+  }, [page, itemsPerPage, searchValue, sortConfig]);
 
   const handleDeleteProduct = (productId: string | number) => {
     setSelectedProduct(
       products.find((product) => product._id === productId) || null
-    ); // Update ID checking based on your Product type
+    );
     setDialogOpen(true);
   };
 
@@ -79,7 +88,9 @@ const ProductPage: React.FC = () => {
         setSnackbarMessage(response.message);
         setProducts(
           products.filter((product) => product._id !== selectedProduct._id)
-        ); // Remove the deleted product from the list
+        );
+        setTotalProducts((prevTotal) => prevTotal - 1); // Update total count after deletion
+        setPageCount(Math.ceil((totalProducts - 1) / itemsPerPage)); // Recalculate page count
       } catch (error: any) {
         setSnackbarMessage(error.message || "Failed to delete product");
       }
@@ -87,6 +98,17 @@ const ProductPage: React.FC = () => {
     setDialogOpen(false);
     setSelectedProduct(null);
   };
+
+  const handleSort = (key: string) => {
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
+    setSortConfig({ key, direction });
+  };
+
+  const sortedProducts = useSortableData(products, sortConfig);
 
   const actionRenderer = (item: Product) => (
     <div className="flex justify-center items-center gap-4">
@@ -100,17 +122,6 @@ const ProductPage: React.FC = () => {
       />
     </div>
   );
-
-  const handleSort = (key: string) => {
-    const direction = getNextSortDirection(
-      sortConfig.key,
-      key,
-      sortConfig.direction
-    );
-    setSortConfig({ key, direction });
-  };
-
-  const sortedProducts = useSortableData(products, sortConfig);
 
   const columns = [
     {
@@ -148,13 +159,13 @@ const ProductPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-10 w-10">
           <img
             className="h-10 w-10 rounded-full"
-            src={getImage(item.thumbnailImage)} // Use appropriate image field
+            src={getImage(item.thumbnailImage)}
             alt={item.name}
           />
         </div>
       ),
     },
-    // Other column definitions remain the same...
+    // Other columns...
     {
       header: (
         <SortableHeader
@@ -265,13 +276,17 @@ const ProductPage: React.FC = () => {
           <DataTable
             items={sortedProducts}
             columns={columns}
-            idKey="_id" // Use _id based on your Product type structure
+            idKey="_id"
             itemsPerPage={itemsPerPage}
-            tableType="product"
             actionRenderer={actionRenderer}
             loading={isLoading}
             currentPage={page}
-            onPageChange={setPage} // Handle pagination
+            onPageChange={(newPage) => {
+              console.log("[DEBUG] Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount}
+            totalCount={totalProducts} // Pass total product count
           />
         )}
       </div>

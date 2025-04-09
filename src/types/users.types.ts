@@ -1,4 +1,3 @@
-// Define AddressData interface first so we can reference it
 export interface AddressData {
   addressLine1: string;
   addressLine2: string;

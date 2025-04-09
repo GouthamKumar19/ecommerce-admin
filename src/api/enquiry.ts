@@ -1,6 +1,6 @@
 import axiosInstance from "./axios";
 import axios from "axios";
-import { Enquiry } from "../types/enquiry.types";
+import { EnquiryData } from "../types/enquiry.types";
 
 interface ApiResponse<T> {
   status: number;
@@ -8,11 +8,11 @@ interface ApiResponse<T> {
   data: T;
 }
 
-let currentController: AbortController;
+let currentController: AbortController | null = null;
 
 export const getAllEnquiry = async (
   payload: any
-): Promise<ApiResponse<Enquiry[]> | undefined> => {
+): Promise<ApiResponse<EnquiryData>> => {
   console.log("Payload received:", payload); // Log the payload for debugging
 
   try {
@@ -30,8 +30,8 @@ export const getAllEnquiry = async (
     if (response.status === 200) {
       return {
         status: response.status,
-        message: response.data.message,
-        data: response.data.data.totalData,
+        message: response.data.message || "Success",
+        data: response.data.data || { totalCount: 0, totalData: [] },
       };
     } else {
       throw new Error("Failed to fetch enquiries");
@@ -39,9 +39,9 @@ export const getAllEnquiry = async (
   } catch (error: any) {
     if (axios.isCancel(error)) {
       console.log("Request canceled:", error.message);
-    } else {
-      console.error("[API] Error fetching all enquiries:", error);
-      return undefined;
     }
+    throw error;
+  } finally {
+    currentController = null;
   }
 };
