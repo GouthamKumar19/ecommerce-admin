@@ -19,11 +19,12 @@ const DashboardOrdersTable: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchValue, setSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "createdAt",
+    key: "updatedAt",
     direction: "descending",
   });
   const [page, setPage] = useState<number>(1); // Pagination state
   const [itemsPerPage] = useState<number>(5); // Items per page
+  
   const navigate = useNavigate();
 
   const handleViewOrder = (item: Order) => {
@@ -50,7 +51,17 @@ const DashboardOrdersTable: React.FC = () => {
           searchValue,
           sortConfig
         );
-        setOrders(response.data.tableData);
+
+        if (response.data && Array.isArray(response.data.tableData)) {
+          // Slice to get the first 10 records
+          const slicedData = response.data.tableData.slice(0, 10);
+
+          setOrders(slicedData); // Populate only the first 10 orders
+          // setTotalCount(response.data.totalCount); // Set total count
+          // setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate total pages
+        } else {
+          throw new Error("Invalid API response structure");
+        }
       } catch (err: any) {
         console.error("Failed to fetch orders:", err.message);
       } finally {
@@ -119,12 +130,12 @@ const DashboardOrdersTable: React.FC = () => {
       header: (
         <SortableHeader
           label="Date"
-          columnKey="createdAt"
+          columnKey="updatedAt"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
       ),
-      key: "createdAt",
+      key: "updatedA",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">
           {new Date(item.createdAt).toLocaleDateString()}
@@ -189,21 +200,20 @@ const DashboardOrdersTable: React.FC = () => {
         <TableSkeletonLoader columns={7} rows={5} />
       ) : (
         <DataTable<Order>
-        items={sortedOrders}
-        columns={columns}
-        idKey="_id"
-        itemsPerPage={itemsPerPage}
-       
-        actionRenderer={actionRenderer}
-        loading={isLoading}
-        currentPage={page}
-        onPageChange={(newPage) => {
-          console.log("Changing page to:", newPage);
-          setPage(newPage);
-        }}
-        pageCount={1} // Pass the calculated page count
-        totalCount={10} // Pass the total count to DataTable
-      />
+          items={sortedOrders}
+          columns={columns}
+          idKey="_id"
+          itemsPerPage={itemsPerPage}
+          actionRenderer={actionRenderer}
+          loading={isLoading}
+          currentPage={page}
+          onPageChange={(newPage) => {
+            console.log("Changing page to:", newPage);
+            setPage(newPage);
+          }}
+          pageCount={1} // Pass the calculated page count
+          totalCount={10} // Pass the total count to DataTable
+        />
       )}
     </div>
   );

@@ -20,7 +20,7 @@ const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "createdAt",
+    key: "updatedAt",
     direction: "descending",
   });
   const [orders, setOrders] = useState<Order[]>([]);
@@ -101,11 +101,12 @@ const OrderPage: React.FC = () => {
 
   const handleFilterApply = (filters: OrderFilters) => {
     const newFilters: any = {
-      filter: {}
+      filter: {},
     };
 
     if (filters.paymentStatus.length > 0) {
-      newFilters.filter["paymentDetails.status"] = filters.paymentStatus[0].toUpperCase();
+      newFilters.filter["paymentDetails.status"] =
+        filters.paymentStatus[0].toUpperCase();
     }
 
     if (filters.orderStatus.length > 0) {
@@ -233,7 +234,7 @@ const OrderPage: React.FC = () => {
               onSearchChange={setSearchValue}
             />
           </div>
-  
+
           <div className="flex ml-auto">
             <Button
               variant="contained"
@@ -250,7 +251,7 @@ const OrderPage: React.FC = () => {
           </div>
         </div>
       </div>
-  
+
       <OrderFilterDialog
         open={openFilterDialog}
         onClose={() => setOpenFilterDialog(false)}
@@ -266,7 +267,6 @@ const OrderPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-           
             actionRenderer={actionRenderer}
             loading={isLoading}
             currentPage={page}
