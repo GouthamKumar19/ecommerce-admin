@@ -177,7 +177,7 @@ export const CategoryDetails = () => {
                 });
 
                 // Store the formatted filename that will be sent to the server
-                const formattedFileName = `/public/ecommerce/category/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+                const formattedFileName = `public/ecommerce/category/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
                 // Get presigned URL and upload
                 const presignedUrl = await getPresignedUrl(
@@ -244,7 +244,7 @@ export const CategoryDetails = () => {
       });
 
       // Store the formatted filename
-      const formattedFileName = `/public/ecommerce/subcategory/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+      const formattedFileName = `public/ecommerce/subcategory/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
       // Get presigned URL and upload
       const presignedUrl = await getPresignedUrl(fileName, "subcategory");

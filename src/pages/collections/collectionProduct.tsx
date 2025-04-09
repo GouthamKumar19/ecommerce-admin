@@ -24,6 +24,7 @@ import {
   BaseRecord,
   Collections,
 } from "../../types/collectionResponse.types";
+import { getImage } from "../../utils/imagePreview";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 
 const ProductAddPage: React.FC = () => {
@@ -286,7 +287,7 @@ const ProductAddPage: React.FC = () => {
           <div className="text-center flex-shrink-0 h-10 w-10">
             <img
               className="h-10 w-10 rounded-full"
-              src={typedItem?.productDetails?.thumbnailImage}
+              src={getImage(typedItem?.productDetails?.thumbnailImage)}
               alt={typedItem?.productDetails?.name || "Product thumbnail"}
             />
           </div>

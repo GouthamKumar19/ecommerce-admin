@@ -18,7 +18,40 @@ import {
   updateCollection,
 } from "../api/collections";
 import { useParams, useNavigate } from "react-router-dom";
-import { getPresignedUrl,uploadFile } from "../api/collectionImage"; // Import your file upload utilities
+import { getPresignedUrl, uploadFile } from "../api/collectionImage";
+
+/**
+ * Constructs full S3 image URL from file path or returns fallback image
+ * @param {string | undefined} filePath - The path of the image file
+ * @returns {string} - Complete S3 URL or fallback image URL
+ */
+export const getImage = (filePath?: string): string => {
+  // Get S3 base URL from environment variables
+  const s3BaseUrl =
+    import.meta.env.VITE_S3_URL ||
+    "https://your-default-s3-bucket.s3.amazonaws.com/";
+
+  // Fallback/dummy image URL
+  const fallbackImage = "/assets/images/placeholder.jpg";
+
+  // If no file path provided or it's empty, return fallback image
+  if (!filePath || filePath.trim() === "") {
+    return fallbackImage;
+  }
+
+  // Check if the filePath already contains the full URL
+  if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+    return filePath;
+  }
+
+  // Ensure file path starts with a forward slash if not already
+  const formattedPath = filePath.startsWith("/")
+    ? filePath.substring(1)
+    : filePath;
+
+  // Construct and return the full S3 URL
+  return `${s3BaseUrl}${formattedPath}`;
+};
 
 interface FormErrors {
   collectionName: string;
@@ -56,9 +89,10 @@ const CollectionForm: React.FC = () => {
             setCollectionName(response.data.name);
 
             if (response.data.bannerImage) {
+              const bannerImageUrl = getImage(response.data.bannerImage);
               const updatedImages = [...images];
               const imageIndex = updatedImages.findIndex(
-                (img) => img.url === response.data.bannerImage
+                (img) => img.url === bannerImageUrl
               );
               if (imageIndex >= 0) {
                 updatedImages.forEach((img, idx) => {
@@ -67,7 +101,7 @@ const CollectionForm: React.FC = () => {
               } else {
                 updatedImages.push({
                   id: Date.now(),
-                  url: response.data.bannerImage,
+                  url: bannerImageUrl,
                   selected: true,
                 });
               }
@@ -129,42 +163,42 @@ const CollectionForm: React.FC = () => {
   };
 
   // Helper function to handle image uploads if needed
- const uploadPendingImages = async () => {
-   const selectedImage = images.find((img) => img.selected);
-   if (!selectedImage) return null;
+  const uploadPendingImages = async () => {
+    const selectedImage = images.find((img) => img.selected);
+    if (!selectedImage) return null;
 
-   // Check if the image is a base64 string that needs uploading
-   if (selectedImage.url.startsWith("data:image")) {
-     setUploadInProgress(true);
-     try {
-       // Convert base64 to blob
-       const response = await fetch(selectedImage.url);
-       const blob = await response.blob();
+    // Check if the image is a base64 string that needs uploading
+    if (selectedImage.url.startsWith("data:image")) {
+      setUploadInProgress(true);
+      try {
+        // Convert base64 to blob
+        const response = await fetch(selectedImage.url);
+        const blob = await response.blob();
 
-       // Create a file from the blob
-       const fileName = `collection_image_${Date.now()}.jpg`;
-       const imageFile = new File([blob], fileName, { type: "image/jpeg" });
+        // Create a file from the blob
+        const fileName = `image_${Date.now()}.jpg`;
+        const imageFile = new File([blob], fileName, { type: "image/jpeg" });
 
-       // Store the formatted filename that will be sent to the server
-       const formattedFileName = `/public/ecommerce/collections/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+        // Store the formatted filename that will be sent to the server
+        const formattedFileName = `public/ecommerce/collections/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
-       // Get presigned URL and upload
-       const presignedUrl = await getPresignedUrl(fileName, "collections");
-       await uploadFile(presignedUrl, imageFile);
+        // Get presigned URL and upload
+        const presignedUrl = await getPresignedUrl(fileName, "collections");
+        await uploadFile(presignedUrl, imageFile);
 
-       // Return the formatted filename instead of the presigned URL
-       return formattedFileName;
-     } catch (error) {
-       console.error("Error uploading image:", error);
-       throw new Error("Failed to upload image");
-     } finally {
-       setUploadInProgress(false);
-     }
-   }
+        // Return the formatted filename instead of the presigned URL
+        return formattedFileName;
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        throw new Error("Failed to upload image");
+      } finally {
+        setUploadInProgress(false);
+      }
+    }
 
-   // If the image is already a URL, just return it
-   return selectedImage.url;
- };
+    // If the image is already a URL, just return it
+    return selectedImage.url;
+  };
 
   const handleConfirm = async () => {
     if (!validateForm()) {
