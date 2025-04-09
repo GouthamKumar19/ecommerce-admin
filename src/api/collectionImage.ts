@@ -8,13 +8,13 @@ import axiosInstance from "./axios"; // Ensure this is correctly configured
  * @returns {Promise<string>} - A promise that resolves to the presigned URL
  */
 export const getPresignedUrl = async (fileName: string, type: string): Promise<string> => {
-    const formattedFileName = `/public/ecommerce/${type}/` + fileName.toLowerCase().replace(/\s+/g, "_");
+    const formattedFileName = `public/ecommerce/${type}/` + fileName.toLowerCase().replace(/\s+/g, "_");
   const response = await axiosInstance.post(`/generic/image`, {
     fileName:formattedFileName,
   });
 
   if (response.status === 200) {
-    return response.data.data.signedPost; // Adjust to return signedPost
+    return response.data.data.signedPost; // Adjust to return  signedPost
   } else {
     throw new Error('Failed to get presigned URL');
   }

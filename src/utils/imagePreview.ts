@@ -7,7 +7,7 @@
  */
 export const getImage = (filePath?: string): string => {
   // Get S3 base URL from environment variables
-  const s3BaseUrl = import.meta.env.VITE_S3_URL || 'https://your-default-s3-bucket.s3.amazonaws.com';
+  const s3BaseUrl = import.meta.env.VITE_S3_URL || 'https://your-default-s3-bucket.s3.amazonaws.com/';
   
   // Fallback/dummy image URL
   const fallbackImage = '/assets/images/placeholder.jpg';
@@ -23,7 +23,7 @@ export const getImage = (filePath?: string): string => {
   }
   
   // Ensure file path starts with a forward slash if not already
-  const formattedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
+  const formattedPath = filePath.startsWith('/') ? filePath : `${filePath}`;
   
   // Construct and return the full S3 URL
   return `${s3BaseUrl}${formattedPath}`;

@@ -9,6 +9,8 @@ import { getProductById, updateProduct, addProduct, addProductVariants,updatePro
 import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
 import { Product } from "../../types/product.types";
 import { Variant } from "../../components/Product/VariantManager"; // Import Variant type
+import { getImage } from "../../utils/imagePreview";
+
 
 interface ProductImage {
   id: number;
@@ -142,7 +144,7 @@ export const ProductDetails = () => {
         setImages(
           product.images.map((url: string, index: number) => ({
             id: index,
-            url,
+            url: getImage(url), // Use getImage to format the URL
             selected: true,
           }))
         );
@@ -169,7 +171,7 @@ export const ProductDetails = () => {
             setImages(
               product.images.map((url: string, index: number) => ({
                 id: index,
-                url,
+                url: getImage(url), // Use getImage to format the URL
                 selected: true,
               }))
             );
@@ -189,7 +191,6 @@ export const ProductDetails = () => {
       }
     }
   }, [id, location.state]);
-
   useEffect(() => {
     // Set up action handlers for the ActionBox component
     setActionHandlers({
@@ -240,7 +241,7 @@ export const ProductDetails = () => {
             });
 
             // Store the formatted filename that will be sent to the server
-            const formattedFileName = `/public/ecommerce/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+            const formattedFileName = `public/ecommerce/product/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
             // Get presigned URL and upload
             const presignedUrl = await getPresignedUrl(fileName, "product");

@@ -7,8 +7,8 @@ import ImagePopup from "./ImagePopup";
 import ImageUploader from "./ImageUploader";
 import ConfirmationDialog from "./Dialog"; // Importing the ConfirmationDialog
 import "yet-another-react-lightbox/styles.css";
-// import { getPresignedUrl } from "../../api/collectionImage";
-// Types
+
+
 export interface ProductImage {
   id: number;
   url: string;
@@ -114,7 +114,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
 const ImageSelection: React.FC<ImageSelectionProps> = ({
   images,
   setImages,
-  // type,
+  type,
 }) => {
   // State
   const [cropOpen, setCropOpen] = useState(false);
@@ -300,7 +300,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
         }}
         imageUrl={currentImage}
         onCropComplete={handleCropComplete}
-        //type={type} // Pass the type prop here
+        types={type} // Pass the type prop here
       />
 
       {/* Image Popup */}
