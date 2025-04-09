@@ -110,7 +110,7 @@ const CategoryPage: React.FC = () => {
         setError(err.message || "Failed to fetch categories");
         console.error("Error fetching categories:", err);
       } finally {
-        setIsLoading(false);
+         setTimeout(() => setIsLoading(false), 1000);
       }
     };
 

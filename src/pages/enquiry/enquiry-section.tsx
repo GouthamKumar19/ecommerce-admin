@@ -79,7 +79,7 @@ const EnquiryPage: React.FC = () => {
         setEnquiries([]);
         setTotalEnquiries(0);
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // End loading
       }
     };
 

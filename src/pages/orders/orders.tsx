@@ -79,7 +79,7 @@ const OrderPage: React.FC = () => {
         setError(err.message || "Failed to fetch orders");
         console.error("Error fetching orders:", err);
       } finally {
-        setIsLoading(false);
+        setTimeout(() => setIsLoading(false), 1000);
       }
     };
 

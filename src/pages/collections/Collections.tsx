@@ -96,7 +96,8 @@ const CollectionsPage: React.FC = () => {
           setError(err.message || "Failed to fetch collections");
         }
       } finally {
-        setIsLoading(false);
+        // Add a delay to display the skeleton loader for longer
+        setTimeout(() => setIsLoading(false), 1000); // 1 second delay
       }
     };
 
@@ -244,7 +245,7 @@ const CollectionsPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <TableSkeletonLoader columns={3} rows={10} />
+          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
         ) : (
           <DataTable
             items={sortedCollections}
