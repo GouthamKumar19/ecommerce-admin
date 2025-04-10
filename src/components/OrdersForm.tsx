@@ -92,7 +92,6 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
           <span className="text-gray-700">{order.orderId}</span>
         </h1>
       </div>
-
       {/* Row 1: Name, Shipping Address, Billing Address */}
       <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-2 py-1">

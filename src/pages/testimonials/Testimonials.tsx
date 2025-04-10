@@ -131,7 +131,7 @@ const TestimonialsPage: React.FC = () => {
         />
       ),
       key: "rating",
-      render: (item: Testimonial) => renderStarRating(item.ratings), // Render star rating
+      render: (item: Testimonial) => renderStarRating(item.ratings),
     },
     {
       header: (
@@ -144,7 +144,11 @@ const TestimonialsPage: React.FC = () => {
       ),
       key: "description",
       render: (item: Testimonial) => (
-        <div className="text-sm text-gray-900">{item.description}</div>
+        <div className="text-sm text-gray-900">
+          {item.description.length > 50 
+            ? `${item.description.substring(0, 50)}...` 
+            : item.description}
+        </div>
       ),
     },
     {
