@@ -466,8 +466,8 @@ const ProductAddPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            totalCount={8} // Pass the total count
-            pageCount={1} // Pass the total page count
+            totalCount={tableData.length} // Use the actual length of tableData
+            pageCount={Math.ceil(tableData.length / itemsPerPage)} // Calculate the page count based on data length
             currentPage={page}
             onPageChange={(newPage) => setPage(newPage)}
             actionRenderer={actionRenderer}
