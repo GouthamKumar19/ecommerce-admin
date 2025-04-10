@@ -20,7 +20,7 @@ const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "createdAt",
+    key: "updatedAt",
     direction: "descending",
   });
   const [orders, setOrders] = useState<Order[]>([]);
