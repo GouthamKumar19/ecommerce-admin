@@ -48,7 +48,7 @@ const UsersPage: React.FC = () => {
           sortConfig
         );
         setUsers(response.data.tableData);
-        // @ts-expect-error non fix tommroow
+       
         
         setPageCount(response.data.totalCount); // Set the page count based on totalCount
         console.log("User Details:", response.data);

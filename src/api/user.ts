@@ -5,8 +5,9 @@ import { SortConfig } from "../types/users.types";
 
 let currentController: AbortController | null = null;
 
+// Fix the UserResponse interface
 interface UserResponse {
-  totalCount(totalCount: any): unknown;
+  totalCount: number; // Change from a function to a number property
   tableData: User[];
   // Add other response properties as needed
 }
