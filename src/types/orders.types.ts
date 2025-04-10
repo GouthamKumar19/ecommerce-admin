@@ -66,9 +66,9 @@ export interface OrderNew {
   customerId: string;
   customerDetails: CustomerDetails;
   shippingAddressId: string;
-  shippingAddressDetails: Address;
+  shippingAddress: Address;
   billingAddressId: string;
-  billingAddressDetails: Address;
+  billingAddress: Address;
   products: OrderProduct[];
   status: OrderStatus;
   paymentId: string;
