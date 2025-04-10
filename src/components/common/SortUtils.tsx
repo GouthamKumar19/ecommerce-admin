@@ -6,19 +6,42 @@ export function useSortableData<T extends Record<string, unknown>>(
 ): T[] {
   console.log("Sortable data:", items);
 
-  //if items is empty, return empty array
+  // If items is empty, return empty array
   if (items.length === 0) {
     console.log("NEWSD")
     return [];
   }
+  
+  // If no sort config is provided, return items as is
   if (!sortConfig.key || !sortConfig.direction) {
     return items;
   }
 
   return [...items].sort((a, b) => {
-    const aValue = a[sortConfig.key] as ComparableValue; // Use a type assertion
-    const bValue = b[sortConfig.key] as ComparableValue; // Use a type assertion
+    // Function to get nested property value using dot notation
+    const getNestedValue = (obj: any, path: string) => {
+      return path.split('.').reduce((prev, curr) => {
+        return prev ? prev[curr] : null;
+      }, obj);
+    };
 
+    // Get values using the nested property path
+    const aValue = getNestedValue(a, sortConfig.key) as ComparableValue;
+    const bValue = getNestedValue(b, sortConfig.key) as ComparableValue;
+
+    // Handle null or undefined values
+    if (aValue === null && bValue === null) return 0;
+    if (aValue === null) return sortConfig.direction === "ascending" ? 1 : -1;
+    if (bValue === null) return sortConfig.direction === "ascending" ? -1 : 1;
+
+    // Handle string comparison
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortConfig.direction === "ascending" 
+        ? aValue.localeCompare(bValue) 
+        : bValue.localeCompare(aValue);
+    }
+
+    // Handle numeric and other comparisons
     if (aValue < bValue) {
       return sortConfig.direction === "ascending" ? -1 : 1;
     }
@@ -30,7 +53,7 @@ export function useSortableData<T extends Record<string, unknown>>(
 }
 
 // A type that encompasses all values that can be compared
-type ComparableValue = string | number | boolean;
+type ComparableValue = string | number | boolean | null;
 
 export function getNextSortDirection(
   currentKey: string,

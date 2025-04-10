@@ -17,11 +17,12 @@ import type { Collection } from "../../types/collections.types";
 import { getImage } from "../../utils/imagePreview";
 
 
+
 // Add this interface near your other imports
-// interface CollectionResponse {
-//   collections: Collection[];
-//   totalCount: number;
-// }
+export interface CollectionResponse {
+  tableData: Collection[];
+  totalCount: number;
+}
 
 const CollectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -75,17 +76,16 @@ const CollectionsPage: React.FC = () => {
         console.log("Payload:", payload);
         const response = await getAllCollection(payload);
 
+        // In your useEffect, update the data handling:
         if (response && response.data) {
           console.log("Fetched Collections Response:", response);
-// / Double type assertion for 
-
           console.log("Fetched Collections Data:", response.data);
-          // @ts-expect-error non fix tommroow
-          setCollections( response.data.tableData);
-          // @ts-expect-error non fix tommroow
-
-          setTotalCount(response.data.totalCount); // Set total count
-          // setPageCount(response.data.totalCount ); // Calculate page count
+          
+          // First convert to unknown, then to CollectionResponse
+          const responseData = response.data as unknown as CollectionResponse;
+          setCollections(responseData.tableData);
+          setTotalCount(responseData.totalCount);
+          setPageCount(Math.ceil(responseData.totalCount / itemsPerPage)); // Calculate page count
         } else {
           console.error("Invalid response format:", response);
           throw new Error("Invalid response format");

@@ -70,8 +70,8 @@ export interface ProductResponse {
 
 // Example response structure for collections
 export interface CollectionResponse {
-  totalCount: number;
   tableData: Collection[];
+  totalCount: number;
 }
 
 export type SortDirection = "ascending" | "descending" | null;
