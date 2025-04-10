@@ -10,7 +10,7 @@ import SortableHeader, {
 } from "../../components/common/SortableHeader";
 import {
   useSortableData,
-  getNextSortDirection,
+
 } from "../../components/common/SortUtils";
 import { getCollectionById } from "../../api/collections";
 import {
@@ -73,13 +73,14 @@ const ProductAddPage: React.FC = () => {
       setError(null);
 
       try {
+        // Update the search payload to allow partial matches anywhere in the string
         const payload = {
           search: [
             {
               term: searchValue,
               fields: ["productDetails.name"],
-              startsWith: true,
-              endsWith: false,
+              startsWith: false, // Allow matches anywhere in the string
+              endsWith: false,   // Allow matches anywhere in the string
             },
           ],
           options: {
@@ -95,10 +96,18 @@ const ProductAddPage: React.FC = () => {
         console.log("Fetched Collection Response:", response);
 
         if (response?.data?.collectionProducts) {
-          setTableData(response.data.collectionProducts);
-          console.log("Fetched Collection Products:", response.data.collectionProducts);
+          // Filter the products based on the searchValue
+          const filteredProducts = response.data.collectionProducts.filter((product) =>
+            product.productDetails?.name
+              ?.toLowerCase()
+              .includes(searchValue.toLowerCase())
+          );
+
+          setTableData(filteredProducts);
+          console.log("Filtered Collection Products:", filteredProducts);
+
           // Extract product IDs for later use when adding new products
-          const productIds = response.data.collectionProducts
+          const productIds = filteredProducts
             .filter((product) => product.isEnabled) // Filter out disabled products
             .map((product) => product.productId);
           console.log("Product IDs in this collection:", productIds);
@@ -217,12 +226,20 @@ const ProductAddPage: React.FC = () => {
   };
 
   const handleSort = (key: string) => {
-    const direction = getNextSortDirection(
-      sortConfig.key,
-      key,
-      sortConfig.direction
-    );
-    setSortConfig({ key, direction });
+    // If clicking on the same column that's already sorted
+    if (sortConfig.key === key) {
+      // Cycle through: ascending → descending → no sort
+      if (sortConfig.direction === "ascending") {
+        setSortConfig({ key, direction: "descending" });
+      } else if (sortConfig.direction === "descending") {
+        setSortConfig({ key: "", direction: null }); // Reset to default/unsorted
+      } else {
+        setSortConfig({ key, direction: "ascending" });
+      }
+    } else {
+      // If clicking on a new column, start with ascending
+      setSortConfig({ key, direction: "ascending" });
+    }
   };
 
   // Use BaseRecord instead of Record<string, unknown> for better type compatibility
@@ -278,124 +295,141 @@ const ProductAddPage: React.FC = () => {
     );
   };
 
- const columns = [
-   {
-     header: "",
-     key: "imageUrl",
-     render: (item: BaseRecord) => {
-       const typedItem = toCollectionProduct(item);
-       return (
-         <div className="text-center flex-shrink-0 h-10 w-10">
-           <img
-             className="h-10 w-10 rounded-full"
-             src={getImage(typedItem?.productDetails?.thumbnailImage)}
-             alt={typedItem?.productDetails?.name || "Product thumbnail"}
-           />
-         </div>
-       );
-     },
-   },
-   {
-     header: (
-       <SortableHeader
-         label="Product Name"
-         columnKey="name"
-         sortConfig={sortConfig}
-         onSort={handleSort}
-       />
-     ),
-     key: "name",
-     render: (item: BaseRecord) => {
-       const typedItem = toCollectionProduct(item);
-       return (
-         <div className="flex text-left">
-           <div className="ml-0">
-             <div
-               className={`text-sm max-w-xs truncate ${
-                 disabledProducts.includes(String(typedItem._id))
-                   ? "text-gray-400"
-                   : "text-gray-900"
-               }`}
-             >
-               {typedItem?.productDetails?.name}
-             </div>
-           </div>
-         </div>
-       );
-     },
-   },
-   {
-     header: (
-       <SortableHeader
-         label="Description"
-         columnKey="description"
-         sortConfig={sortConfig}
-         onSort={handleSort}
-       />
-     ),
-     key: "description",
-     render: (item: BaseRecord) => {
-       const typedItem = toCollectionProduct(item);
-       return (
-         <div
-           className={`text-sm max-w-xs truncate ${
-             disabledProducts.includes(String(typedItem._id))
-               ? "text-gray-400"
-               : "text-gray-900"
-           }`}
-         >
-           {typedItem?.productDetails?.description}
-         </div>
-       );
-     },
-   },
-   {
-     header: (
-       <SortableHeader
-         label="Price"
-         columnKey="price"
-         sortConfig={sortConfig}
-         onSort={handleSort}
-       />
-     ),
-     key: "price",
-     render: (item: BaseRecord) => {
-       const typedItem = toCollectionProduct(item);
-       const formattedPrice = new Intl.NumberFormat("en-IN", {
-         style: "currency",
-         currency: "INR",
-         minimumFractionDigits: 2,
-       }).format(typedItem?.productDetails?.price || 0);
-
-       return (
-         <div
-           className={`flex items-center ${
-             disabledProducts.includes(String(typedItem._id))
-               ? "text-gray-400"
-               : ""
-           }`}
-         >
-           <span
-             className={`text-sm font-medium ${
-               disabledProducts.includes(String(typedItem._id))
-                 ? "text-gray-400"
-                 : "text-gray-900"
-             }`}
-           >
-             {formattedPrice}
-           </span>
-         </div>
-       );
-     },
-   },
-   
-   {
-     header: <span>Actions</span>,
-     key: "actions",
-     render: actionRenderer,
-   },
- ];
-
+  const columns = [
+    {
+      header: "",
+      key: "imageUrl",
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div className="text-center flex-shrink-0 h-10 w-10">
+            <img
+              className="h-10 w-10 rounded-full"
+              src={getImage(typedItem?.productDetails?.thumbnailImage)}
+              alt={typedItem?.productDetails?.name || "Product thumbnail"}
+            />
+          </div>
+        );
+      },
+    },
+    {
+      header: (
+        <SortableHeader
+          label="Product Name"
+          columnKey="productDetails.name"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
+      key: "name",
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div className="flex text-left">
+            <div className="ml-0">
+              <div
+                className={`text-sm max-w-xs truncate ${
+                  disabledProducts.includes(String(typedItem._id))
+                    ? "text-gray-400"
+                    : "text-gray-900"
+                }`}
+              >
+                {typedItem?.productDetails?.name}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: (
+        <SortableHeader
+          label="Description"
+          columnKey="productDetails.description"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
+      key: "description",
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div
+            className={`text-sm max-w-xs truncate ${
+              disabledProducts.includes(String(typedItem._id))
+                ? "text-gray-400"
+                : "text-gray-900"
+            }`}
+          >
+            {typedItem?.productDetails?.description}
+          </div>
+        );
+      },
+    },
+    {
+      header: (
+        <SortableHeader
+          label="Price"
+          columnKey="productDetails.price"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
+      key: "price",
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div
+            className={`flex items-center ${
+              disabledProducts.includes(String(typedItem._id))
+                ? "text-gray-400"
+                : ""
+            }`}
+          >
+            <span
+              className={`text-sm font-medium ${
+                disabledProducts.includes(String(typedItem._id))
+                  ? "text-gray-400"
+                  : "text-gray-900"
+              }`}
+            >
+              ${typedItem?.productDetails?.price}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: (
+        <SortableHeader
+          label="Quantity"
+          columnKey="productDetails.quantity"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
+      key: "quantity",
+      render: (item: BaseRecord) => {
+        const typedItem = toCollectionProduct(item);
+        return (
+          <div
+            className={`text-sm ${
+              disabledProducts.includes(String(typedItem._id))
+                ? "text-gray-400"
+                : "text-gray-900"
+            }`}
+          >
+            {typedItem?.productDetails?.quantity}
+          </div>
+        );
+      },
+    },
+    {
+      header: <span>Actions</span>,
+      key: "actions",
+      render: actionRenderer,
+    },
+  ];
   if (error) {
     return (
       <div className="bg-white p-4 rounded-lg shadow mb-4">
@@ -403,7 +437,6 @@ const ProductAddPage: React.FC = () => {
       </div>
     );
   }
-
   return (
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
@@ -415,7 +448,6 @@ const ProductAddPage: React.FC = () => {
               onSearchChange={setSearchValue}
             />
           </div>
-
           <div className="flex ml-auto">
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
@@ -427,7 +459,6 @@ const ProductAddPage: React.FC = () => {
           </div>
         </div>
       </div>
-
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
           <TableSkeletonLoader columns={6} rows={10} /> // Show the skeleton loader while loading
@@ -439,8 +470,8 @@ const ProductAddPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            totalCount={8} // Pass the total count
-            pageCount={1} // Pass the total page count
+            totalCount={tableData.length} // Use the actual length of tableData
+            pageCount={Math.ceil(tableData.length / itemsPerPage)} // Calculate the page count based on data length
             currentPage={page}
             onPageChange={(newPage) => setPage(newPage)}
             actionRenderer={actionRenderer}
@@ -448,7 +479,6 @@ const ProductAddPage: React.FC = () => {
           />
         )}
       </div>
-
       <ConfirmationDialog
         open={dialogOpen}
         title={dialogTitle}
