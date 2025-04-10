@@ -88,8 +88,8 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={paymentStatus.includes("Complete")}
-                    onChange={() => handlePaymentStatusChange("Complete")}
+                    checked={paymentStatus.includes("Completed")}
+                    onChange={() => handlePaymentStatusChange("Completed")}
                     sx={{
                       color: "var(--secondary-color)",
                       "&.Mui-checked": {
