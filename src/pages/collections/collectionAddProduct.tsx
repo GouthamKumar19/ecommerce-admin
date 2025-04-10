@@ -346,33 +346,36 @@ const CollectionAddPage: React.FC = () => {
         />
       ),
       key: "price",
-      render: (item: Product) => (
-        <div className="flex items-center">
-          <span className="text-sm font-medium text-gray-900">
-            ${item.price.toFixed(2)}
-          </span>
-          {item.slashedPrice && (
-            <span className="ml-2 text-sm text-gray-500 line-through">
-              ${item.slashedPrice.toFixed(2)}
+      render: (item: Product) => {
+        const formattedPrice = new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+          minimumFractionDigits: 2,
+        }).format(item.price);
+
+        const formattedSlashedPrice =
+          item.slashedPrice &&
+          new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: "INR",
+            minimumFractionDigits: 2,
+          }).format(item.slashedPrice);
+
+        return (
+          <div className="flex items-center">
+            <span className="text-sm font-medium text-gray-900">
+              {formattedPrice}
             </span>
-          )}
-        </div>
-      ),
+            {formattedSlashedPrice && (
+              <span className="ml-2 text-sm text-gray-500 line-through">
+                {formattedSlashedPrice}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
-    {
-      header: (
-        <SortableHeader
-          label="Quantity"
-          columnKey="quantity"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "quantity",
-      render: (item: Product) => (
-        <div className="text-sm text-gray-900">{item.quantity}</div>
-      ),
-    },
+    
   ];
 
   return (

@@ -163,9 +163,15 @@ const OrderPage: React.FC = () => {
         />
       ),
       key: "total",
-      render: (item: Order) => (
-        <div className="text-sm text-gray-900">${item.total.toFixed(2)}</div>
-      ),
+      render: (item: Order) => {
+        const formattedTotal = new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+          minimumFractionDigits: 2,
+        }).format(item.total);
+
+        return <div className="text-sm text-gray-900">{formattedTotal}</div>;
+      },
     },
     {
       header: (

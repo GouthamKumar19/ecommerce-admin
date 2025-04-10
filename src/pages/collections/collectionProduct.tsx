@@ -278,141 +278,123 @@ const ProductAddPage: React.FC = () => {
     );
   };
 
-  const columns = [
-    {
-      header: "",
-      key: "imageUrl",
-      render: (item: BaseRecord) => {
-        const typedItem = toCollectionProduct(item);
-        return (
-          <div className="text-center flex-shrink-0 h-10 w-10">
-            <img
-              className="h-10 w-10 rounded-full"
-              src={getImage(typedItem?.productDetails?.thumbnailImage)}
-              alt={typedItem?.productDetails?.name || "Product thumbnail"}
-            />
-          </div>
-        );
-      },
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Product Name"
-          columnKey="name"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "name",
-      render: (item: BaseRecord) => {
-        const typedItem = toCollectionProduct(item);
-        return (
-          <div className="flex text-left">
-            <div className="ml-0">
-              <div
-                className={`text-sm max-w-xs truncate ${
-                  disabledProducts.includes(String(typedItem._id))
-                    ? "text-gray-400"
-                    : "text-gray-900"
-                }`}
-              >
-                {typedItem?.productDetails?.name}
-              </div>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Description"
-          columnKey="description"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "description",
-      render: (item: BaseRecord) => {
-        const typedItem = toCollectionProduct(item);
-        return (
-          <div
-            className={`text-sm max-w-xs truncate ${
-              disabledProducts.includes(String(typedItem._id))
-                ? "text-gray-400"
-                : "text-gray-900"
-            }`}
-          >
-            {typedItem?.productDetails?.description}
-          </div>
-        );
-      },
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Price"
-          columnKey="price"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "price",
-      render: (item: BaseRecord) => {
-        const typedItem = toCollectionProduct(item);
-        return (
-          <div
-            className={`flex items-center ${
-              disabledProducts.includes(String(typedItem._id))
-                ? "text-gray-400"
-                : ""
-            }`}
-          >
-            <span
-              className={`text-sm font-medium ${
-                disabledProducts.includes(String(typedItem._id))
-                  ? "text-gray-400"
-                  : "text-gray-900"
-              }`}
-            >
-              ${typedItem?.productDetails?.price}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Quantity"
-          columnKey="quantity"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "quantity",
-      render: (item: BaseRecord) => {
-        const typedItem = toCollectionProduct(item);
-        return (
-          <div
-            className={`text-sm ${
-              disabledProducts.includes(String(typedItem._id))
-                ? "text-gray-400"
-                : "text-gray-900"
-            }`}
-          >
-            {typedItem?.productDetails?.quantity}
-          </div>
-        );
-      },
-    },
-    {
-      header: <span>Actions</span>,
-      key: "actions",
-      render: actionRenderer,
-    },
-  ];
+ const columns = [
+   {
+     header: "",
+     key: "imageUrl",
+     render: (item: BaseRecord) => {
+       const typedItem = toCollectionProduct(item);
+       return (
+         <div className="text-center flex-shrink-0 h-10 w-10">
+           <img
+             className="h-10 w-10 rounded-full"
+             src={getImage(typedItem?.productDetails?.thumbnailImage)}
+             alt={typedItem?.productDetails?.name || "Product thumbnail"}
+           />
+         </div>
+       );
+     },
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Product Name"
+         columnKey="name"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "name",
+     render: (item: BaseRecord) => {
+       const typedItem = toCollectionProduct(item);
+       return (
+         <div className="flex text-left">
+           <div className="ml-0">
+             <div
+               className={`text-sm max-w-xs truncate ${
+                 disabledProducts.includes(String(typedItem._id))
+                   ? "text-gray-400"
+                   : "text-gray-900"
+               }`}
+             >
+               {typedItem?.productDetails?.name}
+             </div>
+           </div>
+         </div>
+       );
+     },
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Description"
+         columnKey="description"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "description",
+     render: (item: BaseRecord) => {
+       const typedItem = toCollectionProduct(item);
+       return (
+         <div
+           className={`text-sm max-w-xs truncate ${
+             disabledProducts.includes(String(typedItem._id))
+               ? "text-gray-400"
+               : "text-gray-900"
+           }`}
+         >
+           {typedItem?.productDetails?.description}
+         </div>
+       );
+     },
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Price"
+         columnKey="price"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "price",
+     render: (item: BaseRecord) => {
+       const typedItem = toCollectionProduct(item);
+       const formattedPrice = new Intl.NumberFormat("en-IN", {
+         style: "currency",
+         currency: "INR",
+         minimumFractionDigits: 2,
+       }).format(typedItem?.productDetails?.price || 0);
+
+       return (
+         <div
+           className={`flex items-center ${
+             disabledProducts.includes(String(typedItem._id))
+               ? "text-gray-400"
+               : ""
+           }`}
+         >
+           <span
+             className={`text-sm font-medium ${
+               disabledProducts.includes(String(typedItem._id))
+                 ? "text-gray-400"
+                 : "text-gray-900"
+             }`}
+           >
+             {formattedPrice}
+           </span>
+         </div>
+       );
+     },
+   },
+   
+   {
+     header: <span>Actions</span>,
+     key: "actions",
+     render: actionRenderer,
+   },
+ ];
 
   if (error) {
     return (

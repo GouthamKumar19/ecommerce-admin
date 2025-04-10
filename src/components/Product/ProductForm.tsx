@@ -151,7 +151,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     fontSize: "0.65rem",
                   }}
                 >
-                  {`${productName.length}/10`}
+                  {`${productName.length}/20`}
                 </InputAdornment>
               ),
               style: {

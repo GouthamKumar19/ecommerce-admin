@@ -83,105 +83,111 @@ const DashboardOrdersTable: React.FC = () => {
 
   const sortedOrders = useSortableData(orders, sortConfig);
 
-  const columns = [
-    {
-      header: (
-        <SortableHeader
-          label="Order ID"
-          columnKey="orderId"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "orderId",
-      render: (item: Order) => (
-        <div className="text-sm text-gray-900">{item.orderId}</div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Customer Name"
-          columnKey="customerDetails.name"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "customerDetails.name",
-      render: (item: Order) => (
-        <div className="text-sm text-gray-900">{item.customerDetails.name}</div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Total"
-          columnKey="total"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "total",
-      render: (item: Order) => (
-        <div className="text-sm text-gray-900">${item.total.toFixed(2)}</div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Date"
-          columnKey="updatedAt"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "updatedA",
-      render: (item: Order) => (
-        <div className="text-sm text-gray-900">
-          {new Date(item.createdAt).toLocaleDateString()}
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Payment Status"
-          columnKey="paymentDetails.status"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "paymentDetails.status",
-      render: (item: Order) => (
-        <div className="text-sm text-gray-900">
-          {item.paymentDetails?.status ?? "N/A"}
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Order Status"
-          columnKey="status"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "status",
-      render: (item: Order) => (
-        <div className="text-sm text-gray-900">{item.status}</div>
-      ),
-    },
-    {
-      header: (
-        <div className="flex items-center justify-center">
-          <span>Actions</span>
-        </div>
-      ),
-      key: "actions",
-      render: actionRenderer,
-    },
-  ];
+ const columns = [
+   {
+     header: (
+       <SortableHeader
+         label="Order ID"
+         columnKey="orderId"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "orderId",
+     render: (item: Order) => (
+       <div className="text-sm text-gray-900">{item.orderId}</div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Customer Name"
+         columnKey="customerDetails.name"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "customerDetails.name",
+     render: (item: Order) => (
+       <div className="text-sm text-gray-900">{item.customerDetails.name}</div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Total"
+         columnKey="total"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "total",
+     render: (item: Order) => {
+       const formattedTotal = new Intl.NumberFormat("en-IN", {
+         style: "currency",
+         currency: "INR",
+         minimumFractionDigits: 2,
+       }).format(item.total);
+
+       return <div className="text-sm text-gray-900">{formattedTotal}</div>;
+     },
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Date"
+         columnKey="updatedAt"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "updatedA",
+     render: (item: Order) => (
+       <div className="text-sm text-gray-900">
+         {new Date(item.createdAt).toLocaleDateString()}
+       </div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Payment Status"
+         columnKey="paymentDetails.status"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "paymentDetails.status",
+     render: (item: Order) => (
+       <div className="text-sm text-gray-900">
+         {item.paymentDetails?.status ?? "N/A"}
+       </div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Order Status"
+         columnKey="status"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "status",
+     render: (item: Order) => (
+       <div className="text-sm text-gray-900">{item.status}</div>
+     ),
+   },
+   {
+     header: (
+       <div className="flex items-center justify-center">
+         <span>Actions</span>
+       </div>
+     ),
+     key: "actions",
+     render: actionRenderer,
+   },
+ ];
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">

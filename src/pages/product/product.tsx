@@ -123,128 +123,131 @@ const ProductPage: React.FC = () => {
     </div>
   );
 
-  const columns = [
-    {
-      header: (
-        <SortableHeader
-          label="Featured"
-          columnKey="isFeatured"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "isFeatured",
-      render: (item: Product) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={item.isFeatured}
-            className="form-checkbox h-5 w-5 checkbox-green"
-            readOnly
-          />
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Image"
-          columnKey="imageUrl"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "imageUrl",
-      render: (item: Product) => (
-        <div className="text-center flex-shrink-0 h-10 w-10">
-          <img
-            className="h-10 w-10 rounded-full"
-            src={getImage(item.thumbnailImage)}
-            alt={item.name}
-          />
-        </div>
-      ),
-    },
-    // Other columns...
-    {
-      header: (
-        <SortableHeader
-          label="Product Name"
-          columnKey="name"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "name",
-      render: (item: Product) => (
-        <div className="flex text-left">
-          <div className="ml-0">
-            <div className="text-sm text-gray-900 max-w-xs truncate">
-              {item.name}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Description"
-          columnKey="description"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "description",
-      render: (item: Product) => (
-        <div className="text-sm text-gray-900 max-w-xs truncate">
-          {item.description}
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Price"
-          columnKey="price"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "price",
-      render: (item: Product) => (
-        <div className="flex items-center">
-          <span className="text-sm font-medium text-gray-900">
-            ${item.price.toFixed(2)}
-          </span>
-          {item.slashedPrice && (
-            <span className="ml-2 text-sm text-gray-500 line-through">
-              ${item.slashedPrice.toFixed(2)}
-            </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Quantity"
-          columnKey="quantity"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "quantity",
-      render: (item: Product) => (
-        <div className="text-sm text-gray-900">{item.quantity}</div>
-      ),
-    },
-    {
-      header: <span>Actions</span>,
-      key: "actions",
-      render: actionRenderer,
-    },
-  ];
+ const columns = [
+   {
+     header: (
+       <SortableHeader
+         label="Featured"
+         columnKey="isFeatured"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "isFeatured",
+     render: (item: Product) => (
+       <div className="flex justify-center">
+         <input
+           type="checkbox"
+           checked={item.isFeatured}
+           className="form-checkbox h-5 w-5 checkbox-green"
+           readOnly
+         />
+       </div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Image"
+         columnKey="imageUrl"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "imageUrl",
+     render: (item: Product) => (
+       <div className="text-center flex-shrink-0 h-10 w-10">
+         <img
+           className="h-10 w-10 rounded-full"
+           src={getImage(item.thumbnailImage)}
+           alt={item.name}
+         />
+       </div>
+     ),
+   },
+   
+   {
+     header: (
+       <SortableHeader
+         label="Product Name"
+         columnKey="name"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "name",
+     render: (item: Product) => (
+       <div className="flex text-left">
+         <div className="ml-0">
+           <div className="text-sm text-gray-900 max-w-xs truncate">
+             {item.name}
+           </div>
+         </div>
+       </div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Description"
+         columnKey="description"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "description",
+     render: (item: Product) => (
+       <div className="text-sm text-gray-900 max-w-xs truncate">
+         {item.description}
+       </div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Price"
+         columnKey="price"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "price",
+     render: (item: Product) => {
+       const formattedPrice = new Intl.NumberFormat("en-IN", {
+         style: "currency",
+         currency: "INR",
+         minimumFractionDigits: 2,
+       }).format(item.price);
+
+       const formattedSlashedPrice =
+         item.slashedPrice &&
+         new Intl.NumberFormat("en-IN", {
+           style: "currency",
+           currency: "INR",
+           minimumFractionDigits: 2,
+         }).format(item.slashedPrice);
+
+       return (
+         <div className="flex items-center">
+           <span className="text-sm font-medium text-gray-900">
+             {formattedPrice}
+           </span>
+           {formattedSlashedPrice && (
+             <span className="ml-2 text-sm text-gray-500 line-through">
+               {formattedSlashedPrice}
+             </span>
+           )}
+         </div>
+       );
+     },
+   },
+   
+   {
+     header: <span>Actions</span>,
+     key: "actions",
+     render: actionRenderer,
+   },
+ ];
 
   return (
     <div>
