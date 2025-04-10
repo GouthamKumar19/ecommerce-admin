@@ -1,4 +1,4 @@
-import React,{useEffect} from "react";
+import React, { useEffect } from "react";
 import {
   TextField,
   Typography,
@@ -25,8 +25,11 @@ interface ProductFormProps {
   description: string;
   price: string;
   slashedPrice: string;
-  category: string | null;
-  subCategory: string | null;
+  category: string | null; // Changed from categories array to category string
+  subCategory: string | null; // Changed from subcategories array to subCategory string
+  categories: any[]; // Keep this for the dropdown options
+  categoriesLoading: boolean;
+  subcategories: any[]; // Keep this for the dropdown options
   featured: boolean;
   images: ProductImage[];
   variants: Variant[]; // Use the imported Variant type
@@ -74,6 +77,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
   slashedPrice,
   category,
   subCategory,
+  categories,
+  categoriesLoading,
+  subcategories,
   featured,
   images,
   variants,
@@ -96,14 +102,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
   }, [variants]);
   // Validation functions
   const validateProductName = (name: string) =>
-    /^[a-zA-Z\s]*$/.test(name) && name.length <= 10;
+    /^[a-zA-Z\s]*$/.test(name) && name.length <= 20;
   const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
   const validateDescription = (desc: string) => desc.length <= 60;
-
-  // Sample category and subcategory data
-  const categories = ["Footwear", "Clothing", "Accessories"];
-  const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
- 
 
   return (
     <div>
@@ -129,9 +130,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   updateForm.setProductNameErrorMessage(
                     "Only characters are allowed."
                   );
-                } else if (name.length > 10) {
+                } else if (name.length > 20) {
                   updateForm.setProductNameErrorMessage(
-                    "Maximum 10 characters allowed."
+                    "Maximum 20 characters allowed."
                   );
                 }
               }
@@ -348,9 +349,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
           </Typography>
           <Autocomplete
             options={categories}
-            value={category}
+            getOptionLabel={(option) => option.name || ""}
+            value={categories.find((cat) => cat._id === category) || null}
             onChange={(_, newValue) => {
-              updateForm.setCategory(newValue);
+              updateForm.setCategory(newValue?._id || null);
+              updateForm.setSubCategory(null); // Reset subcategory when category changes
               if (newValue) {
                 updateForm.setIsCategoryValid(true);
                 updateForm.setCategoryErrorMessage("");
@@ -360,6 +363,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               }
             }}
             fullWidth
+            loading={categoriesLoading}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -386,10 +390,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
             Sub Category
           </Typography>
           <Autocomplete
-            options={subCategories}
-            value={subCategory}
+            options={subcategories}
+            getOptionLabel={(option) => option.name || ""}
+            value={subcategories.find((sub) => sub._id === subCategory) || null}
             onChange={(_, newValue) => {
-              updateForm.setSubCategory(newValue);
+              updateForm.setSubCategory(newValue?._id || null);
               if (newValue) {
                 updateForm.setIsSubCategoryValid(true);
                 updateForm.setSubCategoryErrorMessage("");
@@ -401,6 +406,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               }
             }}
             fullWidth
+            disabled={!category} // Disable if no category selected
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -463,7 +469,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <VariantManager
             variants={variants}
             setVariants={(newVariants) => {
-              console.log("VariantManager callback - New variants:", newVariants);
+              console.log(
+                "VariantManager callback - New variants:",
+                newVariants
+              );
               updateForm.setVariants(newVariants);
             }}
           />
