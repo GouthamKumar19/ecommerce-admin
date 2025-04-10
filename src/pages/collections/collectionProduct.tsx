@@ -10,7 +10,7 @@ import SortableHeader, {
 } from "../../components/common/SortableHeader";
 import {
   useSortableData,
-  getNextSortDirection,
+
 } from "../../components/common/SortUtils";
 import { getCollectionById } from "../../api/collections";
 import {
@@ -226,12 +226,20 @@ const ProductAddPage: React.FC = () => {
   };
 
   const handleSort = (key: string) => {
-    const direction = getNextSortDirection(
-      sortConfig.key,
-      key,
-      sortConfig.direction
-    );
-    setSortConfig({ key, direction });
+    // If clicking on the same column that's already sorted
+    if (sortConfig.key === key) {
+      // Cycle through: ascending → descending → no sort
+      if (sortConfig.direction === "ascending") {
+        setSortConfig({ key, direction: "descending" });
+      } else if (sortConfig.direction === "descending") {
+        setSortConfig({ key: "", direction: null }); // Reset to default/unsorted
+      } else {
+        setSortConfig({ key, direction: "ascending" });
+      }
+    } else {
+      // If clicking on a new column, start with ascending
+      setSortConfig({ key, direction: "ascending" });
+    }
   };
 
   // Use BaseRecord instead of Record<string, unknown> for better type compatibility
@@ -308,7 +316,7 @@ const ProductAddPage: React.FC = () => {
       header: (
         <SortableHeader
           label="Product Name"
-          columnKey="name"
+          columnKey="productDetails.name"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
@@ -337,7 +345,7 @@ const ProductAddPage: React.FC = () => {
       header: (
         <SortableHeader
           label="Description"
-          columnKey="description"
+          columnKey="productDetails.description"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
@@ -362,7 +370,7 @@ const ProductAddPage: React.FC = () => {
       header: (
         <SortableHeader
           label="Price"
-          columnKey="price"
+          columnKey="productDetails.price"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
@@ -395,7 +403,7 @@ const ProductAddPage: React.FC = () => {
       header: (
         <SortableHeader
           label="Quantity"
-          columnKey="quantity"
+          columnKey="productDetails.quantity"
           sortConfig={sortConfig}
           onSort={handleSort}
         />
@@ -422,7 +430,6 @@ const ProductAddPage: React.FC = () => {
       render: actionRenderer,
     },
   ];
-
   if (error) {
     return (
       <div className="bg-white p-4 rounded-lg shadow mb-4">
@@ -430,7 +437,6 @@ const ProductAddPage: React.FC = () => {
       </div>
     );
   }
-
   return (
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
@@ -442,7 +448,6 @@ const ProductAddPage: React.FC = () => {
               onSearchChange={setSearchValue}
             />
           </div>
-
           <div className="flex ml-auto">
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
@@ -454,7 +459,6 @@ const ProductAddPage: React.FC = () => {
           </div>
         </div>
       </div>
-
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
           <TableSkeletonLoader columns={6} rows={10} /> // Show the skeleton loader while loading
@@ -475,7 +479,6 @@ const ProductAddPage: React.FC = () => {
           />
         )}
       </div>
-
       <ConfirmationDialog
         open={dialogOpen}
         title={dialogTitle}
