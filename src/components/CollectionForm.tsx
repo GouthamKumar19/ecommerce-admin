@@ -5,9 +5,9 @@ import {
   Box,
   CircularProgress,
   TextField,
-  
-  
+  Tooltip,
 } from "@mui/material";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import ImageSelection, {
   ProductImage,
 } from "../components/common/ImageSelection";
@@ -110,7 +110,6 @@ const CollectionForm: React.FC = () => {
           }
         } catch (error) {
           console.error("Error fetching collection details:", error);
-         
         } finally {
           setLoading(false);
         }
@@ -211,12 +210,11 @@ const CollectionForm: React.FC = () => {
       try {
         imageUrl = await uploadPendingImages();
         if (!imageUrl) {
-          
           return false;
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-       
+
         return false;
       }
 
@@ -247,7 +245,7 @@ const CollectionForm: React.FC = () => {
         `Error ${isEditMode ? "updating" : "creating"} collection:`,
         error
       );
-     
+
       return false;
     } finally {
       setLoading(false);
@@ -260,7 +258,6 @@ const CollectionForm: React.FC = () => {
     navigate("/collections");
   };
 
-  
   if (loading || uploadInProgress) {
     return (
       <Box
@@ -343,9 +340,25 @@ const CollectionForm: React.FC = () => {
 
       <Grid container spacing={3} justifyContent="flex-start">
         <Grid item xs={12}>
-          <Typography variant="subtitle1" gutterBottom align="left">
-            Collection Images
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+            <Typography variant="subtitle1" gutterBottom align="left">
+              Collection Images
+            </Typography>
+            <Tooltip
+              title="Press on image to add products to collection"
+              arrow
+              placement="right"
+            >
+              <InfoOutlined
+                sx={{
+                  ml: 1,
+                  fontSize: 18,
+                  color: "primary.main",
+                  cursor: "help",
+                }}
+              />
+            </Tooltip>
+          </Box>
           <Box
             sx={{
               bgcolor: "white",
@@ -378,8 +391,6 @@ const CollectionForm: React.FC = () => {
           </Box>
         </Grid>
       </Grid>
-
-     
     </Box>
   );
 };
