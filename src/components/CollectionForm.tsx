@@ -5,8 +5,8 @@ import {
   Box,
   CircularProgress,
   TextField,
-  Snackbar,
-  Alert,
+  
+  
 } from "@mui/material";
 import ImageSelection, {
   ProductImage,
@@ -68,8 +68,8 @@ const CollectionForm: React.FC = () => {
     collectionName: "",
     collectionImages: "",
   });
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [showError, setShowError] = useState(false);
+  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // const [showError, setShowError] = useState(false);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const { setActionHandlers } = useContext(ActionContext);
   const params = useParams();
@@ -110,10 +110,7 @@ const CollectionForm: React.FC = () => {
           }
         } catch (error) {
           console.error("Error fetching collection details:", error);
-          setErrorMessage(
-            "Failed to load collection details. Please try again."
-          );
-          setShowError(true);
+         
         } finally {
           setLoading(false);
         }
@@ -214,14 +211,12 @@ const CollectionForm: React.FC = () => {
       try {
         imageUrl = await uploadPendingImages();
         if (!imageUrl) {
-          setErrorMessage("Failed to process selected image");
-          setShowError(true);
+          
           return false;
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        setErrorMessage("Failed to upload image. Please try again.");
-        setShowError(true);
+       
         return false;
       }
 
@@ -252,11 +247,7 @@ const CollectionForm: React.FC = () => {
         `Error ${isEditMode ? "updating" : "creating"} collection:`,
         error
       );
-      setErrorMessage(
-        error.message ||
-          `Failed to ${isEditMode ? "update" : "create"} collection`
-      );
-      setShowError(true);
+     
       return false;
     } finally {
       setLoading(false);
@@ -269,10 +260,7 @@ const CollectionForm: React.FC = () => {
     navigate("/collections");
   };
 
-  const handleCloseError = () => {
-    setShowError(false);
-  };
-
+  
   if (loading || uploadInProgress) {
     return (
       <Box
@@ -307,11 +295,16 @@ const CollectionForm: React.FC = () => {
           value={collectionName}
           onChange={(e) => {
             const value = e.target.value;
-            if (/^[a-zA-Z\s]*$/.test(value)) {
+            if (/^[a-zA-Z\s]*$/.test(value) && value.length <= 15) {
               setCollectionName(value);
               if (value.trim() && errors.collectionName) {
                 setErrors({ ...errors, collectionName: "" });
               }
+            } else if (value.length > 15) {
+              setErrors({
+                ...errors,
+                collectionName: "Collection name must not exceed 15 characters",
+              });
             } else {
               setErrors({
                 ...errors,
@@ -386,20 +379,7 @@ const CollectionForm: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Snackbar
-        open={showError}
-        autoHideDuration={6000}
-        onClose={handleCloseError}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseError}
-          severity="error"
-          sx={{ width: "100%" }}
-        >
-          {errorMessage}
-        </Alert>
-      </Snackbar>
+     
     </Box>
   );
 };
