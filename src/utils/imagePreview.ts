@@ -1,5 +1,3 @@
-// utils/imageUtils.ts
-
 /**
  * Constructs full S3 image URL from file path or returns fallback image
  * @param {string | undefined} filePath - The path of the image file
@@ -23,7 +21,7 @@ export const getImage = (filePath?: string): string => {
   }
   
   // Ensure file path starts with a forward slash if not already
-  const formattedPath = filePath.startsWith('/') ? filePath : `${filePath}`;
+  const formattedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
   
   // Construct and return the full S3 URL
   return `${s3BaseUrl}${formattedPath}`;
