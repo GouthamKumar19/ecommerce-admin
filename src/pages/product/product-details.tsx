@@ -23,6 +23,7 @@ interface ProductImage {
   id: number;
   url: string;
   selected: boolean;
+  isNew?: boolean; // Add property to track if image is newly added
 }
 
 const DEFAULT_CATEGORY_ID = "67ce9292891e6b7ec5df5831";
@@ -41,6 +42,7 @@ export const ProductDetails = () => {
   const [featured, setFeatured] = useState<boolean>(false);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [originalThumbnail, setOriginalThumbnail] = useState<string>(""); // Store original thumbnail
 
   // Category data state
   const [categories, setCategories] = useState<Category[]>([]);
@@ -203,11 +205,13 @@ export const ProductDetails = () => {
         setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
         setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
         setFeatured(product.isFeatured || false);
+        setOriginalThumbnail(product.thumbnailImage || ""); // Store original thumbnail
         setImages(
           product.images.map((url: string, index: number) => ({
             id: index,
             url: getImage(url), // Use getImage to format the URL
             selected: true,
+            isNew: false, // Mark as existing image
           }))
         );
 
@@ -230,11 +234,13 @@ export const ProductDetails = () => {
             setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
             setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
             setFeatured(product.isFeatured || false);
+            setOriginalThumbnail(product.thumbnailImage || ""); // Store original thumbnail
             setImages(
               product.images.map((url: string, index: number) => ({
                 id: index,
                 url: getImage(url), // Use getImage to format the URL
                 selected: true,
+                isNew: false, // Mark as existing image
               }))
             );
 
@@ -280,52 +286,85 @@ export const ProductDetails = () => {
     images,
     variants,
     isEdit,
+    originalThumbnail,
   ]);
 
-  const uploadPendingImages = async () => {
+ 
+  const processImages = async () => {
     const selectedImages = images.filter((img) => img.selected);
     if (selectedImages.length < 4) {
-      return null;
+      throw new Error("Please select at least 4 images.");
     }
 
-    const uploadedImageUrls = await Promise.all(
-      selectedImages.map(async (selectedImage) => {
-        if (selectedImage.url.startsWith("data:image")) {
-          setUploadInProgress(true);
-          try {
-            // Convert base64 to blob
-            const response = await fetch(selectedImage.url);
-            const blob = await response.blob();
+    // Create an array to store all final image URLs
+    const finalImageUrls: string[] = [];
 
-            // Create a file from the blob
-            const fileName = `image_${Date.now()}.jpg`;
-            const imageFile = new File([blob], fileName, {
-              type: "image/jpeg",
-            });
+    // Keep track of the first image to use as thumbnail
+    let firstImageUrl = "";
+    let firstImageIsNew = false;
+    let firstImageProcessed = false;
 
-            // Store the formatted filename that will be sent to the server
-            const formattedFileName = `public/ecommerce/product/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+    // Process each image one by one
+    for (const image of selectedImages) {
+      let finalUrl = "";
 
-            // Get presigned URL and upload
-            const presignedUrl = await getPresignedUrl(fileName, "product");
-            await uploadFile(presignedUrl, imageFile);
+      if (image.url.startsWith("data:image")) {
+        // This is a new image that needs to be uploaded
+        setUploadInProgress(true);
+        try {
+          // Convert base64 to blob
+          const response = await fetch(image.url);
+          const blob = await response.blob();
 
-            // Return the formatted filename instead of the presigned URL
-            return formattedFileName;
-          } catch (error) {
-            console.error("Error uploading image:", error);
-            throw new Error("Failed to upload image");
-          } finally {
-            setUploadInProgress(false);
-          }
+          // Create a file from the blob
+          const fileName = `image_${Date.now()}.jpg`;
+          const imageFile = new File([blob], fileName, {
+            type: "image/jpeg",
+          });
+
+          // Store the formatted filename that will be sent to the server
+          const formattedFileName = `public/ecommerce/product/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+
+          // Get presigned URL and upload
+          const presignedUrl = await getPresignedUrl(fileName, "product");
+          await uploadFile(presignedUrl, imageFile);
+
+          finalUrl = formattedFileName;
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          setUploadInProgress(false);
+          throw new Error("Failed to upload image");
+        } finally {
+          setUploadInProgress(false);
         }
+      } else {
+        // For existing images, extract just the path part from the S3 URL
+        if (image.url.includes("amazonaws.com/")) {
+          // Extract only the path part after the S3 domain
+          finalUrl = image.url.split("amazonaws.com/")[1];
+        } else {
+          // If it's not an S3 URL, keep it as is
+          finalUrl = image.url;
+        }
+      }
 
-        // If the image is already a URL, just return it
-        return selectedImage.url;
-      })
-    );
+      // Add the URL to our final array
+      finalImageUrls.push(finalUrl);
 
-    return uploadedImageUrls;
+      // Track the first image for thumbnail purposes
+      if (!firstImageProcessed) {
+        firstImageUrl = finalUrl;
+        firstImageIsNew = !!image.isNew;
+        firstImageProcessed = true;
+      }
+    }
+
+    // Return both the array of image URLs and information about the first image
+    return {
+      imageUrls: finalImageUrls,
+      firstImageUrl,
+      firstImageIsNew,
+    };
   };
 
   const validateForm = () => {
@@ -473,10 +512,32 @@ export const ProductDetails = () => {
     setIsLoading(true);
 
     try {
-      // Upload images and get the URLs
-      const uploadedImageUrls = await uploadPendingImages();
-      if (!uploadedImageUrls || uploadedImageUrls.length < 4) {
-        throw new Error("Please select at least 4 images.");
+      // Process images - get URLs and first image information
+      const imageResult = await processImages();
+
+      // Determine the thumbnail image URL
+      let thumbnailImageUrl;
+
+      if (isEdit) {
+        // For edit mode, we need special thumbnail handling
+        if (imageResult.firstImageIsNew) {
+          // If first image is new, use the new first image
+          thumbnailImageUrl = imageResult.firstImageUrl;
+        } else {
+          // If first image isn't new but we have original thumbnail and it's still in the list
+          if (
+            originalThumbnail &&
+            imageResult.imageUrls.includes(originalThumbnail)
+          ) {
+            thumbnailImageUrl = originalThumbnail;
+          } else {
+            // Otherwise, use the first image in the list
+            thumbnailImageUrl = imageResult.firstImageUrl;
+          }
+        }
+      } else {
+        // For new products, just use the first image
+        thumbnailImageUrl = imageResult.firstImageUrl;
       }
 
       // Prepare product data
@@ -489,14 +550,16 @@ export const ProductDetails = () => {
         categoryId: category || DEFAULT_CATEGORY_ID,
         subCategoryId: subCategory || DEFAULT_SUBCATEGORY_ID,
         isFeatured: featured,
-        // Make sure we're sending an array of image URLs
-        images: uploadedImageUrls,
-        // Make sure we're setting a valid thumbnail image
-        thumbnailImage: uploadedImageUrls[0],
-        quantity: 0, // You might want to add a field for quantity
+        // Use the processed image URLs
+        images: imageResult.imageUrls,
+        // Set the thumbnail image based on our logic above
+        thumbnailImage: thumbnailImageUrl,
+        quantity: 0, // Default quantity
         createdAt: isEdit ? undefined : new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
+      console.log("Saving product with data:", productData);
 
       let response;
       let productId = "";
@@ -563,7 +626,31 @@ export const ProductDetails = () => {
     setCategory,
     setSubCategory,
     setFeatured,
-    setImages,
+    setImages: (
+      newImages: ProductImage[] | ((prev: ProductImage[]) => ProductImage[])
+    ) => {
+      // Mark new images when setting images
+      if (typeof newImages === "function") {
+        setImages((prevImages) => {
+          const updatedImages = newImages(prevImages);
+          return updatedImages.map((img) => {
+            if (img.url.startsWith("data:image")) {
+              return { ...img, isNew: true };
+            }
+            return img;
+          });
+        });
+      } else {
+        setImages(
+          newImages.map((img) => {
+            if (img.url.startsWith("data:image")) {
+              return { ...img, isNew: true };
+            }
+            return img;
+          })
+        );
+      }
+    },
     setVariants,
     setIsProductNameValid,
     setIsPriceValid,
