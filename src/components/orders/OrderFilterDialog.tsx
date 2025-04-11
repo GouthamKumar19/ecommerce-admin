@@ -58,16 +58,35 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
     onClose();
   };
 
+  const handleClear = () => {
+    setPaymentStatus([]);
+    setOrderStatus([]);
+    setSelectedDate("");
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Typography
-          variant="h5"
-          fontWeight="bold"
-          sx={{ color: "var(--secondary-color)" }}
-        >
-          Filter Orders
-        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            sx={{ color: "var(--secondary-color)" }}
+          >
+            Filter Orders
+          </Typography>
+          <Button
+            onClick={handleClear}
+            variant="outlined"
+            sx={{
+              color: "var(--secondary-color)",
+              borderColor: "var(--secondary-color)",
+              borderRadius: 2,
+            }}
+          >
+            Clear
+          </Button>
+        </Box>
       </DialogTitle>
       <DialogContent dividers sx={{ p: 3 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -88,8 +107,8 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={paymentStatus.includes("Complete")}
-                    onChange={() => handlePaymentStatusChange("Complete")}
+                    checked={paymentStatus.includes("Completed")}
+                    onChange={() => handlePaymentStatusChange("Completed")}
                     sx={{
                       color: "var(--secondary-color)",
                       "&.Mui-checked": {

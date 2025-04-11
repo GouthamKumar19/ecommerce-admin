@@ -9,7 +9,7 @@ export const mockOrders: OrderNew[] = [
       name: "John Doe",
     },
     shippingAddressId: "65d9f0f6d1e57b6d4b8b4569",
-    shippingAddressDetails: {
+    shippingAddress: {
       userId: "65d9f0f6d1e57b6d4b8b4599",
       line1: "123 Main St",
       line2: "Apt 4B",
@@ -20,7 +20,7 @@ export const mockOrders: OrderNew[] = [
       isDefault: false,
     },
     billingAddressId: "65d9f0f6d1e57b6d4b8b4569",
-    billingAddressDetails: {
+    billingAddress: {
       userId: "65d9f0f6d1e57b6d4b8b4599",
       line1: "123 Main St",
       line2: "Apt 4B",
@@ -80,7 +80,7 @@ export const mockOrders: OrderNew[] = [
       name: "John Doe",
     },
     shippingAddressId: "65d9f0f6d1e57b6d4b8b4569",
-    shippingAddressDetails: {
+    shippingAddress: {
       userId: "65d9f0f6d1e57b6d4b8b4599",
       line1: "123 Main St",
       line2: "Apt 4B",
@@ -91,7 +91,7 @@ export const mockOrders: OrderNew[] = [
       isDefault: false,
     },
     billingAddressId: "65d9f0f6d1e57b6d4b8b4569",
-    billingAddressDetails: {
+    billingAddress: {
       userId: "65d9f0f6d1e57b6d4b8b4599",
       line1: "123 Main St",
       line2: "Apt 4B",
