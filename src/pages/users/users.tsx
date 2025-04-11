@@ -94,18 +94,15 @@ const UsersPage: React.FC = () => {
     }
 
     try {
-      const isCurrentlyDisabled = dialogTitle === "Disable User";
-      const updatedStatus = !isCurrentlyDisabled;
+      // Determine the updated status
+      const updatedStatus = !user.isEnabled;
 
+      // Send only the `isEnabled` property to the API
       await updateUser(user._id as string, {
-        name: user.name,
-        email: user.email,
-        countryCode: user.countryCode,
-        phone: user.phone,
-        gender: user.gender,
         isEnabled: updatedStatus,
       });
 
+      // Update the UI state after toggling
       setDisabledRows((prev) => {
         if (prev.includes(String(user._id))) {
           return prev.filter((rowId) => rowId !== String(user._id));
@@ -113,7 +110,8 @@ const UsersPage: React.FC = () => {
           return [...prev, String(user._id)];
         }
       });
-      fetchUserData();
+
+      fetchUserData(); // Refresh the user list
     } catch (error) {
       console.error("Failed to toggle user status:", error);
     } finally {

@@ -1,15 +1,19 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Edit, Delete } from "@mui/icons-material";
 import TextField from "@mui/material/TextField";
-import { InputAdornment, Snackbar, Alert } from "@mui/material";
+import {
+  InputAdornment,
+  MenuItem,
+  Select,
+  FormControl,
+  FormHelperText,
+  SelectChangeEvent,
+} from "@mui/material";
 import AddressPopup from "./AddressPopup";
-import { ActionContext } from "../../context/ActionContext";
-import { createUser, getUserById, updateUser } from "../../api/user";
-import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { User } from "../../types/users.types";
 
 interface AddressData {
@@ -20,34 +24,36 @@ interface AddressData {
   pinCode: string;
 }
 
-const UserDetailsForm: React.FC = () => {
+interface UserDetailsFormProps {
+  userData: User | null;
+  isLoading: boolean;
+  isEditMode: boolean;
+  onSave: (formData: any) => void;
+}
+
+const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
+  userData,
+  isLoading,
+  isEditMode,
+  onSave,
+}) => {
   // Form state variables
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     gender: "",
-    phoneNumber: "+91",
+    phoneNumber: "91",
     countryCode: "91",
     addresses: [] as AddressData[],
   });
 
   // UI state variables
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [showAddress, setShowAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressData | null>(
     null
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-
-  // Snackbar state
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
-  );
 
   // Validation state
   const [errors, setErrors] = useState({
@@ -57,12 +63,6 @@ const UserDetailsForm: React.FC = () => {
     password: "",
     gender: "",
   });
-
-  // Context and routing hooks
-  const params = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { setActionHandlers } = useContext(ActionContext);
 
   // Helper function to populate form with user data
   const populateFormWithUserData = (user: User) => {
@@ -78,56 +78,25 @@ const UserDetailsForm: React.FC = () => {
     });
   };
 
-  // Fetch user data effect
+  // Populate form with user data when it's available
   useEffect(() => {
-    const fetchUserData = async () => {
-      const id = params.id;
-      if (id && id !== "new") {
-        setIsLoading(true);
-        setIsEditMode(true);
-        setUserId(id);
+    if (userData) {
+      populateFormWithUserData(userData);
+    }
+  }, [userData]);
 
-        try {
-          // If data is passed through location state, use it
-          // Otherwise fetch from API
-          console.log("Fetching user data for ID:", id);
-          const response = await getUserById(id);
-          console.log("User data response:", response);
-
-          if (response.status === 200 && response.data) {
-            populateFormWithUserData(response.data);
-          } else {
-            throw new Error("Failed to load user data");
-          }
-        } catch (error) {
-          console.error("Error fetching user:", error);
-          setSnackbarMessage("Failed to load user data. Please try again.");
-          setSnackbarSeverity("error");
-          setOpenSnackbar(true);
-        } finally {
-          setIsLoading(false);
-        }
-      }
+  // Set up event listener for save trigger from parent
+  useEffect(() => {
+    const handleTriggerSave = () => {
+      validateAndSubmit();
     };
 
-    fetchUserData();
-  }, [params.id, location.state]);
-
-  // Set up action handlers effect
-  useEffect(() => {
-    setActionHandlers({
-      onConfirm: handleSaveUser,
-      onCancel: handleCancel,
-    });
+    document.addEventListener("triggerSaveFromParent", handleTriggerSave);
 
     return () => {
-      // Reset action handlers when component unmounts
-      setActionHandlers({
-        onConfirm: () => console.warn("onConfirm is not implemented"),
-        onCancel: () => console.warn("onCancel is not implemented"),
-      });
+      document.removeEventListener("triggerSaveFromParent", handleTriggerSave);
     };
-  }, [formData, isEditMode, setActionHandlers]);
+  }, [formData, errors]);
 
   // Input change handler
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,20 +130,6 @@ const UserDetailsForm: React.FC = () => {
             (phoneDigits.length > 10 ? phoneDigits.slice(0, 10) : phoneDigits),
         }));
       }
-    } else if (name === "gender") {
-      // Convert gender input to uppercase
-      const upperCaseValue = value.toUpperCase();
-
-      setFormData((prev) => ({
-        ...prev,
-        [name]: upperCaseValue,
-      }));
-
-      // Validate gender (optional: add specific gender validation if needed)
-      setErrors((prev) => ({
-        ...prev,
-        gender: "",
-      }));
     } else if (name === "password") {
       setFormData((prev) => ({
         ...prev,
@@ -229,6 +184,21 @@ const UserDetailsForm: React.FC = () => {
     }
   };
 
+  // Handle gender select change
+  const handleGenderChange = (event: SelectChangeEvent) => {
+    const value = event.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      gender: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      gender: "",
+    }));
+  };
+
   // Address handlers
   const handleAddAddress = (addressData: AddressData) => {
     setFormData((prev) => ({
@@ -266,8 +236,8 @@ const UserDetailsForm: React.FC = () => {
     }));
   };
 
-  // Save user handler
-  const handleSaveUser = async () => {
+  // Validation and submission
+  const validateAndSubmit = () => {
     // Check for validation errors
     if (
       errors.name ||
@@ -276,11 +246,6 @@ const UserDetailsForm: React.FC = () => {
       errors.password ||
       errors.gender
     ) {
-      setSnackbarMessage(
-        "Please correct the validation errors before submitting."
-      );
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
       return;
     }
 
@@ -290,9 +255,7 @@ const UserDetailsForm: React.FC = () => {
         ...prev,
         password: "Password is required for new users.",
       }));
-      setSnackbarMessage("Password is required for new users.");
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
+
       return;
     }
 
@@ -311,65 +274,8 @@ const UserDetailsForm: React.FC = () => {
       userData.password = formData.password;
     }
 
-    setIsLoading(true);
-
-    try {
-      if (isEditMode && userId) {
-        // Update existing user
-        console.log("Updating user with ID:", userId);
-        console.log("Updated user data:", userData);
-
-        const response = await updateUser(userId, userData);
-        console.log("Update response:", response);
-
-        if (response.status === 200) {
-          setSnackbarMessage("User updated successfully");
-          setSnackbarSeverity("success");
-          setOpenSnackbar(true);
-
-          // Navigate back after short delay
-          setTimeout(() => {
-            navigate("/users");
-          }, 1500);
-        } else {
-          throw new Error(response.message || "Something went wrong");
-        }
-      } else {
-        // Create new user
-        console.log("Creating new user with data:", userData);
-
-        const response = await createUser(userData);
-        console.log("Create response:", response);
-
-        if (response.status === 200 || response.status === 201) {
-          setSnackbarMessage("User created successfully");
-          setSnackbarSeverity("success");
-          setOpenSnackbar(true);
-
-          // Navigate back after short delay
-          setTimeout(() => {
-            navigate("/users");
-          }, 1500);
-        } else {
-          throw new Error(response.message || "Something went wrong");
-        }
-      }
-    } catch (error) {
-      console.error("Error submitting user data:", error);
-      setSnackbarMessage(
-        error instanceof Error ? error.message : "Failed to save user"
-      );
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Cancel handler
-  const handleCancel = () => {
-    console.log("Cancel action triggered");
-    navigate("/users");
+    // Call the onSave prop function from parent component
+    onSave(userData);
   };
 
   // Calculate phone length excluding +91 prefix
@@ -487,36 +393,42 @@ const UserDetailsForm: React.FC = () => {
             </div>
             <div className="w-full md:w-1/3 text-left">
               <label className="block text-black text-small font-medium mb-2 text-left">
-                Gender 
+                Gender
               </label>
-              <TextField
+              <FormControl
                 variant="outlined"
-                name="gender"
-                placeholder="GENDER"
-                value={formData.gender}
-                onChange={handleInputChange}
                 className="w-full"
-                error={!!errors.gender}
-                helperText={errors.gender}
                 size="small"
-                InputProps={{
-                  style: { backgroundColor: "white" },
-                }}
-                sx={{
-                  ...textFieldStyle,
-                  "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
-                    {
-                      borderColor: "red",
-                    },
-                }}
-              />
+                error={!!errors.gender}
+              >
+                <Select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleGenderChange}
+                  displayEmpty
+                  sx={{
+                    ...textFieldStyle,
+                    backgroundColor: "white",
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    <em>Select Gender</em>
+                  </MenuItem>
+                  <MenuItem value="MALE">MALE</MenuItem>
+                  <MenuItem value="FEMALE">FEMALE</MenuItem>
+                  <MenuItem value="OTHER">OTHER</MenuItem>
+                </Select>
+                {errors.gender && (
+                  <FormHelperText>{errors.gender}</FormHelperText>
+                )}
+              </FormControl>
             </div>
           </div>
 
           {/* Password field with validation */}
           <div className="w-full md:w-1/3 text-left mt-4">
             <label className="block text-black text-small font-medium mb-2 text-left">
-              Password 
+              Password
             </label>
             <TextField
               variant="outlined"
@@ -700,18 +612,6 @@ const UserDetailsForm: React.FC = () => {
           </DialogContentText>
         </DialogContent>
       </Dialog>
-
-      {/* Snackbar for messages */}
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={3000}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        onClose={() => setOpenSnackbar(false)}
-      >
-        <Alert severity={snackbarSeverity} sx={{ width: "100%" }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </div>
   );
 };
