@@ -98,13 +98,25 @@ const ProductForm: React.FC<ProductFormProps> = ({
   updateForm,
 }) => {
   useEffect(() => {
+    
     console.log("ProductForm - Variants received:", variants);
   }, [variants]);
   // Validation functions
-  const validateProductName = (name: string) =>
-    /^[a-zA-Z\s]*$/.test(name) && name.length <= 20;
-  const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
-  const validateDescription = (desc: string) => desc.length <= 60;
+ const validateProductName = (name: string) =>
+   /^[a-zA-Z\s]*$/.test(name) && name.length <= 20;
+ const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
+   const validateDescription = (desc: string) => desc.length <= 60;
+
+   // Formatting function for Indian currency
+   const formatCurrency = (value: string) => {
+     if (!value) return "";
+     const numericValue = parseFloat(value.replace(/,/g, ""));
+     if (isNaN(numericValue)) return value;
+     return numericValue.toLocaleString("en-IN", {
+       minimumFractionDigits: 0,
+       maximumFractionDigits: 2,
+     });
+   };
 
   return (
     <div>
@@ -130,9 +142,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   updateForm.setProductNameErrorMessage(
                     "Only characters are allowed."
                   );
-                } else if (name.length > 20) {
+                } else if (name.length > 15) {
                   updateForm.setProductNameErrorMessage(
-                    "Maximum 20 characters allowed."
+                    "Maximum 15 characters allowed."
                   );
                 }
               }
@@ -151,7 +163,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     fontSize: "0.65rem",
                   }}
                 >
-                  {`${productName.length}/20`}
+                  {`${productName.length}/15`}
                 </InputAdornment>
               ),
               style: {
@@ -264,11 +276,29 @@ const ProductForm: React.FC<ProductFormProps> = ({
             size="small"
             value={price}
             onChange={(e) => {
-              const priceValue = e.target.value;
+              const priceValue = e.target.value.replace(/,/g, ""); // Remove commas
+              const numericPrice = parseFloat(priceValue);
+              const numericSlashedPrice = parseFloat(
+                slashedPrice.replace(/,/g, "")
+              );
+
               if (validatePrice(priceValue)) {
-                updateForm.setPrice(priceValue);
-                updateForm.setIsPriceValid(true);
-                updateForm.setPriceErrorMessage("");
+                if (
+                  !numericSlashedPrice ||
+                  numericPrice <= numericSlashedPrice
+                ) {
+                  // Valid price
+                  updateForm.setPrice(formatCurrency(priceValue));
+                  updateForm.setIsPriceValid(true);
+                  updateForm.setPriceErrorMessage("");
+                } else {
+                  // Price is greater than slashed price
+                  updateForm.setPrice(formatCurrency(priceValue));
+                  updateForm.setIsPriceValid(false);
+                  updateForm.setPriceErrorMessage(
+                    "Price must be less than the slashed price."
+                  );
+                }
               } else {
                 updateForm.setIsPriceValid(false);
                 updateForm.setPriceErrorMessage("Only numbers are allowed.");
@@ -304,11 +334,24 @@ const ProductForm: React.FC<ProductFormProps> = ({
             size="small"
             value={slashedPrice}
             onChange={(e) => {
-              const slashedPriceValue = e.target.value;
+              const slashedPriceValue = e.target.value.replace(/,/g, ""); // Remove commas
+              const numericSlashedPrice = parseFloat(slashedPriceValue);
+              const numericPrice = parseFloat(price.replace(/,/g, ""));
+
               if (validatePrice(slashedPriceValue)) {
-                updateForm.setSlashedPrice(slashedPriceValue);
-                updateForm.setIsSlashedPriceValid(true);
-                updateForm.setSlashedPriceErrorMessage("");
+                if (!numericPrice || numericSlashedPrice > numericPrice) {
+                  // Valid slashed price
+                  updateForm.setSlashedPrice(formatCurrency(slashedPriceValue));
+                  updateForm.setIsSlashedPriceValid(true);
+                  updateForm.setSlashedPriceErrorMessage("");
+                } else {
+                  // Slashed price is less than or equal to price
+                  updateForm.setSlashedPrice(formatCurrency(slashedPriceValue));
+                  updateForm.setIsSlashedPriceValid(false);
+                  updateForm.setSlashedPriceErrorMessage(
+                    "Slashed price must be greater than the price."
+                  );
+                }
               } else {
                 updateForm.setIsSlashedPriceValid(false);
                 updateForm.setSlashedPriceErrorMessage(
