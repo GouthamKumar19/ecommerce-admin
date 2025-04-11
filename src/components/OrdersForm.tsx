@@ -69,7 +69,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
     setShowOrderDropdown(false);
   };
 
-  const formatAddress = (address: OrderNew["shippingAddressDetails"]) => {
+  const formatAddress = (address: OrderNew["shippingAddress"]) => {
     return [
       address?.line1,
       address?.line2,
@@ -92,7 +92,6 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
           <span className="text-gray-700">{order.orderId}</span>
         </h1>
       </div>
-
       {/* Row 1: Name, Shipping Address, Billing Address */}
       <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-2 py-1">
@@ -116,7 +115,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 h-20">
               <div className="text-sm text-gray-700 leading-tight">
                 <p className="font-normal">
-                  {formatAddress(order.shippingAddressDetails)}
+                  {formatAddress(order.shippingAddress)}
                 </p>
               </div>
             </div>
@@ -130,7 +129,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 h-20">
               <div className="text-sm text-gray-700 leading-tight">
                 <p className="font-normal">
-                  {formatAddress(order.billingAddressDetails)}
+                  {formatAddress(order.billingAddress)}
                 </p>
               </div>
             </div>

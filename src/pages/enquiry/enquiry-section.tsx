@@ -17,7 +17,7 @@ import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 const EnquiryPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "createdAt",
+    key: "updatedAt",
     direction: "descending",
   });
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
