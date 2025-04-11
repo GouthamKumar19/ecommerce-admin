@@ -8,14 +8,19 @@ import ImageUploader from "./ImageUploader";
 import ConfirmationDialog from "./Dialog"; // Importing the ConfirmationDialog
 import "yet-another-react-lightbox/styles.css";
 
-
 export interface ProductImage {
   id: number;
   url: string;
   selected: boolean;
 }
 
-type ImageType = "product" | "general" | "collection" |"category" | "subcategory" |undefined; // Update the type to include "collection"
+type ImageType =
+  | "product"
+  | "general"
+  | "collection"
+  | "category"
+  | "subcategory"
+  | undefined; // Update the type to include "collection"
 
 interface ImageSelectionProps {
   images: ProductImage[];
@@ -130,6 +135,11 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
   const firstRow = selectedImages.slice(0, IMAGES_PER_ROW);
   const secondRow = selectedImages.slice(IMAGES_PER_ROW, MAX_IMAGES);
 
+  // Collection type should only allow 1 image
+  const isCollection = type === "collection";
+  const maxImagesAllowed = isCollection ? 1 : MAX_IMAGES;
+  const disableUploader = isCollection && selectedImages.length >= 1;
+
   // Handlers
   const handleCropComplete = async (croppedImageBlob: Blob) => {
     try {
@@ -146,7 +156,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
       // console.log(presignedUrl, "PRESIGNEDURL");
       // Upload the file
       // await uploadFile(presignedUrl, imageFile);
-      
+
       // Create a local URL for preview while waiting for server response
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -166,7 +176,14 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
             url: croppedImageUrl,
             selected: true,
           };
-          setImages((prev) => [...prev, newImage]);
+
+          // For collection type, replace any existing image
+          if (isCollection) {
+            setImages([newImage]);
+          } else {
+            // For other types, add to existing images
+            setImages((prev) => [...prev, newImage]);
+          }
         }
       };
       reader.readAsDataURL(croppedImageBlob);
@@ -229,12 +246,32 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
   // Render
   return (
     <Box sx={{ width: "100%" }}>
-      {/* Image Uploader Component */}
-      <ImageUploader
-        currentCount={images.length}
-        maxImages={MAX_IMAGES}
-        onFileUpload={handleFileUpload}
-      />
+      {/* Image Uploader Component - Conditionally rendered based on collection type */}
+      {!disableUploader && (
+        <ImageUploader
+          currentCount={images.length}
+          maxImages={maxImagesAllowed}
+          onFileUpload={handleFileUpload}
+        />
+      )}
+
+      {/* Informational message for collection when upload is disabled */}
+      {disableUploader && (
+        <Box
+          sx={{
+            p: 2,
+            backgroundColor: "#f5f5f5",
+            borderRadius: 1,
+            mb: 2,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Collection only allows one image. Delete the current image to upload
+            a new one.
+          </Typography>
+        </Box>
+      )}
 
       {/* Selected Images Gallery */}
       {selectedImages.length > 0 && (

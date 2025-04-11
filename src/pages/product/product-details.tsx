@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { Box, Snackbar, Alert } from "@mui/material";
+import { Box } from "@mui/material";
 import ProductForm from "../../components/Product/ProductForm";
 import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
@@ -13,11 +13,11 @@ import {
   updateProductVariants,
 } from "../../api/product";
 import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
-import { getAllCategory } from "../../api/category"; // Import getAllCategory
+import { getAllCategory } from "../../api/category";
 import { Product } from "../../types/product.types";
 import { Variant } from "../../components/Product/VariantManager";
 import { getImage } from "../../utils/imagePreview";
-import { Category } from "../../types/category.types"; // Import category types
+import { Category } from "../../types/category.types";
 
 interface ProductImage {
   id: number;
@@ -25,19 +25,14 @@ interface ProductImage {
   selected: boolean;
 }
 
-const DEFAULT_CATEGORY_ID = "67ce9292891e6b7ec5df5831";
-const DEFAULT_SUBCATEGORY_ID = "67cc21365983b789b129c1f6";
-
 export const ProductDetails = () => {
   // Form state variables
   const [productName, setProductName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [price, setPrice] = useState<string>("");
   const [slashedPrice, setSlashedPrice] = useState<string>("");
-  const [category, setCategory] = useState<string | null>(DEFAULT_CATEGORY_ID);
-  const [subCategory, setSubCategory] = useState<string | null>(
-    DEFAULT_SUBCATEGORY_ID
-  );
+  const [category, setCategory] = useState<string | null>(null);
+  const [subCategory, setSubCategory] = useState<string | null>(null);
   const [featured, setFeatured] = useState<boolean>(false);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
@@ -51,11 +46,6 @@ export const ProductDetails = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [, setUploadInProgress] = useState<boolean>(false);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
-  );
 
   // Validation states
   const [isProductNameValid, setIsProductNameValid] = useState<boolean>(true);
@@ -123,9 +113,7 @@ export const ProductDetails = () => {
       } catch (err: any) {
         setCategoriesError(err.message || "Failed to fetch categories");
         console.error("Error fetching categories:", err);
-        setSnackbarMessage("Failed to fetch categories");
-        setSnackbarSeverity("error");
-        setOpenSnackbar(true);
+        // Toast message would be used here instead of Snackbar
       } finally {
         setCategoriesLoading(false);
       }
@@ -200,8 +188,8 @@ export const ProductDetails = () => {
         setDescription(product.description || "");
         setPrice(product.price?.toString() || "");
         setSlashedPrice(product.slashedPrice?.toString() || "");
-        setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
-        setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
+        setCategory(product.categoryId || null);
+        setSubCategory(product.subCategoryId || null);
         setFeatured(product.isFeatured || false);
         setImages(
           product.images.map((url: string, index: number) => ({
@@ -227,8 +215,8 @@ export const ProductDetails = () => {
             setDescription(product.description || "");
             setPrice(product.price?.toString() || "");
             setSlashedPrice(product.slashedPrice?.toString() || "");
-            setCategory(product.categoryId || DEFAULT_CATEGORY_ID);
-            setSubCategory(product.subCategoryId || DEFAULT_SUBCATEGORY_ID);
+            setCategory(product.categoryId || null);
+            setSubCategory(product.subCategoryId || null);
             setFeatured(product.isFeatured || false);
             setImages(
               product.images.map((url: string, index: number) => ({
@@ -243,9 +231,7 @@ export const ProductDetails = () => {
           })
           .catch((error) => {
             console.error("Error fetching product:", error);
-            setSnackbarMessage("Failed to fetch product details");
-            setSnackbarSeverity("error");
-            setOpenSnackbar(true);
+            // Toast message would be used here instead of Snackbar
           })
           .finally(() => {
             setIsLoading(false);
@@ -329,46 +315,80 @@ export const ProductDetails = () => {
   };
 
   const validateForm = () => {
-    // Validation checks
-    const validations = [
-      {
-        condition: isProductNameValid,
-        errorMessage: "Please enter a valid product name",
-      },
-      {
-        condition: isDescriptionValid,
-        errorMessage: "Please enter a valid description",
-      },
-      {
-        condition: isPriceValid,
-        errorMessage: "Please enter a valid price",
-      },
-      {
-        condition: isSlashedPriceValid,
-        errorMessage: "Please enter a valid slashed price",
-      },
-      {
-        condition: isCategoryValid,
-        errorMessage: "Please select a category",
-      },
-      {
-        condition: isSubCategoryValid,
-        errorMessage: "Please select a sub-category",
-      },
-    ];
+    let isValid = true;
 
-    const failedValidation = validations.find(
-      (validation) => !validation.condition
-    );
-
-    if (failedValidation) {
-      setSnackbarMessage(failedValidation.errorMessage);
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
-      return false;
+    // Validate product name
+    if (!productName.trim()) {
+      setIsProductNameValid(false);
+      setProductNameErrorMessage("Product name is required");
+      isValid = false;
+    } else {
+      setIsProductNameValid(true);
+      setProductNameErrorMessage("");
     }
 
-    return true;
+    // Validate description
+    if (!description.trim()) {
+      setIsDescriptionValid(false);
+      setDescriptionErrorMessage("Description is required");
+      isValid = false;
+    } else {
+      setIsDescriptionValid(true);
+      setDescriptionErrorMessage("");
+    }
+
+    // Validate price
+    if (!price.trim() || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+      setIsPriceValid(false);
+      setPriceErrorMessage("Valid price is required");
+      isValid = false;
+    } else {
+      setIsPriceValid(true);
+      setPriceErrorMessage("");
+    }
+
+    // Validate slashed price (if provided)
+    if (
+      slashedPrice.trim() &&
+      (isNaN(parseFloat(slashedPrice)) || parseFloat(slashedPrice) <= 0)
+    ) {
+      setIsSlashedPriceValid(false);
+      setSlashedPriceErrorMessage("Slashed price must be a valid number");
+      isValid = false;
+    } else {
+      setIsSlashedPriceValid(true);
+      setSlashedPriceErrorMessage("");
+    }
+
+    // Validate category
+    if (!category) {
+      setIsCategoryValid(false);
+      setCategoryErrorMessage("Please select a category");
+      isValid = false;
+    } else {
+      setIsCategoryValid(true);
+      setCategoryErrorMessage("");
+    }
+
+    // Validate subcategory
+    if (!subCategory) {
+      setIsSubCategoryValid(false);
+      setSubCategoryErrorMessage("Please select a subcategory");
+      isValid = false;
+    } else {
+      setIsSubCategoryValid(true);
+      setSubCategoryErrorMessage("");
+    }
+
+    // Validate images
+    const selectedImages = images.filter((img) => img.selected);
+    if (selectedImages.length < 4) {
+      // You could handle this with a toast or another validation state
+      console.error("Please select at least 4 images");
+      isValid = false;
+    }
+
+    return isValid;
   };
 
   // Function to add product variants after the product is saved
@@ -456,12 +476,7 @@ export const ProductDetails = () => {
       }
     } catch (error) {
       console.error(`Error handling product variants:`, error);
-      // Still consider the product save successful even if variants fail
-      setSnackbarMessage(
-        `Product saved, but there was an issue with the variants`
-      );
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
+      // Use toast message instead of snackbar for error notification
     }
   };
 
@@ -486,8 +501,8 @@ export const ProductDetails = () => {
         description,
         price: parseFloat(price) || 0,
         slashedPrice: parseFloat(slashedPrice) || 0,
-        categoryId: category || DEFAULT_CATEGORY_ID,
-        subCategoryId: subCategory || DEFAULT_SUBCATEGORY_ID,
+        categoryId: category || "",
+        subCategoryId: subCategory || "",
         isFeatured: featured,
         // Make sure we're sending an array of image URLs
         images: uploadedImageUrls,
@@ -518,11 +533,10 @@ export const ProductDetails = () => {
           await saveProductVariants(productId);
         }
 
-        setSnackbarMessage(
+        // Use toast message instead of snackbar for success notification
+        console.log(
           isEdit ? "Product updated successfully" : "Product added successfully"
         );
-        setSnackbarSeverity("success");
-        setOpenSnackbar(true);
 
         // Navigate back to product list after a short delay
         setTimeout(() => {
@@ -533,11 +547,7 @@ export const ProductDetails = () => {
       }
     } catch (error) {
       console.error("Error saving product:", error);
-      setSnackbarMessage(
-        error instanceof Error ? error.message : "Failed to save product"
-      );
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
+      // Use toast message instead of snackbar for error notification
     } finally {
       setIsLoading(false);
     }
@@ -664,17 +674,6 @@ export const ProductDetails = () => {
           isLoading={isLoading}
         />
       </Box>
-
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={3000}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        onClose={() => setOpenSnackbar(false)}
-      >
-        <Alert severity={snackbarSeverity} sx={{ width: "100%" }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };
