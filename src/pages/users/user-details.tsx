@@ -6,9 +6,16 @@ import ActionBox from "../../components/common/ActionModel";
 import { ActionContext } from "../../context/ActionContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";
-import { User } from "../../types/users.types";
+import { User, AddressData } from "../../types/users.types";
 
-import { createUser,updateUser,getUserById } from "../../api/user";
+import {
+  createUser,
+  updateUser,
+  getUserById,
+  createAddress,
+} from "../../api/user";
+
+
 export const UserDetailsPage = () => {
   const { setActionHandlers } = useContext(ActionContext);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,55 +31,133 @@ export const UserDetailsPage = () => {
     "success"
   );
 
-  // API functions moved from UserDetails component
-  
-
-  
-
-  
   // Check if we're in edit mode and fetch user data if needed
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (id && id !== "new") {
-        setIsEdit(true);
-        setIsLoading(true);
+useEffect(() => {
+  const fetchUser = async () => {
+    if (id && id !== "new") {
+      setIsEdit(true);
+      setIsLoading(true);
 
-        try {
-          const response = await getUserById(id);
-          if (response.status === 200 && response.data) {
-            setUserData(response.data);
-          } else {
-            setSnackbarMessage("Failed to load user data. Please try again.");
-            setSnackbarSeverity("error");
-            setOpenSnackbar(true);
-          }
-        } catch (error) {
-          console.error("Error fetching user:", error);
-          setSnackbarMessage("An error occurred while fetching user data.");
+      try {
+        const response = await getUserById(id);
+        if (response.status === 200 && response.data) {
+          // Store the response in an array and log it
+          const userArray = [response.data];
+          console.log("Fetched user data array:", userArray);
+
+          setUserData(response.data);
+        } else {
+          setSnackbarMessage("Failed to load user data. Please try again.");
           setSnackbarSeverity("error");
           setOpenSnackbar(true);
-        } finally {
-          setIsLoading(false);
         }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        setSnackbarMessage("An error occurred while fetching user data.");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+      } finally {
+        setIsLoading(false);
       }
-    };
+    }
+  };
 
-    fetchUser();
-  }, [id]);
+  fetchUser();
+}, [id]);
+
+  // Helper function to create addresses after user creation/update
+  // Modified function to send addresses in an array
+ const createAddressesForUser = async (
+  userId: string,
+  addresses: AddressData[]
+) => {
+  try {
+    // Transform addresses to the format expected by the API
+    const addressPayloads = addresses.map(address => ({
+      userId: userId,
+      line1: address.addressLine1,
+      line2: address.addressLine2,
+      city: address.city,
+      state: address.state,
+      pinCode: address.pinCode,
+      isShipping: address.useAsShipping || false,
+    }));
+
+    // Send all addresses in a single request - pass the array directly
+    const response = await createAddress(addressPayloads);
+
+    if (response.status !== 200 && response.status !== 201) {
+      throw new Error("Failed to create addresses");
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error creating addresses:", error);
+    return false;
+  }
+};
 
   // Handle form submission from the child component
   const handleSaveUser = async (formData: any) => {
     setIsLoading(true);
 
     try {
+      // Extract addresses from formData to handle separately
+      const { addresses, ...userData } = formData;
       let response;
+      let userId;
 
       if (isEdit && id) {
         // Update existing user
-        response = await updateUser(id, formData);
+        response = await updateUser(id, userData);
+        userId = id;
       } else {
         // Create new user
-        response = await createUser(formData);
+        response = await createUser(userData);
+
+        // Extract user ID from response - ensure we're getting the correct property
+        // Fix: Type the response data correctly
+        if (
+          response?.data &&
+          Array.isArray(response.data) &&
+          response.data.length > 0
+        ) {
+          const userData = response.data[0] as User;
+          userId = userData._id;
+        } else if (response?.data && typeof response.data === "object") {
+          // Handle case where response.data might be a single object
+          const userData = response.data as User;
+          userId = userData._id;
+        }
+
+        if (!userId) {
+          throw new Error("Failed to retrieve user ID after creation.");
+        }
+
+        console.log("Created user with ID:", userId); // Log for debugging
+
+        // Immediately create addresses after user creation
+        if (addresses && addresses.length > 0) {
+          console.log("Creating addresses for user:", userId, addresses); // Debug log
+
+          const addressSuccess = await createAddressesForUser(
+            userId,
+            addresses
+          );
+
+          if (!addressSuccess) {
+            setSnackbarMessage(
+              "User created but there was an issue with saving addresses."
+            );
+            //setSnackbarSeverity("warning");
+            setOpenSnackbar(true);
+            // Still navigate back after delay
+            setTimeout(() => {
+              navigate("/users");
+            }, 1500);
+            return;
+          }
+        }
       }
 
       if (response.status === 200 || response.status === 201) {

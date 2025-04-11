@@ -181,7 +181,7 @@ const UsersPage: React.FC = () => {
       key: "phone",
       render: (item: User) => (
         <div className="text-sm text-gray-900">
-          {item.countryCode ? `${item.countryCode} ` : ""}
+          
           {item.phone || "N/A"}
         </div>
       ),

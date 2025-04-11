@@ -76,6 +76,7 @@ export const getAllUser = async (
 
 // Interface for user form data
 export interface UserFormData {
+  userId:string;
   name: string;
   email: string;
   password?: string; // Made optional for updates
@@ -150,6 +151,38 @@ export const getUserById = async (
     return response.data;
   } catch (error) {
     console.error("[API] Error fetching user:", error);
+    throw error;
+  }
+};
+
+export const createAddress = async (
+  addressData: {
+    userId: string;
+    line1: string;
+    line2: string;
+    city: string;
+    state: string;
+    pinCode: string;
+    isShipping: boolean;
+  }[] // Now accepting an array of address objects
+): Promise<ApiResponse<any>> => {
+  try {
+    // Pass the array directly to the endpoint
+    const response = await axiosInstance.post("/admin/userAddresses/add", addressData);
+    
+    if (response?.status === 200 || response?.status === 201) {
+      return {
+        status: response.status,
+        message: response.data.message || "Addresses created successfully",
+        data: response.data.data,
+      };
+    } else {
+      throw new Error("Failed to create addresses");
+    }
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to create addresses");
+    }
     throw error;
   }
 };

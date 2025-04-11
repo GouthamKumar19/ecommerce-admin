@@ -22,6 +22,7 @@ interface AddressData {
   city: string;
   state: string;
   pinCode: string;
+  useAsShipping?: boolean; // Add this field
 }
 
 interface UserDetailsFormProps {
@@ -43,7 +44,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
     email: "",
     password: "",
     gender: "",
-    phoneNumber: "91",
+    phoneNumber: "",
     countryCode: "91",
     addresses: [] as AddressData[],
   });
@@ -107,7 +108,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
       if (value.startsWith("+91")) {
         const phoneDigits = value.substring(3).replace(/\D/g, ""); // Remove +91 and non-digits
         const newPhoneValue =
-          "+91" +
+          
           (phoneDigits.length > 10 ? phoneDigits.slice(0, 10) : phoneDigits);
 
         setFormData((prev) => ({
@@ -126,7 +127,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
         setFormData((prev) => ({
           ...prev,
           phoneNumber:
-            "+91" +
+           
             (phoneDigits.length > 10 ? phoneDigits.slice(0, 10) : phoneDigits),
         }));
       }
@@ -196,6 +197,20 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
     setErrors((prev) => ({
       ...prev,
       gender: "",
+    }));
+  };
+
+  // Address checkbox handler for existing addresses
+  const handleShippingCheckboxChange = (index: number, checked: boolean) => {
+    const updatedAddresses = [...formData.addresses];
+    updatedAddresses[index] = {
+      ...updatedAddresses[index],
+      useAsShipping: checked,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      addresses: updatedAddresses,
     }));
   };
 
@@ -573,6 +588,12 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
                   type="checkbox"
                   id={`useAsShipping-${index}`}
                   className="mr-2"
+                  readOnly={true}
+                  disabled={true}
+                  checked={address.useAsShipping || false}
+                  onChange={(e) =>
+                    handleShippingCheckboxChange(index, e.target.checked)
+                  }
                 />
                 <label htmlFor={`useAsShipping-${index}`} className="text-sm">
                   Use as shipping address

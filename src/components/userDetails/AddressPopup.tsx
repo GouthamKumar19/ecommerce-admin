@@ -1,14 +1,17 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@mui/material";
 
 interface AddressPopupProps {
   onClose?: () => void;
   onSave?: (addressData: {
+ 
     addressLine1: string;
     addressLine2: string;
     city: string;
     state: string;
     pinCode: string;
+    useAsShipping: boolean; // Add this field
   }) => void;
   initialData?: {
     addressLine1: string;
@@ -16,6 +19,7 @@ interface AddressPopupProps {
     city: string;
     state: string;
     pinCode: string;
+    useAsShipping?: boolean; // Make optional for backward compatibility
   };
 }
 
@@ -30,13 +34,17 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     city: "",
     state: "",
     pinCode: "",
+    useAsShipping: false, // Add default value
   });
 
   const [pinCodeError, setPinCodeError] = useState<string>("");
 
   useEffect(() => {
     if (initialData) {
-      setAddressData(initialData);
+      setAddressData({
+        ...initialData,
+        useAsShipping: initialData.useAsShipping || false, // Handle case when it doesn't exist in initialData
+      });
     }
   }, [initialData]);
 
@@ -50,11 +58,11 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    
+
     if (name === "pinCode") {
       // Only allow numbers and limit to 6 characters
       const numericValue = value.replace(/[^0-9]/g, "").slice(0, 6);
-      
+
       // Clear error if field is empty or validate if it has a value
       if (numericValue === "") {
         setPinCodeError("");
@@ -63,7 +71,7 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
       } else {
         setPinCodeError("");
       }
-      
+
       setAddressData((prev) => ({
         ...prev,
         [name]: numericValue,
@@ -76,12 +84,20 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     }
   };
 
+  // Add a handler for the checkbox
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddressData((prev) => ({
+      ...prev,
+      useAsShipping: e.target.checked,
+    }));
+  };
+
   const handleSave = () => {
     if (!validatePinCode(addressData.pinCode)) {
       setPinCodeError("PIN code must be 6 digits");
       return;
     }
-    
+
     // If validation passes, clear error and save
     setPinCodeError("");
     onSave?.(addressData);
@@ -195,7 +211,13 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
       </div>
 
       <div className="mb-4">
-        <input type="checkbox" id="useAsShipping" className="mr-2" />
+        <input
+          type="checkbox"
+          id="useAsShipping"
+          className="mr-2"
+          checked={addressData.useAsShipping}
+          onChange={handleCheckboxChange}
+        />
         <label htmlFor="useAsShipping" className="text-sm">
           Use as shipping address
         </label>
@@ -236,4 +258,4 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
   );
 };
 
-export default AddressPopup;  
+export default AddressPopup;

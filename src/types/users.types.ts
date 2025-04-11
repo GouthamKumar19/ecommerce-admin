@@ -1,9 +1,12 @@
+// Address data interface
 export interface AddressData {
+  _id:string;
   addressLine1: string;
   addressLine2: string;
   city: string;
   state: string;
   pinCode: string;
+  useAsShipping?: boolean;
 }
 
 // Define the possible value types that can be stored in a record
@@ -49,6 +52,7 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
 export type SortDirection = "ascending" | "descending" | null;
 
 export interface SortConfig {
