@@ -142,9 +142,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   updateForm.setProductNameErrorMessage(
                     "Only characters are allowed."
                   );
-                } else if (name.length > 20) {
+                } else if (name.length > 15) {
                   updateForm.setProductNameErrorMessage(
-                    "Maximum 20 characters allowed."
+                    "Maximum 15 characters allowed."
                   );
                 }
               }
@@ -163,7 +163,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     fontSize: "0.65rem",
                   }}
                 >
-                  {`${productName.length}/20`}
+                  {`${productName.length}/15`}
                 </InputAdornment>
               ),
               style: {
