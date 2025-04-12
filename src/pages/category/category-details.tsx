@@ -15,6 +15,7 @@ import {
 } from "../../api/category";
 import { getPresignedUrl, uploadFile } from "../../api/collectionImage";
 import { Subcategory } from "../../types/category.types";
+import { getImage } from "../../utils/imagePreview";
 
 export const CategoryDetails = () => {
   const { setActionHandlers } = useContext(ActionContext);
@@ -40,7 +41,6 @@ export const CategoryDetails = () => {
   const previousPath = location.state?.from || "/category";
 
   useEffect(() => {
-    // Check if we're in edit mode and fetch category data
     const fetchCategoryData = async () => {
       if (id && id !== "new") {
         setIsEdit(true);
@@ -55,10 +55,15 @@ export const CategoryDetails = () => {
             // Set category name
             setCategoryName(response.data.name || "");
 
-            // Set images if available in the response
-            if (response.data.image) {
-              setImages([{ id: 1, url: response.data.image, selected: true }]);
-            }
+            // Set images if available in the response - using getImage utility
+            const fullCategoryImageUrl = getImage(response.data.image);
+            setImages([
+              {
+                id: 1,
+                url: fullCategoryImageUrl,
+                selected: true,
+              },
+            ]);
 
             // Set subcategories if available in the response
             if (
@@ -70,17 +75,16 @@ export const CategoryDetails = () => {
                   id: index + 1,
                   _id: subcategory._id || "",
                   name: subcategory.name || "",
-                  // Format images for the subcategory as expected by the form
                   images: subcategory.image
                     ? [
                         {
                           id: 1,
-                          url: subcategory.image,
+                          url: getImage(subcategory.image),
                           selected: true,
                         },
                       ]
                     : [],
-                  image: subcategory.image || "",
+                  image: getImage(subcategory.image || ""),
                   createdAt: subcategory.createdAt || "",
                   updatedAt: subcategory.updatedAt || "",
                 })
@@ -96,7 +100,7 @@ export const CategoryDetails = () => {
                   _id: "",
                   name: "",
                   images: [],
-                  image: "",
+                  image: getImage(""),
                   createdAt: "",
                   updatedAt: "",
                 } as Subcategory,
@@ -117,7 +121,7 @@ export const CategoryDetails = () => {
               _id: "",
               name: "",
               images: [],
-              image: "",
+              image: getImage(""),
               createdAt: "",
               updatedAt: "",
             } as Subcategory,
@@ -163,6 +167,19 @@ export const CategoryDetails = () => {
             url: string;
             selected: boolean;
           }) => {
+            // Skip upload if image is from S3 (starts with S3 base URL)
+            const s3BaseUrl =
+              import.meta.env.VITE_S3_URL ||
+              "https://your-default-s3-bucket.s3.amazonaws.com/";
+            if (selectedImage.url.startsWith(s3BaseUrl)) {
+              // Extract the relative path from the full URL
+             
+              const relativePath = selectedImage.url.replace(s3BaseUrl, "");
+              return relativePath.startsWith("/")
+                ? relativePath.substring(1)
+                : relativePath;
+            }
+
             if (selectedImage.url.startsWith("data:image")) {
               setUploadInProgress(true);
               try {
@@ -177,7 +194,7 @@ export const CategoryDetails = () => {
                 });
 
                 // Store the formatted filename that will be sent to the server
-                const formattedFileName = `/public/ecommerce/category/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+                const formattedFileName = `public/ecommerce/category/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
                 // Get presigned URL and upload
                 const presignedUrl = await getPresignedUrl(
@@ -197,7 +214,7 @@ export const CategoryDetails = () => {
               }
             }
 
-            // If the image is already a URL, just return it
+            // If the image is already a URL but not S3 or data URL, just return it
             return selectedImage.url;
           }
         )
@@ -225,6 +242,19 @@ export const CategoryDetails = () => {
       return subcategory.image || "/ecommerce/categories/default.png";
     }
 
+    // Skip upload if image is from S3 (starts with S3 base URL)
+    const s3BaseUrl =
+      import.meta.env.VITE_S3_URL ||
+      "https://your-default-s3-bucket.s3.amazonaws.com/";
+    if (selectedImage.url.startsWith(s3BaseUrl)) {
+      // Extract the relative path from the full URL
+      // Extract the relative path from the full URL
+     const relativePath = selectedImage.url.replace(s3BaseUrl, "");
+     return relativePath.startsWith("/")
+       ? relativePath.substring(1)
+       : relativePath;
+    }
+
     // If the image is already a URL that's not a data URL, just return it
     if (!selectedImage.url.startsWith("data:image")) {
       return selectedImage.url;
@@ -244,7 +274,7 @@ export const CategoryDetails = () => {
       });
 
       // Store the formatted filename
-      const formattedFileName = `/public/ecommerce/subcategory/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
+      const formattedFileName = `public/ecommerce/subcategory/${fileName.toLowerCase().replace(/\s+/g, "_")}`;
 
       // Get presigned URL and upload
       const presignedUrl = await getPresignedUrl(fileName, "subcategory");
@@ -429,7 +459,7 @@ export const CategoryDetails = () => {
             (subcategory) => ({
               name: subcategory.name,
               categoryId: categoryResponse.data.id,
-              image: subcategory.image, // Use the processed image URL
+              image: subcategory.image,
             })
           );
 
@@ -495,6 +525,7 @@ export const CategoryDetails = () => {
     }));
     console.log("Images Updated:", updatedImages);
   };
+  
 
   const handleSubcategoryChange = (updatedSubcategories: Subcategory[]) => {
     // Only update if there's an actual change to prevent infinite loops
@@ -567,7 +598,6 @@ export const CategoryDetails = () => {
           },
         }}
       >
-       
         <CategoryForm
           categoryName={categoryName}
           images={images}
@@ -575,7 +605,7 @@ export const CategoryDetails = () => {
           onNameChange={handleNameChange}
           onImagesChange={handleImagesChange}
           onSubcategoryChange={handleSubcategoryChange}
-          onDeleteSubcategories={handleDeleteSubcategories} // Add this prop
+          onDeleteSubcategories={handleDeleteSubcategories}
           isEditMode={isEdit}
           subcategories={subcategories}
         />

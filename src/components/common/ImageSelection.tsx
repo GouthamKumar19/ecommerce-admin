@@ -20,7 +20,7 @@ type ImageType =
   | "collection"
   | "category"
   | "subcategory"
-  | undefined; // Update the type to include "collection"
+  | undefined; // Update the type to include "collection", "category", and "subcategory"
 
 interface ImageSelectionProps {
   images: ProductImage[];
@@ -135,28 +135,15 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
   const firstRow = selectedImages.slice(0, IMAGES_PER_ROW);
   const secondRow = selectedImages.slice(IMAGES_PER_ROW, MAX_IMAGES);
 
-  // Collection type should only allow 1 image
-  const isCollection = type === "collection";
-  const maxImagesAllowed = isCollection ? 1 : MAX_IMAGES;
-  const disableUploader = isCollection && selectedImages.length >= 1;
+  // Check if the type is 'collection', 'category', or 'subcategory'
+  const isSingleImageType =
+    type === "collection" || type === "category" || type === "subcategory";
+  const maxImagesAllowed = isSingleImageType ? 1 : MAX_IMAGES;
+  const disableUploader = isSingleImageType && selectedImages.length >= 1;
 
   // Handlers
   const handleCropComplete = async (croppedImageBlob: Blob) => {
     try {
-      // Create a file from the blob
-      const fileName = `image_${Date.now()}.jpg`;
-      const fileType = "image/jpeg";
-      new File([croppedImageBlob], fileName, {
-        type: fileType,
-      });
-
-      // Get the presigned URL for upload
-      // const typeFolder = type || "general"; // Use the type prop or default to "general"
-      // const presignedUrl = await getPresignedUrl(fileName, typeFolder);
-      // console.log(presignedUrl, "PRESIGNEDURL");
-      // Upload the file
-      // await uploadFile(presignedUrl, imageFile);
-
       // Create a local URL for preview while waiting for server response
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -177,8 +164,8 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
             selected: true,
           };
 
-          // For collection type, replace any existing image
-          if (isCollection) {
+          // For single-image types, replace any existing image
+          if (isSingleImageType) {
             setImages([newImage]);
           } else {
             // For other types, add to existing images
@@ -192,13 +179,8 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
       setCropOpen(false);
       setCurrentImage(null);
       setCurrentImageId(null);
-
-      // Optional: show success message to user
-      // You can add a toast notification here
     } catch (error) {
       console.error("Error uploading image:", error);
-      // Handle error - show error message to user
-      // You can add a toast notification here
     }
   };
 
@@ -246,7 +228,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
   // Render
   return (
     <Box sx={{ width: "100%" }}>
-      {/* Image Uploader Component - Conditionally rendered based on collection type */}
+      {/* Image Uploader Component - Conditionally rendered based on collection, category, or subcategory type */}
       {!disableUploader && (
         <ImageUploader
           currentCount={images.length}
@@ -255,7 +237,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
         />
       )}
 
-      {/* Informational message for collection when upload is disabled */}
+      {/* Informational message for single-image types when upload is disabled */}
       {disableUploader && (
         <Box
           sx={{
@@ -267,8 +249,8 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            Collection only allows one image. Delete the current image to upload
-            a new one.
+            {type} only allows one image. Delete the current image to upload a
+            new one.
           </Typography>
         </Box>
       )}

@@ -21,7 +21,7 @@ export const getImage = (filePath?: string): string => {
   }
   
   // Ensure file path starts with a forward slash if not already
-  const formattedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
+  const formattedPath = filePath.startsWith('/') ? filePath : `${filePath}`;
   
   // Construct and return the full S3 URL
   return `${s3BaseUrl}${formattedPath}`;
