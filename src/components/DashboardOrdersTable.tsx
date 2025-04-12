@@ -56,9 +56,7 @@ const DashboardOrdersTable: React.FC = () => {
           // Slice to get the first 10 records
           const slicedData = response.data.tableData.slice(0, 10);
 
-          setOrders(slicedData); // Populate only the first 10 orders
-          // setTotalCount(response.data.totalCount); // Set total count
-          // setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate total pages
+          setOrders(slicedData); 
         } else {
           throw new Error("Invalid API response structure");
         }

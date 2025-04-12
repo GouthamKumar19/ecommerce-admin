@@ -103,7 +103,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   }, [variants]);
   // Validation functions
  const validateProductName = (name: string) =>
-   /^[a-zA-Z\s]*$/.test(name) && name.length <= 20;
+   /^[a-zA-Z\s]*$/.test(name) && name.length <= 15;
  const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
    const validateDescription = (desc: string) => desc.length <= 60;
 
@@ -142,7 +142,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   updateForm.setProductNameErrorMessage(
                     "Only characters are allowed."
                   );
-                } else if (name.length > 15) {
+                } else if (name.length < 15) {
                   updateForm.setProductNameErrorMessage(
                     "Maximum 15 characters allowed."
                   );

@@ -6,25 +6,25 @@ const DashboardPage = () => {
   const stats = [
     {
       title: "Total Users",
-      value: "1,284",
+      value: "₹1,284",
       change: "+12.5%",
       changeType: "increase",
     },
     {
       title: "Revenue",
-      value: "$34,743",
+      value: "₹34,743",
       change: "+8.3%",
       changeType: "increase",
     },
     {
       title: "Orders",
-      value: "384",
+      value: "₹384",
       change: "-2.7%",
       changeType: "decrease",
     },
     {
       title: "Avg. Order Value",
-      value: "$89.54",
+      value: "₹89.54",
       change: "+3.1%",
       changeType: "increase",
     },
