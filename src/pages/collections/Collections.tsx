@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import DataTable from "../../components/common/DataTable";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
+import InfoIcon from "@mui/icons-material/Info"; // Import InfoIcon
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
@@ -16,9 +17,6 @@ import { getAllCollection, deleteCollection } from "../../api/collections";
 import type { Collection } from "../../types/collections.types";
 import { getImage } from "../../utils/imagePreview";
 
-
-
-// Add this interface near your other imports
 export interface CollectionResponse {
   tableData: Collection[];
   totalCount: number;
@@ -73,30 +71,21 @@ const CollectionsPage: React.FC = () => {
             itemsPerPage: itemsPerPage,
           },
         };
-        console.log("Payload:", payload);
         const response = await getAllCollection(payload);
 
-        // In your useEffect, update the data handling:
         if (response && response.data) {
-          console.log("Fetched Collections Response:", response);
-          console.log("Fetched Collections Data:", response.data);
-          
-          // First convert to unknown, then to CollectionResponse
           const responseData = response.data as unknown as CollectionResponse;
           setCollections(responseData.tableData);
           setTotalCount(responseData.totalCount);
           setPageCount(Math.ceil(responseData.totalCount / itemsPerPage)); // Calculate page count
         } else {
-          console.error("Invalid response format:", response);
           throw new Error("Invalid response format");
         }
       } catch (err: any) {
         if (!signal.aborted) {
-          console.error(err.message || "Failed to fetch collections");
           setError(err.message || "Failed to fetch collections");
         }
       } finally {
-        // Add a delay to display the skeleton loader for longer
         setTimeout(() => setIsLoading(false), 1000); // 1 second delay
       }
     };
@@ -136,15 +125,11 @@ const CollectionsPage: React.FC = () => {
             );
             setTotalCount((prev) => prev - 1); // Update total count after deletion
             setPageCount(Math.ceil((totalCount - 1) / itemsPerPage)); // Recalculate page count
-            console.log(
-              `Collection deleted successfully: ${currentCollection._id}`
-            );
           } else {
             throw new Error("Failed to delete collection");
           }
         } catch (err: any) {
           setError(err.message || "Failed to delete collection");
-          console.error("Error deleting collection:", err);
         } finally {
           setIsLoading(false);
         }
@@ -241,6 +226,14 @@ const CollectionsPage: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Add instruction line with Info Icon */}
+      <div className="flex items-center justify-center mb-4">
+        <InfoIcon sx={{ color: "#1976d2", marginRight: "8px" }} />
+        <p className="text-gray-700 text-sm font-medium">
+          Press on the image to add products to the collection.
+        </p>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
