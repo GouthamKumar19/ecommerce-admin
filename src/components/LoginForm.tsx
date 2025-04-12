@@ -1,9 +1,9 @@
-import { useState, FormEvent } from "react";
-import { FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
+import React, { useState, FormEvent } from "react";
+import { FaApple } from "react-icons/fa";
 import { GoogleLogin } from "@react-oauth/google";
-import { useNavigate } from "react-router-dom";
+
 interface LoginComponentProps {
-  onSubmit: (email: string, password: string) => Promise<void>;
+  onSubmit?: (email: string, password: string) => Promise<void>;
   loading: boolean;
   error: string;
   onGoogleLogin: (googleCredential: string) => Promise<void>;
@@ -11,27 +11,30 @@ interface LoginComponentProps {
 
 const LoginComponent: React.FC<LoginComponentProps> = ({
   onSubmit,
-  loading,
+
   error,
   onGoogleLogin,
 }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const [email] = useState("");
+  const [password] = useState("");
+  // const [rememberMe, setRememberMe] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await onSubmit(email, password);
+    if (onSubmit) {
+      await onSubmit(email, password);
+    } else {
+      console.warn("Email/password login not implemented");
+    }
   };
 
   const handleGoogleLoginSuccess = (response: any) => {
     console.log("Google Login Success:", response);
-    navigate("/dashboard");
     // Extract the credential from the Google login response
     const googleCredential = response.credential;
     onGoogleLogin(googleCredential);
+    // Note: navigation happens in the parent component after successful login
   };
 
   const handleGoogleLoginError = () => {
@@ -49,6 +52,8 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
         Login here
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Email field */}
+        {/*
         <input
           type="email"
           required
@@ -57,6 +62,10 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
           onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[var(--primary-color)] focus:outline-none"
         />
+        */}
+
+        {/* Password field with toggle visibility */}
+        {/*
         <div className="relative w-full">
           <input
             type={showPassword ? "text" : "password"}
@@ -81,6 +90,10 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </button>
         </div>
+        */}
+
+        {/* Remember Me Checkbox */}
+        {/*
         <div className="flex items-center ml-0.1">
           <label
             htmlFor="remember-me"
@@ -96,6 +109,10 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
             <span className="text-sm text-gray-700">Remember me</span>
           </label>
         </div>
+        */}
+
+        {/* Sign In Button */}
+        {/*
         <button
           type="submit"
           disabled={loading}
@@ -104,6 +121,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
         >
           {loading ? "Signing in..." : "Sign in"}
         </button>
+        */}
       </form>
       <div className="text-center mt-4">
         <p className="text-sm text-gray-600 mt-2">Create new account</p>
@@ -118,6 +136,7 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
           <button
             className="bg-[var(--secondary-color)] text-white p-2 rounded-full"
             style={{ background: "var(--secondary-color)" }}
+            type="button"
           >
             <FaApple />
           </button>

@@ -1,27 +1,20 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
-
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-
 import { Edit, Delete } from "@mui/icons-material";
 import TextField from "@mui/material/TextField";
+import {
+  InputAdornment,
+  MenuItem,
+  Select,
+  FormControl,
+  FormHelperText,
+  SelectChangeEvent,
+} from "@mui/material";
 import AddressPopup from "./AddressPopup";
-import { ActionContext } from "../../context/ActionContext";
-import { createUser, getUserById } from "../../api/user";
-import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { User } from "../../types/users.types";
-import { InputAdornment } from "@mui/material";
-
-interface UserFormData {
-  name: string;
-  email: string;
-  password: string;
-  gender: string;
-  phone: string;
-  countryCode: string;
-}
 
 interface AddressData {
   addressLine1: string;
@@ -29,94 +22,84 @@ interface AddressData {
   city: string;
   state: string;
   pinCode: string;
+  useAsShipping?: boolean; // Add this field
 }
 
-const UserDetailsForm: React.FC = () => {
+interface UserDetailsFormProps {
+  userData: User | null;
+  isLoading: boolean;
+  isEditMode: boolean;
+  onSave: (formData: any) => void;
+}
+
+const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
+  userData,
+  isLoading,
+  isEditMode,
+  onSave,
+}) => {
+  // Form state variables
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     gender: "",
-    phoneNumber: "+91",
-    countryCode: "",
+    phoneNumber: "",
+    countryCode: "91",
     addresses: [] as AddressData[],
   });
 
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // UI state variables
   const [showAddress, setShowAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressData | null>(
     null
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  // Validation state
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     phoneNumber: "",
+    password: "",
+    gender: "",
   });
 
-  const params = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { setActionHandlers } = useContext(ActionContext);
-
+  // Helper function to populate form with user data
   const populateFormWithUserData = (user: User) => {
+    console.log("Populating form with user data:", user);
     setFormData({
-      name: user.name ? String(user.name) : "",
-      email: user.email ? String(user.email) : "",
-      password: user.password ? String(user.password) : "",
-      gender: user.gender ? String(user.gender) : "",
-      phoneNumber: user.phone ? String(user.phone) : "",
-      countryCode: "+91",
-      addresses: [],
+      name: user.name || "",
+      email: user.email || "",
+      password: "", // Don't populate password for security reasons
+      gender: user.gender || "",
+      phoneNumber: user.phone ? user.phone : "+91",
+      countryCode: "91",
+      addresses: user.addresses || [],
     });
   };
 
+  // Populate form with user data when it's available
   useEffect(() => {
-    const fetchUserData = async () => {
-      const id = params.id;
-      if (id && id !== "new") {
-        setIsLoading(true);
-        setIsEditMode(true);
-        setUserId(id);
+    if (userData) {
+      populateFormWithUserData(userData);
+    }
+  }, [userData]);
 
-        try {
-          const response = await getUserById(id);
-          if (response && response.data) {
-            populateFormWithUserData(response.data);
-          }
-        } catch (error) {
-          console.error("Error fetching user:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      } else if (location.state?.user) {
-        const user = location.state.user;
-        setIsEditMode(true);
-        setUserId(String(user.id || user._id));
-        populateFormWithUserData(user);
-      }
+  // Set up event listener for save trigger from parent
+  useEffect(() => {
+    const handleTriggerSave = () => {
+      validateAndSubmit();
     };
 
-    fetchUserData();
-  }, [params.id, location.state]);
-
-  useEffect(() => {
-    setActionHandlers({
-      onConfirm: handleConfirm,
-      onCancel: handleCancel,
-    });
+    document.addEventListener("triggerSaveFromParent", handleTriggerSave);
 
     return () => {
-      setActionHandlers({
-        onConfirm: () => console.warn("onConfirm is not implemented"),
-        onCancel: () => console.warn("onCancel is not implemented"),
-      });
+      document.removeEventListener("triggerSaveFromParent", handleTriggerSave);
     };
-  }, [formData, isEditMode, setActionHandlers]);
+  }, [formData, errors]);
 
+  // Input change handler
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -125,7 +108,7 @@ const UserDetailsForm: React.FC = () => {
       if (value.startsWith("+91")) {
         const phoneDigits = value.substring(3).replace(/\D/g, ""); // Remove +91 and non-digits
         const newPhoneValue =
-          "+91" +
+          
           (phoneDigits.length > 10 ? phoneDigits.slice(0, 10) : phoneDigits);
 
         setFormData((prev) => ({
@@ -144,10 +127,36 @@ const UserDetailsForm: React.FC = () => {
         setFormData((prev) => ({
           ...prev,
           phoneNumber:
-            "+91" +
+           
             (phoneDigits.length > 10 ? phoneDigits.slice(0, 10) : phoneDigits),
         }));
       }
+    } else if (name === "password") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+
+      // Password validation: at least 8 characters with at least one letter and one number
+      const hasMinLength = value.length >= 8;
+      const hasLetter = /[a-zA-Z]/.test(value);
+      const hasNumber = /[0-9]/.test(value);
+      const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(value);
+
+      let passwordError = "";
+
+      if (
+        value &&
+        (!hasMinLength || !hasLetter || !hasNumber || !hasSpecialChar)
+      ) {
+        passwordError =
+          "Password must be at least 8 characters with at least one letter, one number, and one special character.";
+      }
+
+      setErrors((prev) => ({
+        ...prev,
+        password: passwordError,
+      }));
     } else {
       // Handle other inputs normally
       setFormData((prev) => ({
@@ -176,6 +185,36 @@ const UserDetailsForm: React.FC = () => {
     }
   };
 
+  // Handle gender select change
+  const handleGenderChange = (event: SelectChangeEvent) => {
+    const value = event.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      gender: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      gender: "",
+    }));
+  };
+
+  // Address checkbox handler for existing addresses
+  const handleShippingCheckboxChange = (index: number, checked: boolean) => {
+    const updatedAddresses = [...formData.addresses];
+    updatedAddresses[index] = {
+      ...updatedAddresses[index],
+      useAsShipping: checked,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      addresses: updatedAddresses,
+    }));
+  };
+
+  // Address handlers
   const handleAddAddress = (addressData: AddressData) => {
     setFormData((prev) => ({
       ...prev,
@@ -212,66 +251,46 @@ const UserDetailsForm: React.FC = () => {
     }));
   };
 
-  const handleConfirm = async () => {
-    const userData: UserFormData = {
+  // Validation and submission
+  const validateAndSubmit = () => {
+    // Check for validation errors
+    if (
+      errors.name ||
+      errors.email ||
+      errors.phoneNumber ||
+      errors.password ||
+      errors.gender
+    ) {
+      return;
+    }
+
+    // If it's a new user, validate that password field is not empty
+    if (!isEditMode && !formData.password) {
+      setErrors((prev) => ({
+        ...prev,
+        password: "Password is required for new users.",
+      }));
+
+      return;
+    }
+
+    // Prepare user data for API
+    const userData: any = {
       name: formData.name,
       email: formData.email,
-      password: formData.password,
       gender: formData.gender,
       phone: formData.phoneNumber,
       countryCode: formData.countryCode,
+      addresses: formData.addresses,
     };
 
-    console.log("Form data being submitted:", userData);
-
-    // Check for errors before submission
-    if (errors.name || errors.email || errors.phoneNumber) {
-      console.error("There are validation errors", errors);
-      return; // Stop if there are validation errors
+    // Add password only if provided (for updates) or required (for new users)
+    if (formData.password) {
+      userData.password = formData.password;
     }
 
-    try {
-      if (isEditMode && userId) {
-        // Update existing user (API call to be implemented)
-        console.log("Updating user with ID:", userId);
-        console.log("Updated user data:", userData);
-      } else {
-        // Create new user
-        const response = await createUser(userData);
-        console.log({
-          status: 201,
-          message: "Success",
-          data: {
-            id: response.data._id,
-          },
-          toastMessage: "User created successfully",
-        });
-      }
-
-      // Reset form after successful submission
-      if (!isEditMode) {
-        setFormData({
-          name: "",
-          email: "",
-          password: "",
-          gender: "",
-          phoneNumber: "+91",
-          countryCode: "+91",
-          addresses: [],
-        });
-      }
-
-      // You might want to add toast notification here
-    } catch (error) {
-      console.error("Error submitting user data:", error);
-      // Handle error notification here
-    }
-  };
-
-  const handleCancel = () => {
-    console.log("Cancel action triggered");
-    // Redirect to a different route, e.g., the user list page
-    navigate("/users");
+    // Call the onSave prop function from parent component
+    onSave(userData);
   };
 
   // Calculate phone length excluding +91 prefix
@@ -297,7 +316,9 @@ const UserDetailsForm: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
         </div>
       ) : (
-        <div className={`${showAddress ? "filter pointer-events-none" : ""}`}>
+        <div
+          className={`${showAddress ? "filter blur-sm pointer-events-none" : ""}`}
+        >
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
             <div className="w-full md:w-1/3 text-left">
               <label className="block text-black text-small font-medium mb-2 text-left">
@@ -310,7 +331,7 @@ const UserDetailsForm: React.FC = () => {
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full"
-                error={!!errors.name} // Here to indicate error state
+                error={!!errors.name}
                 helperText={errors.name}
                 size="small"
                 InputProps={{
@@ -320,7 +341,7 @@ const UserDetailsForm: React.FC = () => {
                   ...textFieldStyle,
                   "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
                     {
-                      borderColor: "red", // Custom red border color for error state
+                      borderColor: "red",
                     },
                 }}
               />
@@ -337,7 +358,7 @@ const UserDetailsForm: React.FC = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full"
-                error={!!errors.email} // Here to indicate error state
+                error={!!errors.email}
                 helperText={errors.email}
                 size="small"
                 InputProps={{
@@ -347,7 +368,7 @@ const UserDetailsForm: React.FC = () => {
                   ...textFieldStyle,
                   "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
                     {
-                      borderColor: "red", // Custom red border color for error state
+                      borderColor: "red",
                     },
                 }}
               />
@@ -365,7 +386,7 @@ const UserDetailsForm: React.FC = () => {
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
                 className="w-full"
-                error={!!errors.phoneNumber} // Here to indicate error state
+                error={!!errors.phoneNumber}
                 helperText={errors.phoneNumber}
                 size="small"
                 InputProps={{
@@ -380,22 +401,86 @@ const UserDetailsForm: React.FC = () => {
                   ...textFieldStyle,
                   "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
                     {
-                      borderColor: "red", // Custom red border color for error state
+                      borderColor: "red",
                     },
                 }}
               />
             </div>
+            <div className="w-full md:w-1/3 text-left">
+              <label className="block text-black text-small font-medium mb-2 text-left">
+                Gender
+              </label>
+              <FormControl
+                variant="outlined"
+                className="w-full"
+                size="small"
+                error={!!errors.gender}
+              >
+                <Select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleGenderChange}
+                  displayEmpty
+                  sx={{
+                    ...textFieldStyle,
+                    backgroundColor: "white",
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    <em>Select Gender</em>
+                  </MenuItem>
+                  <MenuItem value="MALE">MALE</MenuItem>
+                  <MenuItem value="FEMALE">FEMALE</MenuItem>
+                  <MenuItem value="OTHER">OTHER</MenuItem>
+                </Select>
+                {errors.gender && (
+                  <FormHelperText>{errors.gender}</FormHelperText>
+                )}
+              </FormControl>
+            </div>
+          </div>
+
+          {/* Password field with validation */}
+          <div className="w-full md:w-1/3 text-left mt-4">
+            <label className="block text-black text-small font-medium mb-2 text-left">
+              Password
+            </label>
+            <TextField
+              variant="outlined"
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="w-full"
+              error={!!errors.password}
+              helperText={errors.password}
+              size="small"
+              InputProps={{
+                style: { backgroundColor: "white" },
+              }}
+              sx={{
+                ...textFieldStyle,
+                "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: "red",
+                  },
+              }}
+            />
           </div>
 
           <button
             onClick={() => setShowAddress(true)}
-            className="w-full sm:w-2/3 md:w-1/3 text-white rounded-md mt-4 mb-4 flex items-center justify-center"
+            className="w-full sm:w-2/3 md:w-1/3 bg-green-700 text-white py-2 rounded-md mt-4 mb-4 flex items-center justify-center"
           >
             + ADD A NEW ADDRESS
           </button>
 
           {formData.addresses.map((address, index) => (
-            <div key={index} className="w-full p-4 text-left bg-white mb-4">
+            <div
+              key={index}
+              className="w-full p-4 text-left bg-white mb-4 border rounded"
+            >
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-bold">Address {index + 1}</h3>
                 <div className="flex space-x-2">
@@ -503,6 +588,12 @@ const UserDetailsForm: React.FC = () => {
                   type="checkbox"
                   id={`useAsShipping-${index}`}
                   className="mr-2"
+                  readOnly={true}
+                  disabled={true}
+                  checked={address.useAsShipping || false}
+                  onChange={(e) =>
+                    handleShippingCheckboxChange(index, e.target.checked)
+                  }
                 />
                 <label htmlFor={`useAsShipping-${index}`} className="text-sm">
                   Use as shipping address

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   TextField,
   Typography,
@@ -7,13 +7,10 @@ import {
   Grid,
   InputAdornment,
   Box,
-  Button,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
 import ImageSelection from "../common/ImageSelection";
-import { VariantComponent, Variant } from "./Variant";
-import { ActionContext } from "../../context/ActionContext";
-import { useParams, useLocation } from "react-router-dom";
+import VariantManager, { Variant } from "./VariantManager"; // Import Variant type from VariantManager
+import { Dispatch, SetStateAction } from "react";
 
 interface ProductImage {
   id: number;
@@ -21,162 +18,105 @@ interface ProductImage {
   selected: boolean;
 }
 
-const ProductForm: React.FC = () => {
-  // Form state variables
-  const [productName, setProductName] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [price, setPrice] = useState<string>("");
-  const [slashedPrice, setSlashedPrice] = useState<string>("");
-  const [category, setCategory] = useState<string | null>(null);
-  const [subCategory, setSubCategory] = useState<string | null>(null);
-  const [featured, setFeatured] = useState<boolean>(false);
-  const [images, setImages] = useState<ProductImage[]>([]);
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [productId, setProductId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+// Remove the duplicate Variant interface since we're importing it from VariantManager
 
-  // Add state for variants
-  const [variants, setVariants] = useState<Variant[]>([]);
+interface ProductFormProps {
+  productName: string;
+  description: string;
+  price: string;
+  slashedPrice: string;
+  category: string | null; // Changed from categories array to category string
+  subCategory: string | null; // Changed from subcategories array to subCategory string
+  categories: any[]; // Keep this for the dropdown options
+  categoriesLoading: boolean;
+  subcategories: any[]; // Keep this for the dropdown options
+  featured: boolean;
+  images: ProductImage[];
+  variants: Variant[]; // Use the imported Variant type
+  isProductNameValid: boolean;
+  isPriceValid: boolean;
+  isSlashedPriceValid: boolean;
+  isDescriptionValid: boolean;
+  isCategoryValid: boolean;
+  isSubCategoryValid: boolean;
+  productNameErrorMessage: string;
+  priceErrorMessage: string;
+  slashedPriceErrorMessage: string;
+  descriptionErrorMessage: string;
+  categoryErrorMessage: string;
+  subCategoryErrorMessage: string;
+  updateForm: {
+    setProductName: (value: string) => void;
+    setDescription: (value: string) => void;
+    setPrice: (value: string) => void;
+    setSlashedPrice: (value: string) => void;
+    setCategory: (value: string | null) => void;
+    setSubCategory: (value: string | null) => void;
+    setFeatured: (value: boolean) => void;
+    setImages: Dispatch<SetStateAction<ProductImage[]>>;
+    setVariants: Dispatch<SetStateAction<Variant[]>>; // Use the imported Variant type
+    setIsProductNameValid: (value: boolean) => void;
+    setIsPriceValid: (value: boolean) => void;
+    setIsSlashedPriceValid: (value: boolean) => void;
+    setIsDescriptionValid: (value: boolean) => void;
+    setIsCategoryValid: (value: boolean) => void;
+    setIsSubCategoryValid: (value: boolean) => void;
+    setProductNameErrorMessage: (value: string) => void;
+    setPriceErrorMessage: (value: string) => void;
+    setSlashedPriceErrorMessage: (value: string) => void;
+    setDescriptionErrorMessage: (value: string) => void;
+    setCategoryErrorMessage: (value: string) => void;
+    setSubCategoryErrorMessage: (value: string) => void;
+  };
+}
 
-  // Validation states
-  const [isProductNameValid, setIsProductNameValid] = useState<boolean>(true);
-  const [isPriceValid, setIsPriceValid] = useState<boolean>(true);
-  const [isSlashedPriceValid, setIsSlashedPriceValid] = useState<boolean>(true);
-  const [isDescriptionValid, setIsDescriptionValid] = useState<boolean>(true);
-  const [isCategoryValid, setIsCategoryValid] = useState<boolean>(true);
-  const [isSubCategoryValid, setIsSubCategoryValid] = useState<boolean>(true);
-  const [productNameErrorMessage, setProductNameErrorMessage] =
-    useState<string>("");
-  const [priceErrorMessage, setPriceErrorMessage] = useState<string>("");
-  const [slashedPriceErrorMessage, setSlashedPriceErrorMessage] =
-    useState<string>("");
-  const [descriptionErrorMessage, setDescriptionErrorMessage] =
-    useState<string>("");
-  const [categoryErrorMessage, setCategoryErrorMessage] = useState<string>("");
-  const [subCategoryErrorMessage, setSubCategoryErrorMessage] =
-    useState<string>("");
-
-  // Context and routing hooks
-  const { setActionHandlers } = useContext(ActionContext);
-  const params = useParams();
-  const location = useLocation();
-
-  // Check if we're in edit mode
+const ProductForm: React.FC<ProductFormProps> = ({
+  productName,
+  description,
+  price,
+  slashedPrice,
+  category,
+  subCategory,
+  categories,
+  categoriesLoading,
+  subcategories,
+  featured,
+  images,
+  variants,
+  isProductNameValid,
+  isPriceValid,
+  isSlashedPriceValid,
+  isDescriptionValid,
+  isCategoryValid,
+  isSubCategoryValid,
+  productNameErrorMessage,
+  priceErrorMessage,
+  slashedPriceErrorMessage,
+  descriptionErrorMessage,
+  categoryErrorMessage,
+  subCategoryErrorMessage,
+  updateForm,
+}) => {
   useEffect(() => {
-    const id = params.id;
-    if (id && id !== "new") {
-      setIsEditMode(true);
-      setProductId(id);
-
-      // Here you would fetch product data based on ID
-      // For demonstration purposes, let's assume we have the data from location state
-      if (location.state?.product) {
-        const product = location.state.product;
-        setProductName(product.name || "");
-        setDescription(product.description || "");
-        setPrice(product.price?.toString() || "");
-        setSlashedPrice(product.slashedPrice?.toString() || "");
-        setCategory(product.category || null);
-        setSubCategory(product.subCategory || null);
-        setFeatured(product.featured || false);
-        // Setup images and variants here too
-      }
-    }
-  }, [params.id, location.state]);
-
-  // Set up action handlers for the parent component
-  useEffect(() => {
-    setActionHandlers({
-      onConfirm: handleSaveProduct,
-      onCancel: () => {
-        console.log("Product form cancelled");
-      },
-    });
-
-    return () => {
-      // Reset action handlers when component unmounts
-      setActionHandlers({
-        onConfirm: () => console.warn("onConfirm is not implemented"),
-        onCancel: () => console.warn("onCancel is not implemented"),
-      });
-    };
-  }, [
-    productName,
-    description,
-    price,
-    slashedPrice,
-    category,
-    subCategory,
-    featured,
-    images,
-    variants,
-    isEditMode,
-    setActionHandlers,
-  ]);
-
-  // Functions to handle variants
-  const addVariant = () => {
-    const newVariant: Variant = {
-      id: `variant-${Date.now()}`,
-      optionName: "",
-      optionValues: [],
-      isComplete: false,
-    };
-    setVariants([...variants, newVariant]);
-  };
-
-  const deleteVariant = (id: string) => {
-    setVariants(variants.filter((variant) => variant.id !== id));
-  };
-
-  const completeVariant = (updatedVariant: Variant) => {
-    setVariants(
-      variants.map((variant) =>
-        variant.id === updatedVariant.id ? updatedVariant : variant
-      )
-    );
-  };
-
-  const handleSaveProduct = async () => {
-    setIsLoading(true);
-    console.log(isLoading);
-    // Create the product data object
-    const productData = {
-      id: productId,
-      name: productName,
-      description,
-      price: parseFloat(price) || 0,
-      slashedPrice: parseFloat(slashedPrice) || 0,
-      category,
-      subCategory,
-      featured,
-      images: images.filter((img) => img.selected).map((img) => img.url),
-      variants: completedVariants,
-    };
-
-    console.log("Saving product:", productData);
-
-    // Here you would make the API call to save/update the product
-    // For now, we'll just simulate success
-    setTimeout(() => {
-      setIsLoading(false);
-      // Success would be handled by the parent
-    }, 1000);
-  };
-
-  // Sample category and subcategory data
-  const categories = ["Footwear", "Clothing", "Accessories"];
-  const subCategories = ["Boots", "Sneakers", "Formal", "Casual"];
-
-  // Group variants by completion status
-  const completedVariants = variants.filter((v) => v.isComplete);
-  const incompleteVariants = variants.filter((v) => !v.isComplete);
-
+    
+    console.log("ProductForm - Variants received:", variants);
+  }, [variants]);
   // Validation functions
-  const validateProductName = (name: string) =>
-    /^[a-zA-Z\s]*$/.test(name) && name.length <= 10;
-  const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
-  const validateDescription = (desc: string) => desc.length <= 60;
+ const validateProductName = (name: string) =>
+   /^[a-zA-Z\s]*$/.test(name) && name.length <= 20;
+ const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
+   const validateDescription = (desc: string) => desc.length <= 60;
+
+   // Formatting function for Indian currency
+   const formatCurrency = (value: string) => {
+     if (!value) return "";
+     const numericValue = parseFloat(value.replace(/,/g, ""));
+     if (isNaN(numericValue)) return value;
+     return numericValue.toLocaleString("en-IN", {
+       minimumFractionDigits: 0,
+       maximumFractionDigits: 2,
+     });
+   };
 
   return (
     <div>
@@ -193,15 +133,19 @@ const ProductForm: React.FC = () => {
             onChange={(e) => {
               const name = e.target.value;
               if (validateProductName(name)) {
-                setProductName(name);
-                setIsProductNameValid(true);
-                setProductNameErrorMessage("");
+                updateForm.setProductName(name);
+                updateForm.setIsProductNameValid(true);
+                updateForm.setProductNameErrorMessage("");
               } else {
-                setIsProductNameValid(false);
+                updateForm.setIsProductNameValid(false);
                 if (!/^[a-zA-Z\s]*$/.test(name)) {
-                  setProductNameErrorMessage("Only characters are allowed.");
-                } else if (name.length > 10) {
-                  setProductNameErrorMessage("Maximum 10 characters allowed.");
+                  updateForm.setProductNameErrorMessage(
+                    "Only characters are allowed."
+                  );
+                } else if (name.length > 15) {
+                  updateForm.setProductNameErrorMessage(
+                    "Maximum 15 characters allowed."
+                  );
                 }
               }
             }}
@@ -219,7 +163,7 @@ const ProductForm: React.FC = () => {
                     fontSize: "0.65rem",
                   }}
                 >
-                  {`${productName.length}/10`}
+                  {`${productName.length}/15`}
                 </InputAdornment>
               ),
               style: {
@@ -253,12 +197,14 @@ const ProductForm: React.FC = () => {
             onChange={(e) => {
               const desc = e.target.value;
               if (validateDescription(desc)) {
-                setDescription(desc);
-                setIsDescriptionValid(true);
-                setDescriptionErrorMessage("");
+                updateForm.setDescription(desc);
+                updateForm.setIsDescriptionValid(true);
+                updateForm.setDescriptionErrorMessage("");
               } else {
-                setIsDescriptionValid(false);
-                setDescriptionErrorMessage("Maximum 60 characters allowed.");
+                updateForm.setIsDescriptionValid(false);
+                updateForm.setDescriptionErrorMessage(
+                  "Maximum 60 characters allowed."
+                );
               }
             }}
             placeholder="Description"
@@ -306,7 +252,7 @@ const ProductForm: React.FC = () => {
             <Typography variant="subtitle1">Featured</Typography>
             <Checkbox
               checked={featured}
-              onChange={(e) => setFeatured(e.target.checked)}
+              onChange={(e) => updateForm.setFeatured(e.target.checked)}
               style={{
                 color: "#4CAF50",
                 padding: "0 8px 0 0",
@@ -330,14 +276,32 @@ const ProductForm: React.FC = () => {
             size="small"
             value={price}
             onChange={(e) => {
-              const priceValue = e.target.value;
+              const priceValue = e.target.value.replace(/,/g, ""); // Remove commas
+              const numericPrice = parseFloat(priceValue);
+              const numericSlashedPrice = parseFloat(
+                slashedPrice.replace(/,/g, "")
+              );
+
               if (validatePrice(priceValue)) {
-                setPrice(priceValue);
-                setIsPriceValid(true);
-                setPriceErrorMessage("");
+                if (
+                  !numericSlashedPrice ||
+                  numericPrice <= numericSlashedPrice
+                ) {
+                  // Valid price
+                  updateForm.setPrice(formatCurrency(priceValue));
+                  updateForm.setIsPriceValid(true);
+                  updateForm.setPriceErrorMessage("");
+                } else {
+                  // Price is greater than slashed price
+                  updateForm.setPrice(formatCurrency(priceValue));
+                  updateForm.setIsPriceValid(false);
+                  updateForm.setPriceErrorMessage(
+                    "Price must be less than the slashed price."
+                  );
+                }
               } else {
-                setIsPriceValid(false);
-                setPriceErrorMessage("Only numbers are allowed.");
+                updateForm.setIsPriceValid(false);
+                updateForm.setPriceErrorMessage("Only numbers are allowed.");
               }
             }}
             placeholder="Price"
@@ -370,14 +334,29 @@ const ProductForm: React.FC = () => {
             size="small"
             value={slashedPrice}
             onChange={(e) => {
-              const slashedPriceValue = e.target.value;
+              const slashedPriceValue = e.target.value.replace(/,/g, ""); // Remove commas
+              const numericSlashedPrice = parseFloat(slashedPriceValue);
+              const numericPrice = parseFloat(price.replace(/,/g, ""));
+
               if (validatePrice(slashedPriceValue)) {
-                setSlashedPrice(slashedPriceValue);
-                setIsSlashedPriceValid(true);
-                setSlashedPriceErrorMessage("");
+                if (!numericPrice || numericSlashedPrice > numericPrice) {
+                  // Valid slashed price
+                  updateForm.setSlashedPrice(formatCurrency(slashedPriceValue));
+                  updateForm.setIsSlashedPriceValid(true);
+                  updateForm.setSlashedPriceErrorMessage("");
+                } else {
+                  // Slashed price is less than or equal to price
+                  updateForm.setSlashedPrice(formatCurrency(slashedPriceValue));
+                  updateForm.setIsSlashedPriceValid(false);
+                  updateForm.setSlashedPriceErrorMessage(
+                    "Slashed price must be greater than the price."
+                  );
+                }
               } else {
-                setIsSlashedPriceValid(false);
-                setSlashedPriceErrorMessage("Only numbers are allowed.");
+                updateForm.setIsSlashedPriceValid(false);
+                updateForm.setSlashedPriceErrorMessage(
+                  "Only numbers are allowed."
+                );
               }
             }}
             placeholder="Slashed out price"
@@ -413,18 +392,21 @@ const ProductForm: React.FC = () => {
           </Typography>
           <Autocomplete
             options={categories}
-            value={category}
+            getOptionLabel={(option) => option.name || ""}
+            value={categories.find((cat) => cat._id === category) || null}
             onChange={(_, newValue) => {
-              setCategory(newValue);
+              updateForm.setCategory(newValue?._id || null);
+              updateForm.setSubCategory(null); // Reset subcategory when category changes
               if (newValue) {
-                setIsCategoryValid(true);
-                setCategoryErrorMessage("");
+                updateForm.setIsCategoryValid(true);
+                updateForm.setCategoryErrorMessage("");
               } else {
-                setIsCategoryValid(false);
-                setCategoryErrorMessage("Category is required.");
+                updateForm.setIsCategoryValid(false);
+                updateForm.setCategoryErrorMessage("Category is required.");
               }
             }}
             fullWidth
+            loading={categoriesLoading}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -451,19 +433,23 @@ const ProductForm: React.FC = () => {
             Sub Category
           </Typography>
           <Autocomplete
-            options={subCategories}
-            value={subCategory}
+            options={subcategories}
+            getOptionLabel={(option) => option.name || ""}
+            value={subcategories.find((sub) => sub._id === subCategory) || null}
             onChange={(_, newValue) => {
-              setSubCategory(newValue);
+              updateForm.setSubCategory(newValue?._id || null);
               if (newValue) {
-                setIsSubCategoryValid(true);
-                setSubCategoryErrorMessage("");
+                updateForm.setIsSubCategoryValid(true);
+                updateForm.setSubCategoryErrorMessage("");
               } else {
-                setIsSubCategoryValid(false);
-                setSubCategoryErrorMessage("Sub category is required.");
+                updateForm.setIsSubCategoryValid(false);
+                updateForm.setSubCategoryErrorMessage(
+                  "Sub category is required."
+                );
               }
             }}
             fullWidth
+            disabled={!category} // Disable if no category selected
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -505,7 +491,11 @@ const ProductForm: React.FC = () => {
               width: "100%",
             }}
           >
-            <ImageSelection images={images} setImages={setImages} />
+            <ImageSelection
+              images={images}
+              setImages={updateForm.setImages}
+              type="product"
+            />
           </Box>
         </Grid>
       </Grid>
@@ -519,51 +509,16 @@ const ProductForm: React.FC = () => {
           <Typography variant="subtitle1" gutterBottom align="left">
             Variants
           </Typography>
-          <Box sx={{ width: "100%" }}>
-            {/* Display completed variants first */}
-            {completedVariants.length > 0 && (
-              <Box sx={{ mb: 3 }}>
-                {completedVariants.map((variant) => (
-                  <VariantComponent
-                    key={variant.id}
-                    variant={variant}
-                    onDelete={() => deleteVariant(variant.id)}
-                    onComplete={completeVariant}
-                  />
-                ))}
-              </Box>
-            )}
-
-            {/* Display incomplete variants */}
-            {incompleteVariants.map((variant) => (
-              <VariantComponent
-                key={variant.id}
-                variant={variant}
-                onDelete={() => deleteVariant(variant.id)}
-                onComplete={completeVariant}
-              />
-            ))}
-
-            {/* Add variants button now appears below all variants */}
-            <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-start" }}>
-              <Button
-                startIcon={<AddIcon />}
-                onClick={addVariant}
-                sx={{
-                  color: "var(--secondary-color)",
-                  textAlign: "left",
-                  padding: "6px 8px",
-                  minWidth: "auto",
-                  "&:hover": {
-                    backgroundColor: "transparent",
-                  },
-                }}
-                variant="text"
-              >
-                Add variants like size and color
-              </Button>
-            </Box>
-          </Box>
+          <VariantManager
+            variants={variants}
+            setVariants={(newVariants) => {
+              console.log(
+                "VariantManager callback - New variants:",
+                newVariants
+              );
+              updateForm.setVariants(newVariants);
+            }}
+          />
         </Grid>
       </Grid>
     </div>

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import DataTable from "../../components/common/DataTable";
-import { getAllProducts, deleteProduct } from "../../api/product"; // Import your API fetching function
-import type { Product } from "../../types/product.types";
+import { getAllProducts, deleteProduct } from "../../api/product";
+import { Product } from "../../types/product.types";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
 import SortableHeader, {
@@ -16,18 +16,23 @@ import {
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import { getImage } from "../../utils/imagePreview";
 
 const ProductPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "updatedAt",
+    direction: "descending",
   });
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
+  const [totalProducts, setTotalProducts] = useState<number>(0);
+  const [pageCount, setPageCount] = useState<number>(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
 
   const navigate = useNavigate();
@@ -36,31 +41,43 @@ const ProductPage: React.FC = () => {
     navigate("/product/new?action=add");
   };
 
-  // Payload for API fetching
   useEffect(() => {
     const fetchProducts = async () => {
-      setIsLoading(true); // Set loading state to true
-      setError(null); // Reset error state
-      setTimeout(async () => {
-        try {
-          const response = await getAllProducts(); // Fetching data without payload
-          console.log(error);
-          setProducts(response.data); // Assuming response.data is an array of products
-        } catch (err: any) {
-          setError(err.message || "Failed to fetch products");
-        } finally {
-          setIsLoading(false); // Loading is finished
-        }
-      }, 500);
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await getAllProducts(
+          page,
+          itemsPerPage,
+          searchValue,
+          sortConfig
+        );
+
+        // Debugging: Log the entire API response
+        console.log("[DEBUG] API Response:", response);
+
+        // Debugging: Log the totalCount and tableData from the response
+        console.log("[DEBUG] totalCount from API:", response.data.totalCount);
+        console.log("[DEBUG] tableData from API:", response.data.tableData);
+
+        setProducts(response.data.tableData);
+        setTotalProducts(response.data.totalCount); // Set the total product count
+        setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate total pages
+      } catch (error) {
+        setError("Failed to fetch products");
+        console.error("[DEBUG] Error fetching products:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchProducts();
-  }, []); // Empty dependency array means this runs once on component mount
+  }, [page, itemsPerPage, searchValue, sortConfig]);
 
   const handleDeleteProduct = (productId: string | number) => {
     setSelectedProduct(
       products.find((product) => product._id === productId) || null
-    ); // Update ID checking based on your Product type
+    );
     setDialogOpen(true);
   };
 
@@ -71,7 +88,9 @@ const ProductPage: React.FC = () => {
         setSnackbarMessage(response.message);
         setProducts(
           products.filter((product) => product._id !== selectedProduct._id)
-        ); // Remove the deleted product from the list
+        );
+        setTotalProducts((prevTotal) => prevTotal - 1); // Update total count after deletion
+        setPageCount(Math.ceil((totalProducts - 1) / itemsPerPage)); // Recalculate page count
       } catch (error: any) {
         setSnackbarMessage(error.message || "Failed to delete product");
       }
@@ -79,6 +98,17 @@ const ProductPage: React.FC = () => {
     setDialogOpen(false);
     setSelectedProduct(null);
   };
+
+  const handleSort = (key: string) => {
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
+    setSortConfig({ key, direction });
+  };
+
+  const sortedProducts = useSortableData(products, sortConfig);
 
   const actionRenderer = (item: Product) => (
     <div className="flex justify-center items-center gap-4">
@@ -93,139 +123,131 @@ const ProductPage: React.FC = () => {
     </div>
   );
 
-  const handleSort = (key: string) => {
-    const direction = getNextSortDirection(
-      sortConfig.key,
-      key,
-      sortConfig.direction
-    );
-    setSortConfig({ key, direction });
-  };
+ const columns = [
+   {
+     header: (
+       <SortableHeader
+         label="Featured"
+         columnKey="isFeatured"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "isFeatured",
+     render: (item: Product) => (
+       <div className="flex justify-center">
+         <input
+           type="checkbox"
+           checked={item.isFeatured}
+           className="form-checkbox h-5 w-5 checkbox-green"
+           readOnly
+         />
+       </div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Image"
+         columnKey="imageUrl"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "imageUrl",
+     render: (item: Product) => (
+       <div className="text-center flex-shrink-0 h-10 w-10">
+         <img
+           className="h-10 w-10 rounded-full"
+           src={getImage(item.thumbnailImage)}
+           alt={item.name}
+         />
+       </div>
+     ),
+   },
+   
+   {
+     header: (
+       <SortableHeader
+         label="Product Name"
+         columnKey="name"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "name",
+     render: (item: Product) => (
+       <div className="flex text-left">
+         <div className="ml-0">
+           <div className="text-sm text-gray-900 max-w-xs truncate">
+             {item.name}
+           </div>
+         </div>
+       </div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Description"
+         columnKey="description"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "description",
+     render: (item: Product) => (
+       <div className="text-sm text-gray-900 max-w-xs truncate">
+         {item.description}
+       </div>
+     ),
+   },
+   {
+     header: (
+       <SortableHeader
+         label="Price"
+         columnKey="price"
+         sortConfig={sortConfig}
+         onSort={handleSort}
+       />
+     ),
+     key: "price",
+     render: (item: Product) => {
+       const formattedPrice = new Intl.NumberFormat("en-IN", {
+         style: "currency",
+         currency: "INR",
+         minimumFractionDigits: 2,
+       }).format(item.price);
 
-  const sortedProducts = useSortableData(products, sortConfig);
+       const formattedSlashedPrice =
+         item.slashedPrice &&
+         new Intl.NumberFormat("en-IN", {
+           style: "currency",
+           currency: "INR",
+           minimumFractionDigits: 2,
+         }).format(item.slashedPrice);
 
-  const columns = [
-    {
-      header: (
-        <SortableHeader
-          label="Featured"
-          columnKey="isFeatured"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "isFeatured",
-      render: (item: Product) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={item.isFeatured}
-            className="form-checkbox h-5 w-5 checkbox-green"
-            readOnly
-          />
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Image"
-          columnKey="imageUrl"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "imageUrl",
-      render: (item: Product) => (
-        <div className="text-center flex-shrink-0 h-10 w-10">
-          <img
-            className="h-10 w-10 rounded-full"
-            src={item.thumbnailImage} // Use appropriate image field
-            alt={item.name}
-          />
-        </div>
-      ),
-    },
-    // Other column definitions remain the same...
-    {
-      header: (
-        <SortableHeader
-          label="Product Name"
-          columnKey="name"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "name",
-      render: (item: Product) => (
-        <div className="flex text-left">
-          <div className="ml-0">
-            <div className="text-sm text-gray-900 max-w-xs truncate">
-              {item.name}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Description"
-          columnKey="description"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "description",
-      render: (item: Product) => (
-        <div className="text-sm text-gray-900 max-w-xs truncate">
-          {item.description}
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Price"
-          columnKey="price"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "price",
-      render: (item: Product) => (
-        <div className="flex items-center">
-          <span className="text-sm font-medium text-gray-900">
-            ${item.price.toFixed(2)}
-          </span>
-          {item.slashedPrice && (
-            <span className="ml-2 text-sm text-gray-500 line-through">
-              ${item.slashedPrice.toFixed(2)}
-            </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: (
-        <SortableHeader
-          label="Quantity"
-          columnKey="quantity"
-          sortConfig={sortConfig}
-          onSort={handleSort}
-        />
-      ),
-      key: "quantity",
-      render: (item: Product) => (
-        <div className="text-sm text-gray-900">{item.quantity}</div>
-      ),
-    },
-    {
-      header: <span>Actions</span>,
-      key: "actions",
-      render: actionRenderer,
-    },
-  ];
+       return (
+         <div className="flex items-center">
+           <span className="text-sm font-medium text-gray-900">
+             {formattedPrice}
+           </span>
+           {formattedSlashedPrice && (
+             <span className="ml-2 text-sm text-gray-500 line-through">
+               {formattedSlashedPrice}
+             </span>
+           )}
+         </div>
+       );
+     },
+   },
+   
+   {
+     header: <span>Actions</span>,
+     key: "actions",
+     render: actionRenderer,
+   },
+ ];
 
   return (
     <div>
@@ -250,18 +272,24 @@ const ProductPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
+      <div className="bg-white rounded-lg shadow overflow-hidden">
         {isLoading ? (
-          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+          <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
           <DataTable
             items={sortedProducts}
             columns={columns}
-            idKey="_id" // Use _id based on your Product type structure
-            itemsPerPage={15}
-            tableType="product"
+            idKey="_id"
+            itemsPerPage={itemsPerPage}
             actionRenderer={actionRenderer}
             loading={isLoading}
+            currentPage={page}
+            onPageChange={(newPage) => {
+              console.log("[DEBUG] Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount}
+            totalCount={totalProducts} // Pass total product count
           />
         )}
       </div>

@@ -1,113 +1,99 @@
-// api/product.ts
+import { CategoryResponse } from "../types/category.types";
+import { SortConfig } from "../types/category.types";
+import axiosInstance from "./axios";
 import axios from "axios";
-import { Category } from "../types/category.types";
-import { mockCategoryData } from "../config/mock/categoryTable";
 
 interface ApiResponse<T> {
   status: number;
   message: string;
-  data: T; // This should be generic to allow for different shapes of data
+  data: T;
 }
 
-let currentController: AbortController;
+let currentController: AbortController | null = null;
 
 export const getAllCategory = async (
-  payload: any
-): Promise<ApiResponse<Category[]>> => {
-  // Return ApiResponse<User[]> type
-  console.log("Payload received:", payload); // Log the payload for debugging
-
+  page: number,
+  itemsPerPage: number,
+  searchTerm: string,
+  sortConfig: SortConfig
+): Promise<ApiResponse<CategoryResponse>> => {
   try {
     if (currentController) {
       currentController.abort();
     }
     currentController = new AbortController();
+    console.log("[API] Fetching all testimonials");
 
-    // Uncomment the following lines if you're using an actual API call:
-    /*
     const response = await axiosInstance.post(
-      '/admin/products/getAll',
-      payload, // Sending the payload for sorting and pagination
+      "/admin/categories/getAll",
+      {
+       
+        search: [
+          {
+            term: searchTerm,
+            fields: ["name"],
+            startsWith: true,
+            endsWith: false,
+          },
+        ],
+        options: {
+          sortBy: [sortConfig.key],
+          sortDesc: [sortConfig.direction === "descending"],
+          page,
+          itemsPerPage,
+        },
+      },
       {
         signal: currentController.signal,
       }
     );
-    */
-
-    // Simulate API call with imported mock data
-    const totalCount = mockCategoryData.length;
-    const response = {
-      status: 200,
-      message: "Success",
-      data: {
-        totalCount, // Send the total count of users
-        tableData: mockCategoryData, // Assuming items is an array of user data
-      },
-    };
-
-    if (response?.status === 200) {
-      return {
-        status: response.status,
-        message: response.message,
-        data: response.data.tableData, // Return the array of users in the data
-      };
-    } else {
-      throw new Error("Failed to fetch users");
-    }
-  } catch (error: any) {
-    if (axios.isCancel(error)) {
-      console.log("Request canceled:", error.message);
-    }
+    return response.data;
+  } catch (error) {
+    console.error("[API] Error fetching all categories:", error);
     throw error;
   }
 };
 
-export const createCategory = async (
-  payload: any
-): Promise<ApiResponse<any>> => {
-  console.log("Create Category payload:", payload); // Log the payload
-  // Here you can add logic to make an API call if needed
+export const createCategory = async (payload: {
+  name: string;
+  image: string;
+}): Promise<ApiResponse<{ id: string }>> => {
+  console.log("Create Category payload:", payload);
 
-  return {
-    status: 200,
-    message: "Category created successfully", // You can customize the message
-    data: payload, // Return the payload or any other data needed
-  };
+  try {
+    const response = await axiosInstance.post(
+      "/admin/categories/create",
+      payload
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error creating category:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error creating category"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error creating category");
+    }
+  }
 };
 
-// Get Category by ID function
 export const getCategoryById = async (
   id: string
 ): Promise<ApiResponse<any>> => {
   console.log("Getting category with ID:", id);
 
   try {
-    // In a real application, you would make an API call here
-    // For now, we'll simulate by finding the category in mock data
-    const category = mockCategoryData.find(
-      (item) => item.id?.toString() === id || item._id === id
-    );
-
-    if (category) {
-      return {
-        status: 200,
-        message: "Category found successfully",
-        data: category,
-      };
-    } else {
-      return {
-        status: 404,
-        message: "Category not found",
-        data: null,
-      };
-    }
+    const response = await axiosInstance.post(`/admin/categories/getOne/${id}`);
+    return response.data;
   } catch (error) {
     console.error("Error fetching category:", error);
     throw error;
   }
 };
 
-// Update Category function
 export const updateCategory = async (
   id: string,
   payload: any
@@ -115,35 +101,129 @@ export const updateCategory = async (
   console.log(`Updating category with ID: ${id}`, payload);
 
   try {
-    // In a real application, you would make an API call here
-    // For now, we'll simulate a successful update
-    return {
-      status: 200,
-      message: "Category updated successfully",
-      data: {
-        id,
-        ...payload,
-        updatedAt: new Date().toISOString(),
-      },
-    };
+    const response = await axiosInstance.post(`/admin/categories/create`, {
+      ...payload,
+      id,
+    });
+
+    return response.data;
   } catch (error) {
-    console.error("Error updating category:", error);
-    throw error;
+    if (axios.isAxiosError(error)) {
+      console.error("Error updating category:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error updating category"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error updating category");
+    }
+  }
+};
+// Modified createSubCategory function
+export const createSubCategory = async (
+  payload: {
+    name: string;
+    categoryId: string;
+    image: string;
+  }[]
+): Promise<ApiResponse<{ id: string }>> => {
+  console.log("Create Subcategory payload:", payload);
+  
+
+  console.log("Formatted Subcategory payload:", payload);
+
+  try {
+    const response = await axiosInstance.post(
+      "/admin/subcategories/addMany",
+      payload
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error creating subcategory:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error creating subcategory"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error creating subcategory");
+    }
+  }
+};
+export const updateSubcategories = async (
+  payload: any
+): Promise<ApiResponse<any>> => {
+  console.log(`Updating subcategories with payload:`, payload);
+
+  try {
+    const response = await axiosInstance.put(
+      `/admin/subcategories/update`, // Confirm this endpoint is correct.
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error updating subcategories:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error updating subcategories"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error updating subcategories");
+    }
   }
 };
 
-// Create Subcategory function
-export const createSubCategory = async (payload: {
-  name: string;
-  categoryId: string;
-  image: string;
-}): Promise<ApiResponse<any>> => {
-  console.log("Create Subcategory payload:", payload); // Log the payload
-  // Here you can add logic to make an API call if needed
+export const deleteCategoryById = async (
+  id: string
+): Promise<ApiResponse<any>> => {
+  console.log("Deleting category with ID:", id);
 
-  return {
-    status: 200,
-    message: "Subcategory created successfully", // You can customize the message
-    data: payload, // Return the payload or any other data needed
-  };
+  try {
+    const response = await axiosInstance.delete(
+      `/admin/categories/delete/${id}`
+    );
+
+    if (response.status === 200) {
+      return {
+        status: 200,
+        message: "Category deleted successfully",
+        data: response.data,
+      };
+    } else {
+      return {
+        status: response.status,
+        message: "Error deleting category",
+        data: null,
+      };
+    }
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    throw error;
+  }
+};
+export const deleteSubcategories = async (
+  subcategoryIds: string[]
+): Promise<ApiResponse<any>> => {
+  console.log("Deleting subcategories with IDs:", subcategoryIds);
+
+  try {
+    const response = await axiosInstance.post(
+      "/admin/subcategories/deleteMany",
+      { ids: subcategoryIds }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Error deleting subcategories:", error.response?.data);
+      throw new Error(
+        error.response?.data.message || "Error deleting subcategories"
+      );
+    } else {
+      console.error("Unexpected error:", error);
+      throw new Error("Unexpected error deleting subcategories");
+    }
+  }
 };

@@ -1,5 +1,3 @@
-// types/collection.types.ts
-
 // Define possible value types that can be stored in the record
 type RecordValue =
   | string
@@ -41,11 +39,43 @@ export interface Collection extends BaseRecord {
 }
 
 // Interface for the response structure
-export interface ApiResponse {
+export interface ApiResponse<T> {
   status: number; // HTTP status code
   message: string; // Response message
-  data: {
-    totalCount: number; // Total number of collections
-    tableData: Collection[]; // Array of Collection items
-  };
+  data: T;
+}
+
+// Revised Product interface based on the provided JSON structure
+export interface Product extends BaseRecord {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  slashedPrice?: number;
+  quantity: number;
+  isFeatured: boolean; // Changed featured to isFeatured
+  categoryId: string; // Required category ID
+  subCategoryId: string; // Required sub-category ID
+  // images: string[]; // Array for multiple images
+  thumbnailImage?: string; // Optional thumbnail image
+  createdAt?: string | Date; // Date of creation
+  updatedAt: string | Date; // Date of last update
+}
+
+// Example response structure reflecting the overall API response
+export interface ProductResponse {
+  totalCount: number;
+  tableData: Product[];
+}
+
+// Example response structure for collections
+export interface CollectionResponse {
+  tableData: Collection[];
+  totalCount: number;
+}
+
+export type SortDirection = "ascending" | "descending" | null;
+export interface SortConfig {
+  key: string;
+  direction: SortDirection;
 }

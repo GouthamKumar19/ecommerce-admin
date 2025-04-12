@@ -5,7 +5,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 interface ImageUploaderProps {
   currentCount: number;
   maxImages: number;
-  onFileUpload: (fileUrl: string) => void;
+  onFileUpload: (file: File) => void; // Update this type to accept a File
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -60,8 +60,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleFiles = (files: FileList) => {
     const file = files[0];
     if (file) {
-      const fileUrl = URL.createObjectURL(file);
-      onFileUpload(fileUrl);
+      onFileUpload(file); // Pass the File object to the onFileUpload function
     }
   };
 
@@ -137,10 +136,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           >
             or
           </Typography>
-          <Tooltip
-              title=" You can upload up to 10 images"
-              arrow
-            >
+          <Tooltip title=" You can upload up to 10 images" arrow>
             <Button
               variant="contained"
               color="primary"
@@ -164,7 +160,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             >
               {isMaxImagesReached ? "Maximum Limit Reached" : "Browse Files"}
             </Button>
-            </Tooltip>
+          </Tooltip>
           <Typography
             variant="caption"
             color="textSecondary"

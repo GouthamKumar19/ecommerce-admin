@@ -18,20 +18,26 @@ import { getAllOrders } from "../../api/orders";
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
-  const [filters, setFilters] = useState<OrderFilters>({
-    paymentStatus: [],
-    orderStatus: [],
-    date: "",
-  });
-
   const [openFilterDialog, setOpenFilterDialog] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "updatedAt",
+    direction: "descending",
   });
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
+  const [totalCount, setTotalCount] = useState<number>(0); // Total order count
+  const [pageCount, setPageCount] = useState<number>(0); // Total page count
+  const [activeFilters, setActiveFilters] = useState<{
+    filter?: {
+      status?: string;
+      paymentStatus?: string;
+    };
+    date?: string;
+  }>({});
+
   const navigate = useNavigate();
 
   const handleViewOrder = (item: Order) => {
@@ -47,28 +53,38 @@ const OrderPage: React.FC = () => {
     </div>
   );
 
-  
   useEffect(() => {
     const fetchOrderData = async () => {
-      setIsLoading(true); // Start loading
-      setError(null); // Reset error
+      setIsLoading(true);
+      setError(null);
 
-      setTimeout(async () => {
-        try {
-          const response = await getAllOrders();
-          setOrders(response.data.tableData);
-          console.log(error);
-          console.log("Order Details:", response.data.tableData);
-        } catch (err: any) {
-          setError(err.message || "Failed to fetch orders");
-        } finally {
-          setIsLoading(false);
+      try {
+        const response = await getAllOrders(
+          page,
+          itemsPerPage,
+          searchValue,
+          sortConfig,
+          activeFilters
+        );
+        console.log("API Response:", response);
+
+        if (response.data && Array.isArray(response.data.tableData)) {
+          setOrders(response.data.tableData); // Populate orders
+          setTotalCount(response.data.totalCount); // Set total count
+          setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate total pages
+        } else {
+          throw new Error("Invalid API response structure");
         }
-      }, 500); // Simulating network delay
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch orders");
+        console.error("Error fetching orders:", err);
+      } finally {
+        setTimeout(() => setIsLoading(false), 1000);
+      }
     };
 
     fetchOrderData();
-  }, []); // Empty dependency array means this runs once on component mount
+  }, [page, itemsPerPage, searchValue, sortConfig, activeFilters]);
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -77,6 +93,33 @@ const OrderPage: React.FC = () => {
       sortConfig.direction
     );
     setSortConfig({ key, direction });
+  };
+
+  const handleFilterClick = () => {
+    setOpenFilterDialog(true);
+  };
+
+  const handleFilterApply = (filters: OrderFilters) => {
+    const newFilters: any = {
+      filter: {},
+    };
+
+    if (filters.paymentStatus.length > 0) {
+      newFilters.filter["paymentDetails.status"] =
+        filters.paymentStatus[0].toUpperCase();
+    }
+
+    if (filters.orderStatus.length > 0) {
+      newFilters.filter["status"] = filters.orderStatus[0].toUpperCase();
+    }
+
+    if (filters.date) {
+      newFilters.date = filters.date;
+    }
+
+    console.log("Applied Filters:", newFilters);
+    setActiveFilters(newFilters);
+    setPage(1);
   };
 
   const sortedOrders = useSortableData(orders, sortConfig);
@@ -120,9 +163,15 @@ const OrderPage: React.FC = () => {
         />
       ),
       key: "total",
-      render: (item: Order) => (
-        <div className="text-sm text-gray-900">${item.total.toFixed(2)}</div>
-      ),
+      render: (item: Order) => {
+        const formattedTotal = new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+          minimumFractionDigits: 2,
+        }).format(item.total);
+
+        return <div className="text-sm text-gray-900">{formattedTotal}</div>;
+      },
     },
     {
       header: (
@@ -152,7 +201,7 @@ const OrderPage: React.FC = () => {
       key: "paymentDetails.status",
       render: (item: Order) => (
         <div className="text-sm text-gray-900">
-          {item.paymentDetails.status}
+          {item?.paymentDetails?.status}
         </div>
       ),
     },
@@ -177,32 +226,9 @@ const OrderPage: React.FC = () => {
         </div>
       ),
       key: "actions",
-      render: (item: Order) => actionRenderer(item),
+      render: actionRenderer,
     },
   ];
-
-  const handleFilterClick = () => {
-    setOpenFilterDialog(true);
-  };
-
-  const applyFilters = (newFilters: OrderFilters) => {
-    setFilters(newFilters);
-  };
-
-  const filterOrders = (orders: Order[]) => {
-    return orders
-      .filter((order) => {
-        if (filters.paymentStatus.length === 0) return true;
-        return filters.paymentStatus.includes(order.paymentDetails.status);
-      })
-      .filter((order) => {
-        if (filters.orderStatus.length === 0) return true;
-        return filters.orderStatus.includes(order.status);
-      })
-      .filter((order) =>
-        order.orderId.toLowerCase().includes(searchValue.toLowerCase())
-      );
-  };
 
   return (
     <div className="container mx-auto p-1">
@@ -235,21 +261,27 @@ const OrderPage: React.FC = () => {
       <OrderFilterDialog
         open={openFilterDialog}
         onClose={() => setOpenFilterDialog(false)}
-        onApply={applyFilters}
+        onApply={handleFilterApply}
       />
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
-          <TableSkeletonLoader columns={7} rows={10} /> // Show the skeleton loader while loading
+          <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
           <DataTable<Order>
-            items={filterOrders(sortedOrders)}
+            items={sortedOrders}
             columns={columns}
             idKey="_id"
-            itemsPerPage={15}
-            tableType="order"
+            itemsPerPage={itemsPerPage}
             actionRenderer={actionRenderer}
             loading={isLoading}
+            currentPage={page}
+            onPageChange={(newPage) => {
+              console.log("Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount} // Pass the calculated page count
+            totalCount={totalCount} // Pass the total count to DataTable
           />
         )}
       </div>

@@ -1,14 +1,15 @@
-// api/product.ts
-import axios from 'axios';
-import { User } from '../types/users.types';
-import { items } from '../config/mock/userTable'; // Adjust the import path to where your mock data is located
-interface UserFormData {
-  name: string;
-  email: string;
-  password: string;
-  gender: string;
-  phone:string;
-  countryCode:string;
+import axios from "axios";
+import { User } from "../types/users.types";
+import axiosInstance from "./axios";
+import { SortConfig } from "../types/users.types";
+
+let currentController: AbortController | null = null;
+
+// Fix the UserResponse interface
+interface UserResponse {
+  totalCount: number; // Change from a function to a number property
+  tableData: User[];
+  // Add other response properties as needed
 }
 
 interface ApiResponse<T> {
@@ -17,127 +18,171 @@ interface ApiResponse<T> {
   data: T;
 }
 
-let currentController: AbortController;
-
-export const getAllUser = async (payload: any): Promise<ApiResponse<User[]>> => { // Return ApiResponse<User[]> type
-  console.log("Payload received:", payload); // Log the payload for debugging
-  
+// Get all users with pagination, search, and sort
+export const getAllUser = async (
+  page: number,
+  itemsPerPage: number,
+  searchTerm: string,
+  sortConfig: SortConfig
+): Promise<ApiResponse<UserResponse>> => {
   try {
     if (currentController) {
       currentController.abort();
     }
     currentController = new AbortController();
 
-    // Uncomment the following lines if you're using an actual API call:
-    /*
     const response = await axiosInstance.post(
-      '/admin/products/getAll',
-      payload, // Sending the payload for sorting and pagination
+      "/admin/users/getAll",
+      {
+      
+        search: [
+          {
+            term: searchTerm,
+            fields: ["name", "email"],
+            startsWith: true,
+            endsWith: false,
+          },
+        ],
+        options: {
+          sortBy: [sortConfig.key],
+          sortDesc: [sortConfig.direction === "descending"],
+          page,
+          itemsPerPage,
+        },
+      },
       {
         signal: currentController.signal,
       }
     );
-    */
-
-    // Simulate API call with imported mock data
-    const totalCount = items.length;
-    const response = {
-      status: 200,
-      message: "Success",
-      data: {
-        totalCount, // Send the total count of users
-        tableData: items, // Assuming items is an array of user data
-      },
-    };
 
     if (response?.status === 200) {
       return {
         status: response.status,
-        message: response.message,
-        data: response.data.tableData, // Return the array of users in the data
+        message: response.data.message || "Success",
+        data: response.data.data || { tableData: [] },
       };
     } else {
-      throw new Error('Failed to fetch users');
+      throw new Error("Failed to fetch users");
     }
   } catch (error: any) {
     if (axios.isCancel(error)) {
       console.log("Request canceled:", error.message);
     }
     throw error;
+  } finally {
+    currentController = null;
   }
 };
+
+// Interface for user form data
+export interface UserFormData {
+  userId:string;
+  name: string;
+  email: string;
+  password?: string; // Made optional for updates
+  gender: string;
+  phone: string;
+  countryCode: string;
+  addresses?: any[];
+  isEnabled?:boolean;
+}
+
+// Function to create a new user
 export const createUser = async (
-  UserData: UserFormData
+  userData: UserFormData
 ): Promise<ApiResponse<User>> => {
   try {
-    console.log("[API] Creating user with data:", UserData);
+    const response = await axiosInstance.post("/admin/users/create", userData);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.post('/admin/users/create', UserData);
-    // return response.data;
-
-    // Mock response
-    const mockResponse: ApiResponse<User> = {
-      status: 200,
-      message: "User created successfully",
-      data: {
-        _id: "generated-id-123", // Mock ID; replace with a real ID generation logic when implementing
-        name: UserData.name,
-        email: UserData.email,
-        password: UserData.password,
-        gender: UserData.gender,
-        phone: UserData.phone,
-        isEnabled: true, // Default to true; adjust as necessary for your application
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    };
-
-    console.log("[API] Mock create response:", mockResponse);
-    return Promise.resolve(mockResponse);
-  } catch (error) {
-    console.error("[API] Error creating user:", error);
+    if (response?.status === 200 || response?.status === 201) {
+      return {
+        status: response.status,
+        message: response.data.message || "User created successfully",
+        data: response.data.data,
+      };
+    } else {
+      throw new Error("Failed to create user");
+    }
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to create user");
+    }
     throw error;
   }
 };
 
-export const getUserById = async (
-  id: string
+// Function to update an existing user
+export const updateUser = async (
+  userId: string,
+  userData: Partial<UserFormData>
 ): Promise<ApiResponse<User>> => {
   try {
-    console.log("[API] Fetching user with ID:", id);
+    // Using the correct endpoint format based on your API structure
+    const response = await axiosInstance.put(
+      `/admin/users/update/${userId}`,
+      userData
+    );
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.get(`/admin/users/getOne/${id}`);
-    // return response.data;
-
-    // Mock response using users data
-    const user = items.find((u) => u.id === id || u._id === id);
-
-    if (!user) {
-      throw new Error("User not found");
+    if (response?.status === 200) {
+      return {
+        status: response.status,
+        message: response.data.message || "User updated successfully",
+        data: response.data.data,
+      };
+    } else {
+      throw new Error("Failed to update user");
     }
+  } catch (error: any) {
+    console.error("Update user error:", error);
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to update user");
+    }
+    throw error;
+  }
+};
 
-    const mockResponse: ApiResponse<User> = {
-      status: 200,
-      message: "Success",
-      data: {
-        _id: user._id || String(user.id),
-        name: user.name,
-        email: user.email,
-        password: user.password,
-        gender: user.gender,
-        phone: user.phone,
-        isEnabled: user.isEnabled,
-        createdAt: user.createdAt || new Date().toISOString(),
-        updatedAt: user.updatedAt || new Date().toISOString(),
-      },
-    };
-
-    console.log("[API] Mock get response:", mockResponse);
-    return Promise.resolve(mockResponse);
+// Function to get a single user by ID
+export const getUserById = async (
+  userId: string
+): Promise<ApiResponse<User>> => {
+  try {
+    // Fixed API endpoint with proper parameter format
+    const response = await axiosInstance.post(`/admin/users/getOne/${userId}`);
+    return response.data;
   } catch (error) {
     console.error("[API] Error fetching user:", error);
+    throw error;
+  }
+};
+
+export const createAddress = async (
+  addressData: {
+    userId: string;
+    line1: string;
+    line2: string;
+    city: string;
+    state: string;
+    pinCode: string;
+    isShipping: boolean;
+  }[] // Now accepting an array of address objects
+): Promise<ApiResponse<any>> => {
+  try {
+    // Pass the array directly to the endpoint
+    const response = await axiosInstance.post("/admin/userAddresses/add", addressData);
+    
+    if (response?.status === 200 || response?.status === 201) {
+      return {
+        status: response.status,
+        message: response.data.message || "Addresses created successfully",
+        data: response.data.data,
+      };
+    } else {
+      throw new Error("Failed to create addresses");
+    }
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to create addresses");
+    }
     throw error;
   }
 };

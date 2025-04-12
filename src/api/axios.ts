@@ -15,6 +15,9 @@ let failedQueue: Array<{
   reject: (reason?: unknown) => void;
 }> = [];
 
+// Track the last toast message to prevent duplicates
+let lastToastMessage = "";
+
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
@@ -58,16 +61,19 @@ axiosInstance.interceptors.response.use(
     console.log("response in axios instance", response);
     if (
       response.data?.toastMessage &&
-      response.data.toastMessage !== "User details fetched successfully"
+      response.data.toastMessage !== "User details fetched successfully" &&
+      response.data.toastMessage !== "An unexpected error occurred" &&
+      response.data.toastMessage !== lastToastMessage // Check if this is a new message
     ) {
       console.log("response in axios instance inside if", response);
-      toast.success(response?.data?.toastMessage);
+      // Update the last toast message before showing it
+      lastToastMessage = response.data.toastMessage;
+      toast.success(response.data.toastMessage);
     }
     return response;
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as ExtendedAxiosRequestConfig;
-    const response = error.response?.data;
     console.log("error in axios instance", error);
 
     // Handle network errors
@@ -142,9 +148,6 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    // Handle other errors
-    // @ts-expect-error non fixable error
-    toast.error(response?.toastMessage || "An unexpected error occurred");
     return Promise.reject(error);
   }
 );

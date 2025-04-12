@@ -10,7 +10,7 @@ import DashboardPage from "../pages/dashboard/dashboard";
 import UsersPage from "../pages/users/users";
 import { UserDetailsPage } from "../pages/users/user-details";
 import NotFoundPage from "../pages/not-found";
-import Version from "../pages/version"; 
+import Version from "../pages/version";
 import TestimonialsPage from "../pages/testimonials/Testimonials";
 import TestimonialsDetails from "../pages/testimonials/Testimonials-details";
 import ProductPage from "../pages/product/product";
@@ -18,7 +18,7 @@ import { ProductDetails } from "../pages/product/product-details";
 import Profile from "../pages/profile/Profile";
 import OrderDetails from "../pages/orders/order-details";
 import Enquiry from "../pages/enquiry/enquiry-section";
-import CollectionsPage from "../pages/collections/collections";
+import CollectionsPage from "../pages/collections/Collections";
 import CategoryPage from "../pages/category/Category";
 import Order from "../pages/orders/orders";
 import CollectionDetails from "../pages/collections/collection-details";
@@ -110,11 +110,11 @@ const router = createBrowserRouter([
         element: <CollectionsPage />,
       },
       {
-        path: "/collections/collection-product",
+        path: "/collections/collection-product/:id",
         element: <ProductAddPage />,
       },
       {
-        path: "/collection/collection-product/:id",
+        path: "/collections/collection-product/collectionAdd/:id",
         element: <CollectionAddPage />,
       },
       {

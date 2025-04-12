@@ -22,14 +22,20 @@ interface ImageCropperProps {
   open: boolean;
   onClose: () => void;
   imageUrl: string | null;
-  onCropComplete: (croppedImageUrl: string) => void;
-  type?: "product" | "general"; // Add type prop
+  onCropComplete: (croppedImageBlob: Blob) => void;
+  types?:
+    | "product"
+    | "general"
+    | "collection"
+    | "category"
+    | "subcategory"
+    | "undefined";
 }
 
 function centerAspectCrop(
   mediaWidth: number,
   mediaHeight: number,
-  aspect: number,
+  aspect: number
 ) {
   let cropWidth = 90;
   let cropHeight = cropWidth / aspect;
@@ -49,7 +55,7 @@ function centerAspectCrop(
     },
     aspect,
     mediaWidth,
-    mediaHeight,
+    mediaHeight
   );
 }
 
@@ -66,16 +72,23 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   onClose,
   imageUrl,
   onCropComplete,
-  type = "general", // Default to general
+  types = "general",
 }) => {
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [crop, setCrop] = useState<Crop>(defaultCrop);
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
   const [zoom, setZoom] = useState<number>(1);
   const [rotation, setRotation] = useState<number>(0);
+
+  // Set the default aspect ratio based on the type
   const [aspect, setAspect] = useState<number | undefined>(
-    type === "product" ? 1 : 1,
+    types === "product" || types === "category" || types === "subcategory"
+      ? 1
+      : types === "collection"
+        ? 16 / 9
+        : undefined
   );
+
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   useEffect(() => {
@@ -84,10 +97,17 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       setRotation(0);
       setIsImageLoaded(false);
       setCrop(defaultCrop);
-      // Set aspect to 1:1 for product type
-      setAspect(type === "product" ? 1 : 1);
+
+      // Dynamically set the aspect ratio based on the type
+      setAspect(
+        types === "product" || types === "category" || types === "subcategory"
+          ? 1
+          : types === "collection"
+            ? 16 / 9
+            : undefined
+      );
     }
-  }, [open, type]);
+  }, [open, types]);
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     setIsImageLoaded(true);
@@ -96,8 +116,22 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     if (aspect) {
       const newCrop = centerAspectCrop(width, height, aspect);
       setCrop(newCrop);
+      setCompletedCrop({
+        x: (newCrop.x * width) / 100,
+        y: (newCrop.y * height) / 100,
+        width: (newCrop.width * width) / 100,
+        height: (newCrop.height * height) / 100,
+        unit: "px",
+      });
     } else {
       setCrop(defaultCrop);
+      setCompletedCrop({
+        x: (defaultCrop.x * width) / 100,
+        y: (defaultCrop.y * height) / 100,
+        width: (defaultCrop.width * width) / 100,
+        height: (defaultCrop.height * height) / 100,
+        unit: "px",
+      });
     }
   };
 
@@ -151,14 +185,17 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         0,
         0,
         pixelCrop.width,
-        pixelCrop.height,
+        pixelCrop.height
       );
 
       ctx.restore();
 
-      const base64Image = canvas.toDataURL("image/jpeg", 0.95);
-      onCropComplete(base64Image);
-      onClose();
+      canvas.toBlob((blob) => {
+        if (blob) {
+          onCropComplete(blob);
+          onClose();
+        }
+      });
     }
   };
 
@@ -167,8 +204,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   };
 
   const toggleAspect = () => {
-    // For product type, we don't allow changing aspect ratio
-    if (type === "product") return;
+    if (types === "product" || types === "category" || types === "subcategory")
+      return;
 
     const aspects = [1, 16 / 9, 4 / 3, undefined];
     const currentIndex = aspects.indexOf(aspect);
@@ -208,7 +245,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         }}
       >
         <Typography variant="h6" gutterBottom align="center">
-          Crop Image {type === "product" && "- 1:1 Ratio"}
+          Crop Image {types === "product" && "- 1:1 Ratio"}
         </Typography>
 
         {imageUrl && (
@@ -235,20 +272,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "flex-start",
-                "&::-webkit-scrollbar": {
-                  width: "8px",
-                },
-                "&::-webkit-scrollbar-track": {
-                  background: "#f1f1f1",
-                  borderRadius: "4px",
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  background: "#888",
-                  borderRadius: "4px",
-                  "&:hover": {
-                    background: "#666",
-                  },
-                },
               }}
             >
               <ReactCrop
@@ -263,6 +286,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
                 }}
               >
                 <img
+                  crossOrigin="anonymous"
                   ref={imgRef}
                   src={imageUrl}
                   style={{
@@ -335,7 +359,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
                   </IconButton>
                 </Box>
 
-                {/* Only show aspect ratio button for non-product images */}
                 <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
                   <Typography variant="body2" sx={{ mr: 1 }}>
                     Aspect:
@@ -345,7 +368,11 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
                     size="small"
                     onClick={toggleAspect}
                     startIcon={<AspectRatioIcon />}
-                    disabled={type === "product"}
+                    disabled={
+                      types === "product" ||
+                      types === "category" ||
+                      types === "subcategory"
+                    }
                   >
                     {getAspectRatioText()}
                   </Button>

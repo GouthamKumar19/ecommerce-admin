@@ -8,16 +8,24 @@ import ImageUploader from "./ImageUploader";
 import ConfirmationDialog from "./Dialog"; // Importing the ConfirmationDialog
 import "yet-another-react-lightbox/styles.css";
 
-// Types
 export interface ProductImage {
   id: number;
   url: string;
   selected: boolean;
 }
 
+type ImageType =
+  | "product"
+  | "general"
+  | "collection"
+  | "category"
+  | "subcategory"
+  | undefined; // Update the type to include "collection"
+
 interface ImageSelectionProps {
   images: ProductImage[];
   setImages: React.Dispatch<React.SetStateAction<ProductImage[]>>;
+  type: ImageType; // Use the updated ImageType
 }
 
 interface ImageBoxProps {
@@ -111,6 +119,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
 const ImageSelection: React.FC<ImageSelectionProps> = ({
   images,
   setImages,
+  type,
 }) => {
   // State
   const [cropOpen, setCropOpen] = useState(false);
@@ -126,26 +135,71 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
   const firstRow = selectedImages.slice(0, IMAGES_PER_ROW);
   const secondRow = selectedImages.slice(IMAGES_PER_ROW, MAX_IMAGES);
 
-  // Handlers
-  const handleCropComplete = (croppedImageUrl: string) => {
-    if (currentImageId !== null) {
-      setImages((prev) =>
-        prev.map((img) =>
-          img.id === currentImageId ? { ...img, url: croppedImageUrl } : img
-        )
-      );
-    } else {
-      const newImage: ProductImage = {
-        id: Date.now(),
-        url: croppedImageUrl,
-        selected: true,
-      };
-      setImages((prev) => [...prev, newImage]);
-    }
+  // Collection type should only allow 1 image
+  const isCollection = type === "collection";
+  const maxImagesAllowed = isCollection ? 1 : MAX_IMAGES;
+  const disableUploader = isCollection && selectedImages.length >= 1;
 
-    setCropOpen(false);
-    setCurrentImage(null);
-    setCurrentImageId(null);
+  // Handlers
+  const handleCropComplete = async (croppedImageBlob: Blob) => {
+    try {
+      // Create a file from the blob
+      const fileName = `image_${Date.now()}.jpg`;
+      const fileType = "image/jpeg";
+      new File([croppedImageBlob], fileName, {
+        type: fileType,
+      });
+
+      // Get the presigned URL for upload
+      // const typeFolder = type || "general"; // Use the type prop or default to "general"
+      // const presignedUrl = await getPresignedUrl(fileName, typeFolder);
+      // console.log(presignedUrl, "PRESIGNEDURL");
+      // Upload the file
+      // await uploadFile(presignedUrl, imageFile);
+
+      // Create a local URL for preview while waiting for server response
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const croppedImageUrl = e.target?.result as string;
+
+        if (currentImageId !== null) {
+          // Update existing image
+          setImages((prev) =>
+            prev.map((img) =>
+              img.id === currentImageId ? { ...img, url: croppedImageUrl } : img
+            )
+          );
+        } else {
+          // Add new image
+          const newImage: ProductImage = {
+            id: Date.now(),
+            url: croppedImageUrl,
+            selected: true,
+          };
+
+          // For collection type, replace any existing image
+          if (isCollection) {
+            setImages([newImage]);
+          } else {
+            // For other types, add to existing images
+            setImages((prev) => [...prev, newImage]);
+          }
+        }
+      };
+      reader.readAsDataURL(croppedImageBlob);
+
+      // Reset states
+      setCropOpen(false);
+      setCurrentImage(null);
+      setCurrentImageId(null);
+
+      // Optional: show success message to user
+      // You can add a toast notification here
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      // Handle error - show error message to user
+      // You can add a toast notification here
+    }
   };
 
   const openCropDialog = (imageUrl: string, imageId: number) => {
@@ -178,21 +232,46 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
     setPopupImage(null);
   };
 
-  const handleFileUpload = (fileUrl: string) => {
-    setCurrentImage(fileUrl);
-    setCurrentImageId(null);
-    setCropOpen(true);
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const fileUrl = e.target?.result as string;
+      setCurrentImage(fileUrl);
+      setCurrentImageId(null);
+      setCropOpen(true);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Render
   return (
     <Box sx={{ width: "100%" }}>
-      {/* Image Uploader Component */}
-      <ImageUploader
-        currentCount={images.length}
-        maxImages={MAX_IMAGES}
-        onFileUpload={handleFileUpload}
-      />
+      {/* Image Uploader Component - Conditionally rendered based on collection type */}
+      {!disableUploader && (
+        <ImageUploader
+          currentCount={images.length}
+          maxImages={maxImagesAllowed}
+          onFileUpload={handleFileUpload}
+        />
+      )}
+
+      {/* Informational message for collection when upload is disabled */}
+      {disableUploader && (
+        <Box
+          sx={{
+            p: 2,
+            backgroundColor: "#f5f5f5",
+            borderRadius: 1,
+            mb: 2,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Collection only allows one image. Delete the current image to upload
+            a new one.
+          </Typography>
+        </Box>
+      )}
 
       {/* Selected Images Gallery */}
       {selectedImages.length > 0 && (
@@ -258,7 +337,7 @@ const ImageSelection: React.FC<ImageSelectionProps> = ({
         }}
         imageUrl={currentImage}
         onCropComplete={handleCropComplete}
-        type="product"
+        types={type} // Pass the type prop here
       />
 
       {/* Image Popup */}

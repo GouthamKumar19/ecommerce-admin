@@ -13,8 +13,11 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-import { getAllCategory } from "../../api/category";
+import { getAllCategory, deleteCategoryById } from "../../api/category";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import TableSkeletonLoader
+
+// New type extending Category and Record<string, unknown>
+interface CategoryRecord extends Category, Record<string, unknown> {}
 
 const SubcategoryCell: React.FC<{ subcategories: Subcategory[] }> = ({
   subcategories,
@@ -51,87 +54,27 @@ const SubcategoryCell: React.FC<{ subcategories: Subcategory[] }> = ({
 };
 
 const CategoryPage: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
-  );
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryRecord | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "updatedAt",
+    direction: "descending",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1); // Pagination state
+  const [itemsPerPage] = useState<number>(10); // Items per page
+  const [totalCount, setTotalCount] = useState<number>(0); // Total category count
+  const [pageCount, setPageCount] = useState<number>(0); // Page count
+
   const navigate = useNavigate();
 
   const handleAddNewCategory = () => {
     navigate("/category/new");
   };
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const payload = {
-          options: {
-            page: 1, // Adjust for pagination if needed
-            itemsPerPage: 10,
-          },
-        };
-
-        setTimeout(async () => {
-          const response = await getAllCategory(payload);
-          setCategories(response.data); // Set the categories from fetched data
-          console.log("Fetched Categories:", response.data);
-          setIsLoading(false); // Set loading to false after fetching
-        }, 500); // Simulating a 500ms network delay
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch categories");
-        setIsLoading(false); // Set loading to false on error
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  const handleDeleteCategory = (categoryId: string) => {
-    const categoryToDelete =
-      categories.find((category) => category._id === categoryId) || null;
-    setSelectedCategory(categoryToDelete);
-    setDialogOpen(true);
-  };
-
-  const confirmDeleteCategory = () => {
-    if (selectedCategory) {
-      console.log(`Deleting category with ID: ${selectedCategory._id}`);
-      setCategories(
-        categories.filter((category) => category._id !== selectedCategory._id)
-      );
-    }
-    setDialogOpen(false);
-    setSelectedCategory(null);
-  };
-
-  const handleEditUser = (item: Category) => {
-    navigate(`/category/${item._id}`, {
-      state: { Category: item },
-    });
-  };
-
-  const actionRenderer = (item: Category) => (
-    <div className="flex justify-center items-center gap-2">
-      <Edit
-        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleEditUser(item)}
-      />
-      <Delete
-        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
-        onClick={() => handleDeleteCategory(item._id)}
-      />
-    </div>
-  );
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -142,7 +85,87 @@ const CategoryPage: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoading(true);
+      setError(null); // Reset error state
+      try {
+        const response = await getAllCategory(
+          page,
+          itemsPerPage,
+          searchValue,
+          sortConfig
+        );
+        console.log("Fetched Categories Response:", response); // Log the entire response
+        console.log("Fetched Categories Data:", response.data); // Log the fetched data
+
+        if (response.data && Array.isArray(response.data.tableData)) {
+          setCategories(response.data.tableData as CategoryRecord[]); // Set the categories from fetched data
+          setTotalCount(response.data.totalCount); // Update total category count
+          setPageCount(Math.ceil(response.data.totalCount / itemsPerPage)); // Calculate total pages
+        } else {
+          throw new Error("Data is not an array");
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch categories");
+        console.error("Error fetching categories:", err);
+      } finally {
+         setTimeout(() => setIsLoading(false), 1000);
+      }
+    };
+
+    fetchCategories();
+  }, [page, itemsPerPage, searchValue, sortConfig]); // Add page, itemsPerPage, searchValue, and sortConfig as dependencies
+
+  const handleDeleteCategory = (categoryId: string) => {
+    const categoryToDelete =
+      categories.find((category) => category._id === categoryId) || null;
+    setSelectedCategory(categoryToDelete);
+    setDialogOpen(true);
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (selectedCategory) {
+      console.log(`Deleting category with ID: ${selectedCategory._id}`);
+      try {
+        const response = await deleteCategoryById(selectedCategory._id);
+        if (response.status === 200) {
+          setCategories(
+            categories.filter(
+              (category) => category._id !== selectedCategory._id
+            )
+          );
+          setTotalCount((prev) => prev - 1); // Decrement total category count
+          setPageCount((prev) => Math.ceil((prev - 1) / itemsPerPage)); // Recalculate page count
+          console.log("Category deleted successfully:", response.message);
+        } else {
+          console.error("Error deleting category:", response.message);
+        }
+      } catch (error) {
+        console.error("Error deleting category:", error);
+      }
+    }
+    setDialogOpen(false);
+    setSelectedCategory(null);
+  };
+
+  const handleEditCategory = (categoryId: string) => {
+    navigate(`/category/${categoryId}`);
+  };
+
+  const actionRenderer = (item: CategoryRecord) => (
+    <div className="flex justify-center items-center gap-2">
+      <Edit
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => handleEditCategory(item._id)}
+      />
+      <Delete
+        sx={{ fontSize: 22, cursor: "pointer", color: "#0d7f3f" }}
+        onClick={() => handleDeleteCategory(item._id)}
+      />
+    </div>
+  );
+
   const sortedCategories = useSortableData(categories, sortConfig);
   const filteredCategories = sortedCategories.filter((category) =>
     category.name.toLowerCase().includes(searchValue.toLowerCase())
@@ -159,7 +182,7 @@ const CategoryPage: React.FC = () => {
         />
       ),
       key: "name",
-      render: (item: Category) => (
+      render: (item: CategoryRecord) => (
         <div className="text-sm text-gray-900 capitalize">{item.name}</div>
       ),
     },
@@ -173,7 +196,7 @@ const CategoryPage: React.FC = () => {
         />
       ),
       key: "subcategories",
-      render: (item: Category) => (
+      render: (item: CategoryRecord) => (
         <SubcategoryCell subcategories={item.subcategories} />
       ),
     },
@@ -198,25 +221,31 @@ const CategoryPage: React.FC = () => {
             <button
               className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
               onClick={handleAddNewCategory}
+              disabled={isLoading}
             >
               Add Category
             </button>
           </div>
         </div>
       </div>
-      {error && <div className="text-red-600 text-center mb-4">{error}</div>}{" "}
-      {/* Displaying the error message */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+
+      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
           <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
-          <DataTable<Category>
+          <DataTable<CategoryRecord>
             items={filteredCategories}
             columns={columns}
             idKey="_id"
-            itemsPerPage={10}
-            tableType="category"
+            itemsPerPage={itemsPerPage}
             actionRenderer={actionRenderer}
+            currentPage={page}
+            onPageChange={(newPage) => {
+              console.log("Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount}
+            totalCount={totalCount} // Pass total category count
           />
         )}
       </div>

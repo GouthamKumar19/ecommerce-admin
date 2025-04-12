@@ -1,14 +1,17 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@mui/material";
 
 interface AddressPopupProps {
   onClose?: () => void;
   onSave?: (addressData: {
+ 
     addressLine1: string;
     addressLine2: string;
     city: string;
     state: string;
     pinCode: string;
+    useAsShipping: boolean; // Add this field
   }) => void;
   initialData?: {
     addressLine1: string;
@@ -16,6 +19,7 @@ interface AddressPopupProps {
     city: string;
     state: string;
     pinCode: string;
+    useAsShipping?: boolean; // Make optional for backward compatibility
   };
 }
 
@@ -30,13 +34,17 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     city: "",
     state: "",
     pinCode: "",
+    useAsShipping: false, // Add default value
   });
 
   const [pinCodeError, setPinCodeError] = useState<string>("");
 
   useEffect(() => {
     if (initialData) {
-      setAddressData(initialData);
+      setAddressData({
+        ...initialData,
+        useAsShipping: initialData.useAsShipping || false, // Handle case when it doesn't exist in initialData
+      });
     }
   }, [initialData]);
 
@@ -50,11 +58,11 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    
+
     if (name === "pinCode") {
       // Only allow numbers and limit to 6 characters
       const numericValue = value.replace(/[^0-9]/g, "").slice(0, 6);
-      
+
       // Clear error if field is empty or validate if it has a value
       if (numericValue === "") {
         setPinCodeError("");
@@ -63,7 +71,7 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
       } else {
         setPinCodeError("");
       }
-      
+
       setAddressData((prev) => ({
         ...prev,
         [name]: numericValue,
@@ -76,12 +84,20 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
     }
   };
 
+  // Add a handler for the checkbox
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddressData((prev) => ({
+      ...prev,
+      useAsShipping: e.target.checked,
+    }));
+  };
+
   const handleSave = () => {
     if (!validatePinCode(addressData.pinCode)) {
       setPinCodeError("PIN code must be 6 digits");
       return;
     }
-    
+
     // If validation passes, clear error and save
     setPinCodeError("");
     onSave?.(addressData);
@@ -137,8 +153,42 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
             className="w-full border rounded px-2 py-2 text-sm bg-white border-gray-300"
           >
             <option value="">-- Select --</option>
-            <option value="CA">California</option>
-            <option value="NY">New York</option>
+            <option value="AP">Andhra Pradesh</option>
+            <option value="AR">Arunachal Pradesh</option>
+            <option value="AS">Assam</option>
+            <option value="BR">Bihar</option>
+            <option value="CT">Chhattisgarh</option>
+            <option value="GA">Goa</option>
+            <option value="GJ">Gujarat</option>
+            <option value="HR">Haryana</option>
+            <option value="HP">Himachal Pradesh</option>
+            <option value="JH">Jharkhand</option>
+            <option value="KA">Karnataka</option>
+            <option value="KL">Kerala</option>
+            <option value="MP">Madhya Pradesh</option>
+            <option value="MH">Maharashtra</option>
+            <option value="MN">Manipur</option>
+            <option value="ML">Meghalaya</option>
+            <option value="MZ">Mizoram</option>
+            <option value="NL">Nagaland</option>
+            <option value="OR">Odisha</option>
+            <option value="PB">Punjab</option>
+            <option value="RJ">Rajasthan</option>
+            <option value="SK">Sikkim</option>
+            <option value="TN">Tamil Nadu</option>
+            <option value="TG">Telangana</option>
+            <option value="TR">Tripura</option>
+            <option value="UP">Uttar Pradesh</option>
+            <option value="UT">Uttarakhand</option>
+            <option value="WB">West Bengal</option>
+            <option value="AN">Andaman and Nicobar Islands</option>
+            <option value="CH">Chandigarh</option>
+            <option value="DN">Dadra and Nagar Haveli and Daman and Diu</option>
+            <option value="DL">Delhi</option>
+            <option value="JK">Jammu and Kashmir</option>
+            <option value="LA">Ladakh</option>
+            <option value="LD">Lakshadweep</option>
+            <option value="PY">Puducherry</option>
           </select>
         </div>
 
@@ -161,7 +211,13 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
       </div>
 
       <div className="mb-4">
-        <input type="checkbox" id="useAsShipping" className="mr-2" />
+        <input
+          type="checkbox"
+          id="useAsShipping"
+          className="mr-2"
+          checked={addressData.useAsShipping}
+          onChange={handleCheckboxChange}
+        />
         <label htmlFor="useAsShipping" className="text-sm">
           Use as shipping address
         </label>
@@ -202,4 +258,4 @@ const AddressPopup: React.FC<AddressPopupProps> = ({
   );
 };
 
-export default AddressPopup;  
+export default AddressPopup;

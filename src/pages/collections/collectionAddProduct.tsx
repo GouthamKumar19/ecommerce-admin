@@ -1,35 +1,172 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import DataTable from "../../components/common/DataTable";
-import { productMockData } from "../../config/mock/productCollectionTable";
-import type { Product } from "../../types/collectionProduct.types";
-import { Button } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import Skeleton from "@mui/material/Skeleton";
-import BackArrow from "../../components/common/BackArrow";
+import { getAllProducts } from "../../api/product";
+import {
+  addProductsToCollection,
+  getProductsByCollectionId,
+  deleteCollectionProducts,
+} from "../../api/collectionProduct";
+import { getCollectionById } from "../../api/collections";
+import { Product } from "../../types/product.types";
 import SearchBar from "../../components/common/SearchBar";
-import { getProductById } from "../../api/product"; // Adjust the import path as needed
-// Mock fetch function
-const fetchProducts = async (): Promise<Product[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(productMockData), 1000);
-  });
-};
+import SortableHeader, {
+  SortConfig,
+} from "../../components/common/SortableHeader";
+import {
+  useSortableData,
+  getNextSortDirection,
+} from "../../components/common/SortUtils";
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
+
+import { getImage } from "../../utils/imagePreview";
 
 const CollectionAddPage: React.FC = () => {
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "updatedAt",
+    direction: "descending",
+  });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
+  //const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [checkedProducts, setCheckedProducts] = useState<
     Record<string, boolean>
   >({});
-  const [searchValue, setSearchValue] = useState<string>("");
+  const [existingCollectionProducts, setExistingCollectionProducts] = useState<
+    { _id: string; productId: string }[]
+  >([]);
+  const [isLoadingCollection, setIsLoadingCollection] = useState(true);
+
   const navigate = useNavigate();
+  const { id: collectionId } = useParams<{ id: string }>();
 
-  // Use React Query for data fetching with loading state
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
-  });
+  useEffect(() => {
+    const loadSavedProductIds = () => {
+      const savedIds = sessionStorage.getItem("existingProductIds");
+      if (savedIds) {
+        try {
+          const parsedIds = JSON.parse(savedIds);
+          setExistingCollectionProducts(parsedIds);
+          console.log(
+            "Loaded existing product IDs from sessionStorage:",
+            parsedIds
+          );
 
-  // Function to handle checkbox change
+          const initialCheckedProducts: Record<string, boolean> = {};
+          parsedIds.forEach((item: { productId: string }) => {
+            initialCheckedProducts[item.productId] = true;
+          });
+          setCheckedProducts(initialCheckedProducts);
+          setIsLoadingCollection(false);
+        } catch (error) {
+          console.error("Error parsing saved product IDs:", error);
+          fetchCollectionProducts();
+        }
+      } else {
+        fetchCollectionProducts();
+      }
+    };
+
+    const fetchCollectionProducts = async () => {
+      if (!collectionId) return;
+
+      setIsLoadingCollection(true);
+      try {
+        const response = await getProductsByCollectionId(collectionId);
+        const productMappings = response.data.products.map((product: any) => ({
+          _id: product._id || "",
+          productId: product.productId || "",
+        }));
+        setExistingCollectionProducts(productMappings);
+
+        const initialCheckedProducts: Record<string, boolean> = {};
+        productMappings.forEach((mapping) => {
+          initialCheckedProducts[mapping.productId] = true;
+        });
+        setCheckedProducts(initialCheckedProducts);
+      } catch (error) {
+        console.error("Failed to fetch collection products", error);
+        //setSnackbarMessage("Failed to fetch existing collection products");
+      } finally {
+        setIsLoadingCollection(false);
+      }
+    };
+
+    loadSavedProductIds();
+  }, [collectionId]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+
+      try {
+        const response = await getAllProducts(
+          page,
+          itemsPerPage,
+          searchValue,
+          sortConfig
+        );
+        console.log(response, "Fetched products");
+        setProducts(response.data.tableData);
+
+        // Call getCollectionById immediately after getAllProducts
+        if (collectionId) {
+          console.log("Fetching collection details after products");
+          const collectionResponse = await getCollectionById(collectionId);
+          console.log("Collection data:", collectionResponse);
+
+          // Extract product mappings from collection response
+          if (
+            collectionResponse?.data?.collectionProducts &&
+            Array.isArray(collectionResponse.data.collectionProducts)
+          ) {
+            const productMappings =
+              collectionResponse.data.collectionProducts.map(
+                (product: any) => ({
+                  _id: product._id,
+                  productId: product.productId,
+                })
+              );
+
+            console.log(
+              "Collection Products Mapping (_id -> productId):",
+              productMappings
+            );
+            console.table(productMappings);
+
+            // Update the existingCollectionProducts with actual IDs
+            setExistingCollectionProducts(productMappings);
+
+            // Update the checked state based on these product IDs
+            const updatedCheckedProducts: Record<string, boolean> = {
+              ...checkedProducts,
+            };
+            response.data.tableData.forEach((product: Product) => {
+              if (
+                product._id &&
+                productMappings.some(
+                  (mapping) => mapping.productId === product._id
+                )
+              ) {
+                updatedCheckedProducts[product._id] = true;
+              }
+            });
+            setCheckedProducts(updatedCheckedProducts);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch products", error);
+      } finally {
+        setTimeout(() => setIsLoading(false), 1000);
+      }
+    };
+
+    fetchProducts();
+  }, [page, itemsPerPage, searchValue, sortConfig, collectionId]);
+
   const handleCheckboxChange = (productId: string) => {
     setCheckedProducts((prev) => ({
       ...prev,
@@ -37,228 +174,259 @@ const CollectionAddPage: React.FC = () => {
     }));
   };
 
-  // Function to handle cancel button click
   const handleCancel = () => {
+    sessionStorage.removeItem("existingProductIds");
     navigate(-1);
   };
 
-  // Function to handle add button click
-  // Function to handle add button click
   const handleAdd = async () => {
     try {
+      if (!collectionId) {
+        //setSnackbarMessage("Collection ID is missing");
+        return;
+      }
+
       const selectedProductIds = Object.entries(checkedProducts)
-        .filter(([isChecked]) => isChecked)
+        .filter(([, isChecked]) => isChecked)
         .map(([productId]) => productId);
 
-      // Fetch complete details for each selected product
-      const selectedProductsDetails = await Promise.all(
-        selectedProductIds.map(async (productId) => {
-          try {
-            const response = await getProductById(productId);
-            return response.data;
-          } catch (error) {
-            console.error(`Error fetching product ${productId}:`, error);
-            return null;
-          }
-        })
+      const newProductIds = selectedProductIds.filter(
+        (id) =>
+          !existingCollectionProducts.some(
+            (mapping) => mapping.productId === id
+          )
       );
 
-      // Filter out any null values from failed requests
-      const validProducts = selectedProductsDetails.filter(
-        (product) => product !== null
+      const removedProductMappings = existingCollectionProducts.filter(
+        (mapping) => !selectedProductIds.includes(mapping.productId)
       );
 
-      // Log the complete product details
-      console.log("Selected products details:", validProducts);
+      console.log("Selected Product IDs:", selectedProductIds);
+      console.log("New Product IDs to add:", newProductIds);
+      console.log(
+        "Removed Product Mappings to remove:",
+        removedProductMappings
+      );
 
-      navigate(-1);
+      // Updating product statuses for the newly selected products
+      if (newProductIds.length > 0) {
+        const addPayload = newProductIds.map((productId) => ({
+          collectionId: collectionId,
+          productId: productId,
+        }));
+
+        console.log("Payload for adding products:", addPayload);
+
+        const addResponse = await addProductsToCollection(addPayload);
+        console.log("Add Response:", addResponse);
+
+        
+      }
+
+      // Delete removed products - now using deleteCollectionProducts API
+      if (removedProductMappings.length > 0) {
+        const deletePayload = removedProductMappings.map(
+          (mapping) => mapping._id
+        );
+
+        console.log("Payload for deleting products:", deletePayload);
+
+        const deleteResponse = await deleteCollectionProducts(deletePayload);
+        if (deleteResponse.status === 200 && deleteResponse.data.success) {
+          console.log("Removed products deleted successfully");
+        } else {
+          console.log("Failed to delete removed products");
+        }
+      }
+
+      navigate(`/collections/collection-product/${collectionId}`);
     } catch (error) {
-      console.error("Error processing selected products:", error);
+      //setSnackbarMessage("Error updating collection products");
+      console.error("Error updating collection products:", error);
+      navigate(`/collections/collection-product/${collectionId}`);
     }
   };
 
-  // Filter products based on search input
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  const handleSort = (key: string) => {
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
+    setSortConfig({ key, direction });
+  };
 
-  // Define columns for product table
+  const sortedProducts = useSortableData(products, sortConfig);
+
   const columns = [
     {
-      header: "Featured",
-      key: "featured",
+      header: (
+        <SortableHeader
+          label="Select"
+          columnKey="select"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
+      key: "select",
       render: (item: Product) => (
         <div className="flex justify-center">
-          {isLoading ? (
-            <Skeleton variant="rectangular" width={20} height={20} />
-          ) : (
-            <input
-              type="checkbox"
-              checked={checkedProducts[item._id || ""] || false}
-              className="form-checkbox h-5 w-5 custom-checkbox"
-              onChange={() => handleCheckboxChange(item._id || "")}
-            />
-          )}
+          <input
+            type="checkbox"
+            checked={checkedProducts[item._id || ""] || false}
+            className="form-checkbox h-5 w-5 checkbox-green"
+            onChange={() => handleCheckboxChange(item._id || "")}
+          />
         </div>
       ),
     },
     {
-      header: "",
-      key: "productImage",
+      header: (
+        <SortableHeader
+          label="Image"
+          columnKey="imageUrl"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
+      key: "imageUrl",
       render: (item: Product) => (
         <div className="text-center flex-shrink-0 h-10 w-10">
-          {isLoading ? (
-            <Skeleton variant="circular" width={40} height={40} />
-          ) : (
-            <img
-              className="h-10 w-10 rounded-full"
-              // src={item.imageUrl}
-              alt={item.name}
-            />
-          )}
+          <img
+            className="h-10 w-10 rounded-full"
+            src={getImage(item.thumbnailImage)}
+            alt={item.name}
+          />
         </div>
       ),
     },
     {
-      header: "Product Name",
+      header: (
+        <SortableHeader
+          label="Product Name"
+          columnKey="name"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
       key: "name",
       render: (item: Product) => (
         <div className="flex text-left">
           <div className="ml-0">
-            {isLoading ? (
-              <Skeleton variant="text" width={120} />
-            ) : (
-              <div className="text-sm font-medium text-gray-900">
-                {item.name}
-              </div>
-            )}
+            <div className="text-sm text-gray-900 max-w-xs truncate">
+              {item.name}
+            </div>
           </div>
         </div>
       ),
     },
     {
-      header: "Description",
+      header: (
+        <SortableHeader
+          label="Description"
+          columnKey="description"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
       key: "description",
       render: (item: Product) => (
         <div className="text-sm text-gray-900 max-w-xs truncate">
-          {isLoading ? (
-            <Skeleton variant="text" width={200} />
-          ) : (
-            item.description
-          )}
+          {item.description}
         </div>
       ),
     },
     {
-      header: "Price",
+      header: (
+        <SortableHeader
+          label="Price"
+          columnKey="price"
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      ),
       key: "price",
-      render: (item: Product) => (
-        <div className="flex items-center">
-          {isLoading ? (
-            <Skeleton variant="text" width={80} />
-          ) : (
-            <>
-              <span className="text-sm font-medium text-gray-900">
-                ${item.price.toFixed(2)}
-              </span>
-              {item.discountPrice && (
-                <span className="ml-2 text-sm text-gray-500 line-through">
-                  {/* @ts-ignore */}
-                  ${item.discountPrice.toFixed(2)}
-                </span>
-              )}
-            </>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: "Quantity",
-      key: "quantity",
-      render: (item: Product) => (
-        <div className="text-sm text-gray-900">
-          {isLoading ? <Skeleton variant="text" width={40} /> : item.quantity}
-        </div>
-      ),
-    },
-  ];
+      render: (item: Product) => {
+        const formattedPrice = new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+          minimumFractionDigits: 2,
+        }).format(item.price);
 
-  // Generate skeleton rows when loading
-  const skeletonData = isLoading
-    ? Array(5).fill({
-        _id: "skeleton",
-        name: "",
-        description: "",
-        price: 0,
-        quantity: 0,
-        imageUrl: "",
-      })
-    : [];
+        const formattedSlashedPrice =
+          item.slashedPrice &&
+          new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: "INR",
+            minimumFractionDigits: 2,
+          }).format(item.slashedPrice);
+
+        return (
+          <div className="flex items-center">
+            <span className="text-sm font-medium text-gray-900">
+              {formattedPrice}
+            </span>
+            {formattedSlashedPrice && (
+              <span className="ml-2 text-sm text-gray-500 line-through">
+                {formattedSlashedPrice}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    
+  ];
 
   return (
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
-          <BackArrow />
-          <div className="flex justify-center w-full md:w-auto ml-40">
+          <div className="flex justify-center w-full md:w-auto flex-grow">
             <SearchBar
               searchValue={searchValue}
               onSearchChange={setSearchValue}
             />
           </div>
-          <div className="flex ml-auto space-x-4">
-            <Button
-              variant="outlined"
-              sx={{
-                borderColor: "#0d7f3f",
-                color: "#0d7f3f",
-                width: "96px",
-                mr: 2,
-                "&:hover": {
-                  borderColor: "grey.700",
-                  backgroundColor: "grey.50",
-                },
-              }}
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              CANCEL
-            </Button>
 
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: "var(--secondary-color, #4CAF50)",
-                color: "white",
-                width: "96px",
-                "&:hover": {
-                  bgcolor: "var(--secondary-dark-color, #388E3C)",
-                },
-              }}
+          <div className="flex ml-auto">
+            <button
+              className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAdd}
-              disabled={
-                isLoading ||
-                Object.keys(checkedProducts).filter(
-                  (key) => checkedProducts[key]
-                ).length === 0
-              }
+              disabled={isLoading || isLoadingCollection}
             >
-              ADD
-            </Button>
+              Update Collection
+            </button>
+            <button
+              className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
+              onClick={handleCancel}
+              disabled={isLoading || isLoadingCollection}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={isLoading ? skeletonData : filteredProducts}
-          columns={columns}
-          idKey="_id"
-          itemsPerPage={15}
-          tableType="product"
-          loading={isLoading}
-        />
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {isLoading || isLoadingCollection ? (
+          <TableSkeletonLoader columns={columns.length} rows={10} />
+        ) : (
+          <DataTable
+            items={sortedProducts}
+            columns={columns}
+            idKey="_id"
+            itemsPerPage={itemsPerPage}
+            // Pass the total count
+            loading={isLoading}
+            currentPage={page}
+            onPageChange={setPage}
+            pageCount={Math.ceil(products.length / itemsPerPage)}
+          />
+        )}
       </div>
+
+      
     </div>
   );
 };

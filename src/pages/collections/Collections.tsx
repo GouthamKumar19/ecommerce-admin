@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DataTable from "../../components/common/DataTable";
 import { useNavigate } from "react-router-dom";
 import { Edit, Delete } from "@mui/icons-material";
 import ConfirmationDialog from "../../components/common/Dialog";
 import SearchBar from "../../components/common/SearchBar";
-
+import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 import SortableHeader, {
   SortConfig,
 } from "../../components/common/SortableHeader";
@@ -12,8 +12,17 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-import { getAllCollection, deleteCollection } from "../../api/collections"; // Updated import to include deleteCollection
+import { getAllCollection, deleteCollection } from "../../api/collections";
 import type { Collection } from "../../types/collections.types";
+import { getImage } from "../../utils/imagePreview";
+
+
+
+// Add this interface near your other imports
+export interface CollectionResponse {
+  tableData: Collection[];
+  totalCount: number;
+}
 
 const CollectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -24,35 +33,76 @@ const CollectionsPage: React.FC = () => {
     null
   );
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0); // Total number of items
+  const [pageCount, setPageCount] = useState<number>(0); // Total number of pages
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "",
-    direction: null,
+    key: "updatedAt",
+    direction: "descending",
   });
-  const [isLoading, setIsLoading] = useState(false); // New state for loading
-  const [error, setError] = useState<string | null>(null); // New state for error
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(10);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
-
-  const payload = {}; // Define your payload here if needed
 
   useEffect(() => {
     const fetchCollections = async () => {
-      setIsLoading(true); // Start loading
-      setError(null); // Reset error
-      setTimeout(async () => {
-        try {
-          const response = await getAllCollection(payload); // Call the API
-          setCollections(response.data); // Set the fetched collections
-          console.log("Fetched Collections:", response.data);
-        } catch (err: any) {
-          setError(err.message || "Failed to fetch collections"); // Handle any errors
-        } finally {
-          setIsLoading(false); // End loading
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
+      setIsLoading(true);
+
+      try {
+        const payload = {
+          search: [
+            {
+              term: searchValue,
+              fields: ["name"],
+              startsWith: true,
+              endsWith: false,
+            },
+          ],
+          options: {
+            sortBy: [sortConfig.key],
+            sortDesc: [sortConfig.direction === "descending"],
+            page: page,
+            itemsPerPage: itemsPerPage,
+          },
+        };
+        console.log("Payload:", payload);
+        const response = await getAllCollection(payload);
+
+        // In your useEffect, update the data handling:
+        if (response && response.data) {
+          console.log("Fetched Collections Response:", response);
+          console.log("Fetched Collections Data:", response.data);
+          
+          // First convert to unknown, then to CollectionResponse
+          const responseData = response.data as unknown as CollectionResponse;
+          setCollections(responseData.tableData);
+          setTotalCount(responseData.totalCount);
+          setPageCount(Math.ceil(responseData.totalCount / itemsPerPage)); // Calculate page count
+        } else {
+          console.error("Invalid response format:", response);
+          throw new Error("Invalid response format");
         }
-      }, 500);
+      } catch (err: any) {
+        if (!signal.aborted) {
+          console.error(err.message || "Failed to fetch collections");
+          setError(err.message || "Failed to fetch collections");
+        }
+      } finally {
+        // Add a delay to display the skeleton loader for longer
+        setTimeout(() => setIsLoading(false), 1000); // 1 second delay
+      }
     };
 
-    fetchCollections(); // Execute fetching function
-  }, []); // Empty dependency array to run once on mount
+    fetchCollections();
+  }, [searchValue, sortConfig, page, itemsPerPage]);
 
   const handleAddNewCollection = () => {
     navigate("/collection/new");
@@ -76,16 +126,16 @@ const CollectionsPage: React.FC = () => {
       if (dialogTitle === "Delete Collection") {
         setIsLoading(true);
         try {
-          // Call the deleteCollection API function
           const response = await deleteCollection(currentCollection._id);
 
           if (response.status === 200) {
-            // If successful, remove the collection from the state
             setCollections((prevData) =>
               prevData.filter(
                 (collection) => collection._id !== currentCollection._id
               )
             );
+            setTotalCount((prev) => prev - 1); // Update total count after deletion
+            setPageCount(Math.ceil((totalCount - 1) / itemsPerPage)); // Recalculate page count
             console.log(
               `Collection deleted successfully: ${currentCollection._id}`
             );
@@ -104,9 +154,16 @@ const CollectionsPage: React.FC = () => {
     setCurrentCollection(null);
   };
 
-  const filteredCollections = collections.filter((collection) =>
-    collection.name.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  const handleSort = (key: string) => {
+    const direction = getNextSortDirection(
+      sortConfig.key,
+      key,
+      sortConfig.direction
+    );
+    setSortConfig({ key, direction });
+  };
+
+  const sortedCollections = useSortableData(collections, sortConfig);
 
   const actionRenderer = (item: Collection) => (
     <div className="flex justify-center items-center gap-2">
@@ -121,17 +178,6 @@ const CollectionsPage: React.FC = () => {
     </div>
   );
 
-  const handleSort = (key: string) => {
-    const direction = getNextSortDirection(
-      sortConfig.key,
-      key,
-      sortConfig.direction
-    );
-    setSortConfig({ key, direction });
-  };
-
-  const sortedCollections = useSortableData(filteredCollections, sortConfig);
-
   const columns = [
     {
       header: "BannerImage",
@@ -140,9 +186,11 @@ const CollectionsPage: React.FC = () => {
         <div className="text-center flex-shrink-0 h-16 w-24">
           <img
             className="h-16 w-24 object-cover rounded cursor-pointer"
-            src={item.bannerImage} // Changed imageUrl to bannerImage
+            src={getImage(item.bannerImage)}
             alt={item.name}
-            onClick={() => navigate(`/collections/collection-product`)}
+            onClick={() =>
+              navigate(`/collections/collection-product/${item._id}`)
+            }
           />
         </div>
       ),
@@ -187,26 +235,33 @@ const CollectionsPage: React.FC = () => {
             <button
               className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
               onClick={handleAddNewCollection}
-              disabled={isLoading} // Disable button while loading
+              disabled={isLoading}
             >
               ADD COLLECTION
             </button>
           </div>
         </div>
       </div>
-      {isLoading && <div>Loading...</div>} {/* Loading Indicator */}
-      {error && <div>Error: {error}</div>} {/* Error Display */}
+
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
-        <DataTable
-          items={sortedCollections}
-          columns={columns}
-          idKey="_id"
-          itemsPerPage={15}
-          tableType="collection"
-          actionRenderer={actionRenderer}
-          loading={isLoading}
-        />
+        {isLoading ? (
+          <TableSkeletonLoader columns={4} rows={10} /> // Show the skeleton loader while loading
+        ) : (
+          <DataTable
+            items={sortedCollections}
+            columns={columns}
+            idKey="_id"
+            itemsPerPage={itemsPerPage}
+            totalCount={totalCount} // Pass the total count
+            pageCount={pageCount} // Pass the total page count
+            currentPage={page}
+            onPageChange={(newPage) => setPage(newPage)}
+            actionRenderer={actionRenderer}
+            loading={isLoading}
+          />
+        )}
       </div>
+
       <ConfirmationDialog
         open={dialogOpen}
         title={dialogTitle}

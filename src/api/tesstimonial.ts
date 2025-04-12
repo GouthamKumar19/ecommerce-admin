@@ -1,7 +1,11 @@
-// import axiosInstance from "./axios";
-import { Testimonial } from "../types/testimonials.types";
-import { testimonials } from "../config/mock/testimonialsTable";
-
+import axiosInstance from "./axios";
+import {
+  Testimonial,
+  TestimonialResponse,
+  ApiResponse,
+  SortConfig,
+} from "../types/testimonials.types";
+let currentController: AbortController | null = null;
 interface TestimonialFormData {
   _id?: string;
   name: string;
@@ -9,41 +13,18 @@ interface TestimonialFormData {
   description: string;
 }
 
-interface ApiResponse<T> {
-  status: number;
-  message: string;
-  data: T;
-}
-
 // Create a new testimonial
 export const createTestimonial = async (
   testimonialData: TestimonialFormData
-): Promise<ApiResponse<Testimonial>> => {
+): Promise<ApiResponse<string>> => {
   try {
     console.log("[API] Creating testimonial with data:", testimonialData);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.post('/admin/testimonials/create-update', testimonialData);
-    // return response.data;
-
-    // Mock response
-    const mockResponse: ApiResponse<Testimonial> = {
-      status: 200,
-      message: "Testimonial created successfully",
-      data: {
-        id: String(testimonials.length + 1),
-        _id: String(testimonials.length + 1),
-        name: testimonialData.name,
-        rating: testimonialData.ratings,
-        ratings: testimonialData.ratings,
-        description: testimonialData.description,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    };
-
-    console.log("[API] Mock create response:", mockResponse);
-    return Promise.resolve(mockResponse);
+    const response = await axiosInstance.post(
+      "/admin/testimonials/create-update",
+      testimonialData
+    );
+    return response.data as ApiResponse<string>;
   } catch (error) {
     console.error("[API] Error creating testimonial:", error);
     throw error;
@@ -53,32 +34,15 @@ export const createTestimonial = async (
 // Update an existing testimonial
 export const updateTestimonial = async (
   testimonialData: TestimonialFormData
-): Promise<ApiResponse<Testimonial>> => {
+): Promise<ApiResponse<string>> => {
   try {
     console.log("[API] Updating testimonial with data:", testimonialData);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.post('/admin/testimonials/create-update', testimonialData);
-    // return response.data;
-
-    // Mock response
-    const mockResponse: ApiResponse<Testimonial> = {
-      status: 200,
-      message: "Testimonial updated successfully",
-      data: {
-        id: testimonialData._id!,
-        _id: testimonialData._id!,
-        name: testimonialData.name,
-        rating: testimonialData.ratings,
-        ratings: testimonialData.ratings,
-        description: testimonialData.description,
-        updatedAt: new Date().toISOString(),
-        createdAt: "2023-07-15T08:00:00Z", // Mock original creation date
-      },
-    };
-
-    console.log("[API] Mock update response:", mockResponse);
-    return Promise.resolve(mockResponse);
+    const response = await axiosInstance.post(
+      "/admin/testimonials/create-update",
+      testimonialData
+    );
+    return response.data as ApiResponse<string>;
   } catch (error) {
     console.error("[API] Error updating testimonial:", error);
     throw error;
@@ -92,34 +56,10 @@ export const getTestimonialById = async (
   try {
     console.log("[API] Fetching testimonial with ID:", id);
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.get(`/admin/testimonials/getOne/${id}`);
-    // return response.data;
-
-    // Mock response using testimonials data
-    const testimonial = testimonials.find((t) => t.id === id || t._id === id);
-
-    if (!testimonial) {
-      throw new Error("Testimonial not found");
-    }
-
-    const mockResponse: ApiResponse<Testimonial> = {
-      status: 200,
-      message: "Success",
-      data: {
-        id: testimonial.id,
-        _id: testimonial._id || String(testimonial.id),
-        name: testimonial.name,
-        rating: testimonial.rating,
-        ratings: testimonial.ratings || testimonial.rating,
-        description: testimonial.description,
-        createdAt: testimonial.createdAt || "2023-07-15T08:00:00Z",
-        updatedAt: testimonial.updatedAt || "2023-07-15T08:00:00Z",
-      },
-    };
-
-    console.log("[API] Mock get response:", mockResponse);
-    return Promise.resolve(mockResponse);
+    const response = await axiosInstance.post(
+      `/admin/testimonials/getOne/${id}`
+    );
+    return response.data;
   } catch (error) {
     console.error("[API] Error fetching testimonial:", error);
     throw error;
@@ -127,25 +67,43 @@ export const getTestimonialById = async (
 };
 
 // Get all testimonials
-export const getAllTestimonials = async (): Promise<
-  ApiResponse<Testimonial[]>
-> => {
+export const getAllTestimonials = async (
+  page: number,
+  itemsPerPage: number,
+  searchTerm: string,
+  sortConfig: SortConfig
+): Promise<ApiResponse<TestimonialResponse>> => {
   try {
+    if (currentController) {
+      currentController.abort();
+    }
+    currentController = new AbortController();
     console.log("[API] Fetching all testimonials");
 
-    // Uncomment when API is ready
-    // const response = await axiosInstance.get('/admin/testimonials/getAll');
-    // return response.data;
-
-    // Mock response
-    const mockResponse: ApiResponse<Testimonial[]> = {
-      status: 200,
-      message: "Success",
-      data: testimonials,
-    };
-
-    console.log("[API] Mock getAll response:", mockResponse);
-    return Promise.resolve(mockResponse);
+    const response = await axiosInstance.post(
+      "/admin/testimonials/getAll",
+      {
+       
+        search: [
+          {
+            term: searchTerm,
+            fields: ["name"],
+            startsWith: true,
+            endsWith: false,
+          },
+        ],
+        options: {
+          sortBy: [sortConfig.key],
+          sortDesc: [sortConfig.direction === "descending"],
+          page,
+          itemsPerPage,
+        },
+      },
+      {
+        signal: currentController.signal,
+      }
+    );
+    return response.data;
   } catch (error) {
     console.error("[API] Error fetching all testimonials:", error);
     throw error;

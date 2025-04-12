@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Star, StarBorder } from "@mui/icons-material";
+import React, { useState, useEffect } from "react";
+
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import Pagination from "./Pagination";
 import TableSkeletonLoader from "./TableSkeletonLoader";
+
 
 // Define a base interface for data objects
 interface BaseRecord {
@@ -24,35 +25,22 @@ interface TableColumn<T> {
 }
 
 // Generic DataTable Props
+// Update the DataTableProps interface to include totalCount
 interface DataTableProps<T extends BaseRecord> {
-  items: T[];
+  items: T[];  // Array of items of generic type T
   columns: TableColumn<T>[];
   idKey: string;
   itemsPerPage?: number;
   actionRenderer?: (item: T) => React.ReactNode;
   disabledRows?: string[];
-  tableType?: string;
+  pageCount: number;
+  totalCount?: number; // Add totalCount prop
   loading?: boolean;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
-// Star Rating Component for testimonials
-export const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
-  return (
-    <div className="flex justify-center">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span key={star}>
-          {star <= rating ? (
-            <Star sx={{ fontSize: 20, color: "#FFD700" }} />
-          ) : (
-            <StarBorder sx={{ fontSize: 20, color: "#FFD700" }} />
-          )}
-        </span>
-      ))}
-    </div>
-  );
-};
-
-// Generic DataTable Component
+// Update the DataTable component parameters to include totalCount
 const DataTable = <T extends BaseRecord>({
   items,
   columns,
@@ -61,11 +49,25 @@ const DataTable = <T extends BaseRecord>({
   actionRenderer,
   disabledRows = [],
   loading = false,
+  currentPage = 1,
+  pageCount,
+  totalCount, // Add totalCount to destructuring
+  onPageChange,
 }: DataTableProps<T>) => {
   const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
+    pageIndex: currentPage - 1,
     pageSize: itemsPerPage,
   });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: currentPage - 1 }));
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    if (onPageChange) {
+      onPageChange(page);
+    }
+  };
 
   // Convert TableColumn array to Tanstack ColumnDef array
   const tableColumns: ColumnDef<T>[] = columns.map((column) => ({
@@ -91,7 +93,9 @@ const DataTable = <T extends BaseRecord>({
       } else {
         return (
           <div
-            className={`text-center ${isDisabled ? "text-gray-400" : "text-gray-900"}`}
+            className={`text-center ${
+              isDisabled ? "text-gray-400" : "text-gray-900"
+            }`}
           >
             {String(item[column.key] ?? "N/A")}
           </div>
@@ -110,13 +114,15 @@ const DataTable = <T extends BaseRecord>({
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: false,
-    pageCount: Math.ceil(items.length / pagination.pageSize),
+    manualPagination: true, // Set to true for manual pagination
+    pageCount, // Set the pageCount from props
   });
+
   if (loading) {
     return <TableSkeletonLoader columns={columns.length} rows={itemsPerPage} />;
   }
 
+  // Update the Pagination component to pass totalCount
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto max-h-[70vh]">
@@ -144,45 +150,37 @@ const DataTable = <T extends BaseRecord>({
             ))}
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`hover:bg-gray-50 transition-colors ${
-                    disabledRows.includes(String(row.original[idKey]))
-                      ? "bg-gray-50"
-                      : ""
-                  }`}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500"
-                >
-                  No data available
-                </td>
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className={`hover:bg-gray-50 transition-colors ${
+                  disabledRows.includes(String(row.original[idKey]))
+                    ? "bg-gray-50"
+                    : ""
+                }`}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-center"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>
 
       {/* Pagination Component */}
-      <Pagination table={table} itemsCount={items.length} />
+      <Pagination
+        table={table}
+        itemsCount={items.length}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+        totalCount={totalCount} // Pass totalCount to Pagination
+      />
     </div>
   );
 };
