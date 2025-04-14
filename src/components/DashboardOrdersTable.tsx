@@ -39,6 +39,9 @@ const DashboardOrdersTable: React.FC = () => {
       />
     </div>
   );
+   useEffect(() => {
+        setPage(1);
+      }, [searchValue]);
 
   useEffect(() => {
     const fetchOrderData = async () => {
@@ -53,13 +56,19 @@ const DashboardOrdersTable: React.FC = () => {
         );
 
         if (response.data && Array.isArray(response.data.tableData)) {
-          // Slice to get the first 10 records
-          const slicedData = response.data.tableData.slice(0, 10);
-
-          setOrders(slicedData); 
-        } else {
-          throw new Error("Invalid API response structure");
-        }
+  // Filter data by search value if needed (if API doesn't handle it)
+  const filteredData = searchValue 
+    ? response.data.tableData.filter(order => 
+        order.orderId.toLowerCase().includes(searchValue.toLowerCase()) ||
+        order.customerDetails.name.toLowerCase().includes(searchValue.toLowerCase()))
+    : response.data.tableData;
+  
+  // Then slice to get the first 10 records
+  const slicedData = filteredData.slice(0, 10);
+  setOrders(slicedData);
+} else {
+  throw new Error("Invalid API response structure");
+}
       } catch (err: any) {
         console.error("Failed to fetch orders:", err.message);
       } finally {
