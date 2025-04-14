@@ -30,6 +30,11 @@ const EnquiryPage: React.FC = () => {
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Reset to page 1 when search value changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchValue]);
+
   useEffect(() => {
     const fetchEnquiries = async () => {
       if (abortControllerRef.current) {
@@ -46,7 +51,7 @@ const EnquiryPage: React.FC = () => {
             {
               term: searchValue,
               fields: ["name", "email", "message"],
-              startsWith: false,
+              startsWith: true, // Changed to true to match only text that starts with the search value
               endsWith: false,
             },
           ],
@@ -66,7 +71,9 @@ const EnquiryPage: React.FC = () => {
           console.log("[DEBUG] API Response:", response.data);
           setEnquiries(response.data.totalData || []);
           setTotalEnquiries(response.data.totalCount || 0);
-          setPageCount(Math.ceil((response.data.totalCount || 0) / itemsPerPage));
+          setPageCount(
+            Math.ceil((response.data.totalCount || 0) / itemsPerPage)
+          );
         } else {
           console.warn("[DEBUG] No data received from API");
           setEnquiries([]);
@@ -93,6 +100,12 @@ const EnquiryPage: React.FC = () => {
       sortConfig.direction
     );
     setSortConfig({ key, direction });
+  };
+
+  // Custom search handler to manage search value changes
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    // Page reset is handled by the useEffect hook above
   };
 
   const handleClosePopup = () => {
@@ -173,7 +186,7 @@ const EnquiryPage: React.FC = () => {
           <div className="flex justify-center w-full md:w-auto flex-grow">
             <SearchBar
               searchValue={searchValue}
-              onSearchChange={setSearchValue}
+              onSearchChange={handleSearchChange}
             />
           </div>
         </div>
@@ -189,8 +202,7 @@ const EnquiryPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            actionRenderer= {actionRenderer}
-            
+            actionRenderer={actionRenderer}
             loading={isLoading}
             currentPage={page}
             onPageChange={(newPage) => {
