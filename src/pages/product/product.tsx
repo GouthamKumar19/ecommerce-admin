@@ -40,6 +40,9 @@ const ProductPage: React.FC = () => {
   const handleAddNewProduct = () => {
     navigate("/product/new?action=add");
   };
+  useEffect(() => {
+      setPage(1);
+    }, [searchValue]);
 
   useEffect(() => {
     const fetchProducts = async () => {

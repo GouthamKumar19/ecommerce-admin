@@ -52,7 +52,9 @@ const OrderPage: React.FC = () => {
       />
     </div>
   );
-
+useEffect(() => {
+    setPage(1);
+  }, [searchValue]);
   useEffect(() => {
     const fetchOrderData = async () => {
       setIsLoading(true);

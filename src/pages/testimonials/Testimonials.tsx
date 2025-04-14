@@ -52,7 +52,9 @@ const TestimonialsPage: React.FC = () => {
     );
     setSortConfig({ key, direction });
   };
-
+useEffect(() => {
+    setPage(1);
+  }, [searchValue]);
   useEffect(() => {
     const fetchTestimonials = async () => {
       setIsLoading(true);
