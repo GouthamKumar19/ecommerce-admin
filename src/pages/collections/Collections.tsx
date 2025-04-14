@@ -43,6 +43,9 @@ const CollectionsPage: React.FC = () => {
   const [itemsPerPage] = useState<number>(10);
   const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
+  useEffect(() => {
+      setPage(1);
+    }, [searchValue]);
 
   useEffect(() => {
     const fetchCollections = async () => {
@@ -209,6 +212,12 @@ const CollectionsPage: React.FC = () => {
     <div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
+          <div className="flex items-center justify-center mb-4">
+            <InfoIcon sx={{ color: "#1976d2", marginRight: "8px",marginTop:"4px" }} />
+            <p className="text-gray-700 text-sm font-medium mt-2">
+              Press on the image to add products to the collection.
+            </p>
+          </div>
           <div className="flex justify-center w-full md:w-auto flex-grow">
             <SearchBar
               searchValue={searchValue}
@@ -229,12 +238,6 @@ const CollectionsPage: React.FC = () => {
       </div>
 
       {/* Add instruction line with Info Icon */}
-      <div className="flex items-center justify-center mb-4">
-        <InfoIcon sx={{ color: "#1976d2", marginRight: "8px" }} />
-        <p className="text-gray-700 text-sm font-medium">
-          Press on the image to add products to the collection.
-        </p>
-      </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
         {isLoading ? (
