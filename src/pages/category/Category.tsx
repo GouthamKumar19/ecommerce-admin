@@ -152,7 +152,8 @@ useEffect(() => {
   };
 
   const handleEditCategory = (categoryId: string) => {
-    navigate(`/category/${categoryId}`);
+    
+    navigate(`/category/${categoryId}`,);
   };
 
   const actionRenderer = (item: CategoryRecord) => (

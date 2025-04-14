@@ -35,13 +35,18 @@ const BackArrow = () => {
         return "Add Testimonials";
       }
     }
-    if (path.includes("/category/")) {
+
+    if (path.includes("/category/new")) {
       // Check if we have order data in state (viewing or editing)
-      if (state && state.Category) {
-        return "Edit Category";
-      } else {
-        return "Add Category";
-      }
+
+      return "Add Category";
+    }
+    if (path.includes("/category/")) {
+      return "Edit Category";
+    }
+
+    if (path.includes("/category/:id")) {
+      return "Edit Category";
     }
 
     if (path.includes("/collection/")) {
