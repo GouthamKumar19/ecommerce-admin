@@ -16,6 +16,7 @@ import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 
 const EnquiryPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "updatedAt",
     direction: "descending",
@@ -29,6 +30,32 @@ const EnquiryPage: React.FC = () => {
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Add debounce for search input
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set a new timeout
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchValue(value);
+      setPage(1); // Reset to page 1 when search changes
+    }, 500); // 500ms debounce
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchEnquiries = async () => {
@@ -44,7 +71,7 @@ const EnquiryPage: React.FC = () => {
         const payload = {
           search: [
             {
-              term: searchValue,
+              term: debouncedSearchValue,
               fields: ["name", "email", "message"],
               startsWith: false,
               endsWith: false,
@@ -84,7 +111,7 @@ const EnquiryPage: React.FC = () => {
     };
 
     fetchEnquiries();
-  }, [searchValue, sortConfig, page, itemsPerPage]);
+  }, [debouncedSearchValue, sortConfig, page, itemsPerPage]);
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -93,6 +120,7 @@ const EnquiryPage: React.FC = () => {
       sortConfig.direction
     );
     setSortConfig({ key, direction });
+    setPage(1); // Reset to page 1 when sort changes
   };
 
   const handleClosePopup = () => {
@@ -173,7 +201,7 @@ const EnquiryPage: React.FC = () => {
           <div className="flex justify-center w-full md:w-auto flex-grow">
             <SearchBar
               searchValue={searchValue}
-              onSearchChange={setSearchValue}
+              onSearchChange={handleSearchChange}
             />
           </div>
         </div>
@@ -189,8 +217,7 @@ const EnquiryPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            actionRenderer= {actionRenderer}
-            
+            actionRenderer={actionRenderer}
             loading={isLoading}
             currentPage={page}
             onPageChange={(newPage) => {
