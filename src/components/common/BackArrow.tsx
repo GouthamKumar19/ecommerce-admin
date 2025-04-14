@@ -11,9 +11,9 @@ const BackArrow = () => {
     const path = location.pathname;
     const state = location.state;
 
-    // Check if we're on a user page
+    
     if (path.includes("/users/")) {
-      // Check if we have user data in state (editing)
+     
       if (state && state.user) {
         return "Edit User";
       } else {
