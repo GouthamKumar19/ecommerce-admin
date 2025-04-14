@@ -38,6 +38,7 @@ export interface User extends BaseRecord {
   countryCode?: string;
   isEnabled?: boolean; // Indicates if the user is enabled
   addresses?: AddressData[];
+   
 }
 
 // Interface for the API response
