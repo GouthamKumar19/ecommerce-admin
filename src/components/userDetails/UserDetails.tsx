@@ -16,14 +16,16 @@ import {
 } from "@mui/material";
 import AddressPopup from "./AddressPopup";
 import { User } from "../../types/users.types";
+import { deleteUserAddresses } from "../../api/user";
 
 interface AddressData {
+  _id: string; // Add this line to include the _id field
   addressLine1: string;
   addressLine2: string;
   city: string;
   state: string;
   pinCode: string;
-  useAsShipping?: boolean; // Add this field
+  useAsShipping?: boolean;
 }
 
 interface UserDetailsFormProps {
@@ -75,6 +77,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
     const addressDetails = user.addressDetails;
     const mappedAddresses = Array.isArray(addressDetails)
       ? addressDetails.map((address: any) => ({
+        _id:address._id,
           addressLine1: address?.addressLine1 || address?.line1 || "",
           addressLine2: address?.addressLine2 || address?.line2 || "",
           city: address?.city || "",
@@ -264,11 +267,19 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
     }
   };
 
-  const handleDeleteAddress = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      addresses: prev.addresses.filter((_, i) => i !== index),
-    }));
+  const handleDeleteAddress = async (id: string) => {
+    try {
+      await deleteUserAddresses([id]); // Pass the ID as an array
+      console.log(`Address with ID ${id} deleted successfully.`);
+      
+      // Remove the address from the form data
+      setFormData((prev) => ({
+        ...prev,
+        addresses: prev.addresses.filter((address) => address._id !== id),
+      }));
+    } catch (error) {
+      console.error("Failed to delete address:", id, error);
+    }
   };
 
   // Validation and submission
@@ -535,7 +546,13 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
                 setEditingAddress(null);
                 setEditingIndex(null);
               }}
-              onSave={editingAddress ? handleUpdateAddress : handleAddAddress}
+              onSave={(addressData) => {
+                if (editingAddress) {
+                  handleUpdateAddress({ ...addressData, _id: editingAddress._id });
+                } else {
+                  handleAddAddress({ ...addressData, _id: '' });
+                }
+              }}
               initialData={editingAddress || undefined}
             />
           </DialogContentText>

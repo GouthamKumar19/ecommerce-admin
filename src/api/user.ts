@@ -186,3 +186,24 @@ export const createAddress = async (
     throw error;
   }
 };
+
+// Function to delete a user address
+
+
+// Function to delete user addresses
+export const deleteUserAddresses = async (ids: string[]): Promise<void> => {
+  try {
+    const response = await axiosInstance.post("/admin/userAddresses/delete", {
+      ids: ids, // Send an array of IDs
+    });
+
+    if (response?.status === 200) {
+      throw new Error("Failed to delete addresses");
+    }
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to delete addresses");
+    }
+    throw error;
+  }
+};

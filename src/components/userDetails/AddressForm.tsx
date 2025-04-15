@@ -15,7 +15,7 @@ interface AddressData {
 interface AddressFormProps {
   addresses: AddressData[];
   onEdit: (index: number) => void;
-  onDelete: (index: number) => void;
+  onDelete: (id: string) => void; // Change the parameter type to string
   textFieldStyle: any;
   onShippingChange?: (index: number, checked: boolean) => void;
   isEditMode?: boolean;
@@ -49,7 +49,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                   <Delete
                     className="text-red-500 cursor-pointer"
                     style={{ color: "#0d7f3f" }}
-                    onClick={() => onDelete(index)}
+                    onClick={() => address._id && onDelete(address._id)} // Ensure _id is defined
                   />
                 </div>
               </div>

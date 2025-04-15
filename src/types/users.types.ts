@@ -7,6 +7,7 @@ export interface AddressData {
   state: string;
   pinCode: string;
   useAsShipping?: boolean;
+
 }
 
 // Define the possible value types that can be stored in a record
