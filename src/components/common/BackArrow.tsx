@@ -27,13 +27,11 @@ const BackArrow = () => {
         return "View Order";
       }
     }
-    if (path.includes("/testimonials/")) {
-      // Check if we have order data in state (viewing or editing)
-      if (state && state.testimonial) {
-        return "Edit Testimonials";
-      } else {
-        return "Add Testimonials";
-      }
+    if (path.includes("/testimonials/new")) {
+      return "Add Testimonials";
+    }
+     if(path.includes("/testimonials/")){
+      return "Edit Testimonials";
     }
 
     if (path.includes("/category/new")) {
