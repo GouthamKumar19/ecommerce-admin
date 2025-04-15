@@ -41,17 +41,20 @@ const UsersPage: React.FC = () => {
     setError(null);
     setTimeout(async () => {
       try {
+        // Always pass a valid SortConfig object
+        // If direction is null, use the default sort parameters
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+                
         const response = await getAllUser(
           page,
           itemsPerPage,
           searchValue,
-          sortConfig
+          effectiveSortConfig  // This is always a valid SortConfig object
         );
         setUsers(response.data.tableData);
-       
-        
-        setPageCount(response.data.totalCount); // Set the page count based on totalCount
-        console.log("User Details:", response.data);
+        setPageCount(response.data.totalCount);
       } catch (err: any) {
         console.error("Error fetching users:", err);
         setError(err.message || "Failed to fetch users");
@@ -78,11 +81,14 @@ const UsersPage: React.FC = () => {
 
   const renderSortIcon = (key: string) => {
     if (sortConfig.key === key) {
-      return sortConfig.direction === "ascending" ? (
-        <ArrowUpwardIcon />
-      ) : (
-        <ArrowDownwardIcon />
-      );
+      if (sortConfig.direction === "ascending") {
+        return <ArrowUpwardIcon />;
+      } else if (sortConfig.direction === "descending") {
+        return <ArrowDownwardIcon />;
+      } else if (sortConfig.direction === null) {
+        // Handle null direction case
+        return <SwapVertIcon />;
+      }
     }
     return <SwapVertIcon />;
   };
