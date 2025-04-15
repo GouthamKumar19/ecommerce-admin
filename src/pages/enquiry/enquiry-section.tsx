@@ -131,10 +131,10 @@ const EnquiryPage: React.FC = () => {
   };
 
   // Custom search handler to manage search value changes
-  const handleSearchChange = (value: string) => {
-    setSearchValue(value);
-    // Page reset is handled by the useEffect hook above
-  };
+  // const handleSearchChange = (value: string) => {
+  //   setSearchValue(value);
+  //   // Page reset is handled by the useEffect hook above
+  // };
 
   const handleClosePopup = () => {
     setIsPopupOpen(false);
