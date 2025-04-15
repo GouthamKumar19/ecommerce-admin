@@ -90,6 +90,9 @@ axiosInstance.interceptors.response.use(
 
     if (errorMessage && errorMessage !== lastToastMessage) {
       lastToastMessage = errorMessage;
+      if (errorMessage=='canceled') {
+        return;
+      }
       toast.error(errorMessage);
     }
 
