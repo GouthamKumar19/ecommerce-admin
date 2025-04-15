@@ -73,6 +73,11 @@ const ProductAddPage: React.FC = () => {
       setError(null);
 
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         // Update the search payload to allow partial matches anywhere in the string
         const payload = {
           search: [
@@ -84,8 +89,8 @@ const ProductAddPage: React.FC = () => {
             },
           ],
           options: {
-            sortBy: [sortConfig.key],
-            sortDesc: [sortConfig.direction === "descending"],
+            sortBy: [effectiveSortConfig.key],
+            sortDesc: [effectiveSortConfig.direction === "descending"],
             page: page,
             itemsPerPage: itemsPerPage,
           },

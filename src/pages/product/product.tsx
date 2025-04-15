@@ -49,11 +49,16 @@ const ProductPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const response = await getAllProducts(
           page,
           itemsPerPage,
           searchValue,
-          sortConfig
+          effectiveSortConfig
         );
 
         // Debugging: Log the entire API response

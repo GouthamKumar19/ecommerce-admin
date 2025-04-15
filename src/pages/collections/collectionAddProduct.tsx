@@ -103,11 +103,16 @@ const CollectionAddPage: React.FC = () => {
       setIsLoading(true);
 
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const response = await getAllProducts(
           page,
           itemsPerPage,
           searchValue,
-          sortConfig
+          effectiveSortConfig
         );
         console.log(response, "Fetched products");
         setProducts(response.data.tableData);

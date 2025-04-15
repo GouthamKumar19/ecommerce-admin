@@ -58,6 +58,11 @@ const CollectionsPage: React.FC = () => {
       setIsLoading(true);
 
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const payload = {
           search: [
             {
@@ -68,8 +73,8 @@ const CollectionsPage: React.FC = () => {
             },
           ],
           options: {
-            sortBy: [sortConfig.key],
-            sortDesc: [sortConfig.direction === "descending"],
+            sortBy: [effectiveSortConfig.key],
+            sortDesc: [effectiveSortConfig.direction === "descending"],
             page: page,
             itemsPerPage: itemsPerPage,
           },

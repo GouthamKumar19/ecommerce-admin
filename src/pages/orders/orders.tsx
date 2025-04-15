@@ -61,11 +61,16 @@ useEffect(() => {
       setError(null);
 
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const response = await getAllOrders(
           page,
           itemsPerPage,
           searchValue,
-          sortConfig,
+          effectiveSortConfig,
           activeFilters
         );
         console.log("API Response:", response);

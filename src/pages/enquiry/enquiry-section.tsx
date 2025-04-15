@@ -69,31 +69,36 @@ const EnquiryPage: React.FC = () => {
       }
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
-
+  
       setIsLoading(true);
-
+  
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const payload = {
           search: [
             {
               term: debouncedSearchValue,
               fields: ["name", "email", "message"],
-              startsWith: true, // Changed to true to match only text that starts with the search value
+              startsWith: true,
               endsWith: false,
             },
           ],
           options: {
-            sortBy: [sortConfig.key],
-            sortDesc: [sortConfig.direction === "descending"],
+            sortBy: [effectiveSortConfig.key],
+            sortDesc: [effectiveSortConfig.direction === "descending"],
             page: page,
             itemsPerPage: itemsPerPage,
           },
         };
-
+  
         console.log("[DEBUG] Payload:", payload); // Debugging
-
+  
         const response = await getAllEnquiry(payload); // Fetch data from API
-
+  
         if (response && response.data) {
           console.log("[DEBUG] API Response:", response.data);
           setEnquiries(response.data.totalData || []);
@@ -116,7 +121,7 @@ const EnquiryPage: React.FC = () => {
         setIsLoading(false); // End loading
       }
     };
-
+  
     fetchEnquiries();
   }, [debouncedSearchValue, sortConfig, page, itemsPerPage]);
 
