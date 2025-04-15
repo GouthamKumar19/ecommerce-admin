@@ -13,6 +13,7 @@ import {
   updateUser,
   getUserById,
   createAddress,
+  updateUserAddresses
 } from "../../api/user";
 
 
@@ -111,6 +112,44 @@ useEffect(() => {
         // Update existing user
         response = await updateUser(id, userData);
         userId = id;
+        
+        // Update addresses if they exist
+        if (addresses && addresses.length > 0) {
+          // Filter addresses that have an _id (existing addresses)
+          const addressesToUpdate = addresses
+            .filter((address: AddressData) => address._id)
+            .map((address: AddressData) => ({
+              _id: address._id,
+              line1: address.addressLine1,
+              line2: address.addressLine2 || "",
+              city: address.city,
+              state: address.state,
+              pinCode: address.pinCode,
+              isShipping: address.useAsShipping || false
+            }));
+            
+          if (addressesToUpdate.length > 0) {
+            console.log("Updating addresses:", addressesToUpdate);
+            const updateResponse = await updateUserAddresses(addressesToUpdate);
+            
+            if (updateResponse.status === 200) {
+              console.log("Addresses updated successfully:", updateResponse);
+            } else {
+              throw new Error("Failed to update addresses");
+            }
+          }
+          
+          // Handle new addresses (without _id) by creating them
+          const newAddresses = addresses.filter((address: AddressData) => !address._id);
+          if (newAddresses.length > 0) {
+            const addressSuccess = await createAddressesForUser(userId, newAddresses);
+            if (!addressSuccess) {
+              setSnackbarMessage("Some new addresses could not be created.");
+              setSnackbarSeverity("error");
+              setOpenSnackbar(true);
+            }
+          }
+        }
       } else {
         // Create new user
         response = await createUser(userData);

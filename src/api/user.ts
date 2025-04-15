@@ -207,3 +207,34 @@ export const deleteUserAddresses = async (ids: string[]): Promise<void> => {
     throw error;
   }
 };
+
+export const updateUserAddresses = async (addresses: {
+  _id: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pinCode: string;
+  isShipping: boolean;
+}[]): Promise<ApiResponse<string>> => {
+  try {
+    const response = await axiosInstance.put(
+      "/admin/userAddresses/update",
+      addresses
+    );
+    
+    if (response?.status === 200) {
+      return {
+        status: response.status,
+        message: response.data.message || "Success",
+        data: response.data.data || "Addresses updated successfully"
+      };
+    }
+    throw new Error("Failed to update addresses");
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to update addresses");
+    }
+    throw error;
+  }
+};
