@@ -268,15 +268,15 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
   };
 
   const handleDeleteAddress = async (id: string) => {
+    // Immediately remove the address from the UI
+    setFormData((prev) => ({
+      ...prev,
+      addresses: prev.addresses.filter((address) => address._id !== id),
+    }));
+
     try {
       await deleteUserAddresses([id]); // Pass the ID as an array
       console.log(`Address with ID ${id} deleted successfully.`);
-      
-      // Remove the address from the form data
-      setFormData((prev) => ({
-        ...prev,
-        addresses: prev.addresses.filter((address) => address._id !== id),
-      }));
     } catch (error) {
       console.error("Failed to delete address:", id, error);
     }
