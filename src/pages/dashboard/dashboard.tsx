@@ -5,6 +5,14 @@ import { CalendarToday, KeyboardArrowDown } from '@mui/icons-material';
 import { LinearProgress } from '@mui/material';
 import { useState } from "react";
 import { Menu, MenuItem } from "@mui/material";
+import { addDays, format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const DashboardPage = () => {
   // Chart data
@@ -48,6 +56,12 @@ const DashboardPage = () => {
     handleClose();
   };
 
+  // Add date range state
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 7),
+  });
+
   return (
     <div>
       {/* Top Controls */}
@@ -80,9 +94,35 @@ const DashboardPage = () => {
             <MenuItem onClick={() => handleSelect("lastyear")}>Last Year</MenuItem>
             <MenuItem onClick={() => handleSelect("lifetime")}>Lifetime</MenuItem>
           </Menu>
-          <button className="border rounded-md px-4 py-2 flex items-center gap-2">
-            DATE RANGE <CalendarToday fontSize="small" />
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="border rounded-md px-4 py-2 flex items-center gap-2">
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "MMM dd, y")} -{" "}
+                      {format(dateRange.to, "MMM dd, y")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "MMM dd, y")
+                  )
+                ) : (
+                  "DATE RANGE"
+                )}{" "}
+                <CalendarToday fontSize="small" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 

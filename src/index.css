@@ -104,7 +104,8 @@ accent-color: var(--secondary-color, #0d7f3f);
   }
 
   button {
-    background-color: var(--secondary-color);
+    background-color: var(--primary-color);
+    color: #000000;
   }
 
   html{
