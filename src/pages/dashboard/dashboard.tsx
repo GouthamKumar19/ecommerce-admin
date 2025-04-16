@@ -96,7 +96,7 @@ const DashboardPage = () => {
           </Menu>
           <Popover>
             <PopoverTrigger asChild>
-              <button className="border rounded-md px-4 py-2 flex items-center gap-2">
+              <button className="border rounded-md px-4 py-2 flex items-center gap-2  --background-color: #d3d3d3e1;">
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <>
@@ -120,6 +120,25 @@ const DashboardPage = () => {
                 selected={dateRange}
                 onSelect={setDateRange}
                 numberOfMonths={2}
+                className="flex"
+                modifiersStyles={{
+                  selected: {
+                    backgroundColor: '#0d7f3f',
+                    color: 'white'
+                  },
+                  range_start: {
+                    backgroundColor: '#0d7f3f',
+                    color: 'white'
+                  },
+                  range_end: {
+                    backgroundColor: '#0d7f3f',
+                    color: 'white'
+                  },
+                  range_middle: {
+                    backgroundColor: 'rgba(13, 127, 63, 0.2)',
+                    color: '#374151'
+                  }
+                }}
               />
             </PopoverContent>
           </Popover>
