@@ -198,10 +198,7 @@ const DashboardOrdersTable: React.FC = () => {
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-4 flex">
-        <h3 className="text-lg text-left font-medium text-gray-900 mr-70">
-          Recent Orders
-        </h3>
+      <div className="p-4 flex justify-center items-center">  {/* Updated flex classes */}
         <div className="w-full max-w-md">
           <SearchBar
             searchValue={searchValue}

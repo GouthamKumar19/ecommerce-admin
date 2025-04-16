@@ -3,6 +3,8 @@ import DashboardOrdersTable from "../../components/DashboardOrdersTable";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { CalendarToday, KeyboardArrowDown } from '@mui/icons-material';
 import { LinearProgress } from '@mui/material';
+import { useState } from "react";
+import { Menu, MenuItem } from "@mui/material";
 
 const DashboardPage = () => {
   // Chart data
@@ -16,15 +18,68 @@ const DashboardPage = () => {
     { name: 'Jul', sales: 3490 },
   ];
 
+  // Add these state variables
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  // Add these handler functions
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Add selected option state
+  const [selectedOption, setSelectedOption] = useState("SELECT");
+
+  const handleSelect = (option: string) => {
+    const displayText = {
+      today: "TODAY",
+      yesterday: "YESTERDAY",
+      last7days: "LAST 7 DAYS",
+      last30days: "LAST 30 DAYS",
+      last6months: "LAST 6 MONTHS",
+      lastyear: "LAST YEAR",
+      lifetime: "LIFETIME"
+    }[option];
+    setSelectedOption(displayText || 'SELECT');
+    handleClose();
+  };
+
   return (
     <div>
       {/* Top Controls */}
       <div className="flex justify-between mb-6">
         <div></div>
         <div className="flex gap-4">
-          <button className="border rounded-md px-4 py-2 flex items-center gap-2">
-            SELECT <KeyboardArrowDown />
+          <button
+            className="border rounded-md px-4 py-2 flex items-center gap-2"
+            onClick={handleClick}
+            aria-controls={open ? "basic-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? "true" : undefined}
+          >
+            {selectedOption} <KeyboardArrowDown />
           </button>
+          <Menu
+            id="basic-menu"
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            MenuListProps={{
+              "aria-labelledby": "basic-button",
+            }}
+          >
+            <MenuItem onClick={() => handleSelect("today")}>Today</MenuItem>
+            <MenuItem onClick={() => handleSelect("yesterday")}>Yesterday</MenuItem>
+            <MenuItem onClick={() => handleSelect("last7days")}>Last 7 Days</MenuItem>
+            <MenuItem onClick={() => handleSelect("last30days")}>Last 30 Days</MenuItem>
+            <MenuItem onClick={() => handleSelect("last6months")}>Last 6 Months</MenuItem>
+            <MenuItem onClick={() => handleSelect("lastyear")}>Last Year</MenuItem>
+            <MenuItem onClick={() => handleSelect("lifetime")}>Lifetime</MenuItem>
+          </Menu>
           <button className="border rounded-md px-4 py-2 flex items-center gap-2">
             DATE RANGE <CalendarToday fontSize="small" />
           </button>
@@ -130,7 +185,10 @@ const DashboardPage = () => {
 
       {/* Recent Orders Table */}
       <div className="mt-8">
-        <DashboardOrdersTable />
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">Recent Orders</h2>
+        <div className="mt-8">
+          <DashboardOrdersTable />
+        </div>
       </div>
     </div>
   );
