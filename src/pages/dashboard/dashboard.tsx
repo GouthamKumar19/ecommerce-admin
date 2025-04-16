@@ -96,22 +96,54 @@ const DashboardPage = () => {
               <AreaChart
                 data={chartData}
                 margin={{
-                  top: 10,
+                  top: 20,
                   right: 30,
-                  left: 0,
-                  bottom: 0,
+                  left: 20,
+                  bottom: 20,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <defs>
+                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  vertical={false}
+                  stroke="#f0f0f0"
+                />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false}
+                  tickLine={false}
+                  dy={10}
+                  tick={{ fill: '#666', fontSize: 12 }}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  dx={-10}
+                  tick={{ fill: '#666', fontSize: 12 }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                    padding: '10px 14px'
+                  }}
+                  labelStyle={{ color: '#666', marginBottom: '5px' }}
+                  itemStyle={{ color: '#10B981' }}
+                />
                 <Area 
                   type="monotone" 
                   dataKey="sales" 
                   stroke="#10B981" 
-                  fill="#D1FAE5" 
-                  fillOpacity={0.8}
+                  strokeWidth={2}
+                  fill="url(#colorSales)"
+                  fillOpacity={1}
                 />
               </AreaChart>
             </ResponsiveContainer>
