@@ -2,9 +2,9 @@
 import DashboardOrdersTable from "../../components/DashboardOrdersTable";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { CalendarToday, KeyboardArrowDown } from '@mui/icons-material';
-import { LinearProgress } from '@mui/material';
+import { LinearProgress } from '@mui/material'; // Import LinearProgress from MUI
 import { useState } from "react";
-import { Menu, MenuItem } from "@mui/material";
+import { Menu, MenuItem } from "@mui/material"; // Import Menu and MenuItem from MUI
 import { addDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
