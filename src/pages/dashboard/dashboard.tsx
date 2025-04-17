@@ -69,7 +69,7 @@ const DashboardPage = () => {
         <div></div>
         <div className="flex gap-4">
           <button
-            className="border rounded-md px-4 py-2 flex items-center gap-2"
+            className="border rounded-md px-4 py-2 flex items-center gap-2 bg-[#0d7f3f] text-white hover:bg-[#0d7f3f]/90"
             onClick={handleClick}
             aria-controls={open ? "basic-menu" : undefined}
             aria-haspopup="true"
@@ -96,7 +96,7 @@ const DashboardPage = () => {
           </Menu>
           <Popover>
             <PopoverTrigger asChild>
-              <button className="border rounded-md px-4 py-2 flex items-center gap-2  --background-color: #d3d3d3e1;">
+              <button className="border rounded-md px-4 py-2 flex items-center gap-2 bg-[#0d7f3f] text-white hover:bg-[#0d7f3f]/90">
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <>

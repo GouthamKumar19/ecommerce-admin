@@ -455,11 +455,11 @@ const ProductAddPage: React.FC = () => {
           </div>
           <div className="flex ml-auto">
             <button
-              className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
+              className="ml-4 px-2 py-2 bg-[#0d7f3f] text-white rounded-md hover:bg-[#0d7f3f]/90"
               onClick={handleAddNewProduct}
               disabled={isLoading}
             >
-              ADD PRODUCT
+              Add Product
             </button>
           </div>
         </div>

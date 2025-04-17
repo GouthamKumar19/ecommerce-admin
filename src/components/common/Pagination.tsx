@@ -108,8 +108,8 @@ const Pagination = <T,>({
                 disabled={currentPage === 1}
                 className={`relative inline-flex items-center justify-center w-9 h-9 rounded-md text-sm font-medium transition-all duration-200 ${
                   currentPage === 1
-                    ? "text-gray-300 cursor-not-allowed border border-gray-200"
-                    : "text-gray-700 hover:bg-gray-100 border border-gray-300 hover:shadow-sm"
+                    ? "text-gray-300 cursor-not-allowed bg-[#0d7f3f] border-none"
+                    : "text-white bg-[#0d7f3f] hover:bg-[#0d7f3f]/90 border-none hover:shadow-sm"
                 }`}
                 aria-label="Previous page"
               >
@@ -123,9 +123,9 @@ const Pagination = <T,>({
                 <button
                   key={index}
                   onClick={() => goToPage(page)}
-                  className={`inline-flex items-center justify-center transition-all duration-200 ${
+                  className={`inline-flex items-center justify-center transition-all duration-200 rounded-md ${
                     currentPage === page
-                      ? "w-10 h-10 text-sm font-medium bg-white border-2 border-green-600 text-green-600 font-semibold shadow-sm transform scale-105"
+                      ? "w-10 h-10 text-sm font-medium bg-[#0d7f3f] border-2 border-[#0d7f3f] text-white font-semibold shadow-sm transform scale-105"
                       : "w-9 h-9 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:shadow-sm"
                   }`}
                 >
@@ -145,8 +145,8 @@ const Pagination = <T,>({
                 disabled={currentPage >= totalPages}
                 className={`relative inline-flex items-center justify-center w-9 h-9 rounded-md text-sm font-medium transition-all duration-200 ${
                   currentPage >= totalPages
-                    ? "text-gray-300 cursor-not-allowed border border-gray-200"
-                    : "text-gray-700 hover:bg-gray-100 border border-gray-300 hover:shadow-sm"
+                    ? "text-gray-300 cursor-not-allowed bg-[#0d7f3f] border-none"
+                    : "text-white bg-[#0d7f3f] hover:bg-[#0d7f3f]/90 border-none hover:shadow-sm"
                 }`}
                 aria-label="Next page"
               >
