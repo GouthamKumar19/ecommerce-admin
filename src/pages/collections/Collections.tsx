@@ -172,6 +172,7 @@ const CollectionsPage: React.FC = () => {
   );
 
   const columns = [
+    // In the columns definition, update the onClick handler
     {
       header: "BannerImage",
       key: "bannerImage",
@@ -181,9 +182,10 @@ const CollectionsPage: React.FC = () => {
             className="h-16 w-24 object-cover rounded cursor-pointer"
             src={getImage(item.bannerImage)}
             alt={item.name}
-            onClick={() =>
-              navigate(`/collections/collection-product/${item._id}`)
-            }
+            onClick={() => {
+              console.log("Navigating to collection products with ID:", item._id);
+              navigate(`/collections/collection-product/${item._id}`);
+            }}
           />
         </div>
       ),
