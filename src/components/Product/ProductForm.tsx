@@ -103,7 +103,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   }, [variants]);
   // Validation functions
  const validateProductName = (name: string) =>
-   /^[a-zA-Z\s]*$/.test(name) && name.length <= 20;
+   /^[a-zA-Z\s]*$/.test(name) && name.length <= 15;
  const validatePrice = (price: string) => /^\d*\.?\d*$/.test(price);
    const validateDescription = (desc: string) => desc.length <= 60;
 
@@ -142,7 +142,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   updateForm.setProductNameErrorMessage(
                     "Only characters are allowed."
                   );
-                } else if (name.length > 15) {
+                } else if (name.length < 15) {
                   updateForm.setProductNameErrorMessage(
                     "Maximum 15 characters allowed."
                   );
@@ -283,6 +283,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               );
 
               if (validatePrice(priceValue)) {
+                // In the price onChange handler
                 if (
                   !numericSlashedPrice ||
                   numericPrice <= numericSlashedPrice
@@ -297,6 +298,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   updateForm.setIsPriceValid(false);
                   updateForm.setPriceErrorMessage(
                     "Price must be less than the slashed price."
+                  );
+                }
+
+                // In the slashed price onChange handler
+                if (!numericPrice || numericSlashedPrice > numericPrice) {
+                  // Valid slashed price
+                  updateForm.setSlashedPrice(formatCurrency(slashedPrice));
+                  updateForm.setIsSlashedPriceValid(true);
+                  updateForm.setSlashedPriceErrorMessage("");
+                } else {
+                  // Slashed price is less than or equal to price
+                  updateForm.setSlashedPrice(formatCurrency(slashedPrice));
+                  updateForm.setIsSlashedPriceValid(false);
+                  updateForm.setSlashedPriceErrorMessage(
+                    "Slashed price must be greater than the price."
                   );
                 }
               } else {

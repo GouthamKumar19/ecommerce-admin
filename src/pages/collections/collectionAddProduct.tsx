@@ -98,26 +98,47 @@ const CollectionAddPage: React.FC = () => {
     loadSavedProductIds();
   }, [collectionId]);
 
+  // Add these state variables for pagination
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [pageCount, setPageCount] = useState<number>(0);
+  
+  // Add this useEffect to reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchValue]);
+  
+  // Update the fetchProducts function to handle pagination properly
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
-
+  
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const response = await getAllProducts(
           page,
           itemsPerPage,
           searchValue,
-          sortConfig
+          effectiveSortConfig
         );
         console.log(response, "Fetched products");
+        
+        // Set products from the response
         setProducts(response.data.tableData);
-
+        
+        // Set pagination data
+        setTotalCount(response.data.totalCount);
+        setPageCount(Math.ceil(response.data.totalCount / itemsPerPage));
+  
         // Call getCollectionById immediately after getAllProducts
         if (collectionId) {
           console.log("Fetching collection details after products");
           const collectionResponse = await getCollectionById(collectionId);
           console.log("Collection data:", collectionResponse);
-
+  
           // Extract product mappings from collection response
           if (
             collectionResponse?.data?.collectionProducts &&
@@ -130,16 +151,16 @@ const CollectionAddPage: React.FC = () => {
                   productId: product.productId,
                 })
               );
-
+  
             console.log(
               "Collection Products Mapping (_id -> productId):",
               productMappings
             );
             console.table(productMappings);
-
+  
             // Update the existingCollectionProducts with actual IDs
             setExistingCollectionProducts(productMappings);
-
+  
             // Update the checked state based on these product IDs
             const updatedCheckedProducts: Record<string, boolean> = {
               ...checkedProducts,
@@ -163,7 +184,7 @@ const CollectionAddPage: React.FC = () => {
         setTimeout(() => setIsLoading(false), 1000);
       }
     };
-
+  
     fetchProducts();
   }, [page, itemsPerPage, searchValue, sortConfig, collectionId]);
 
@@ -412,16 +433,20 @@ const CollectionAddPage: React.FC = () => {
         {isLoading || isLoadingCollection ? (
           <TableSkeletonLoader columns={columns.length} rows={10} />
         ) : (
+          // In the return section, update the DataTable component
           <DataTable
             items={sortedProducts}
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            // Pass the total count
             loading={isLoading}
             currentPage={page}
-            onPageChange={setPage}
-            pageCount={Math.ceil(products.length / itemsPerPage)}
+            onPageChange={(newPage) => {
+              console.log("Changing page to:", newPage);
+              setPage(newPage);
+            }}
+            pageCount={pageCount}
+            totalCount={totalCount}
           />
         )}
       </div>

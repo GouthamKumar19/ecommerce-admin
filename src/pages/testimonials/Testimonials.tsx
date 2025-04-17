@@ -52,17 +52,24 @@ const TestimonialsPage: React.FC = () => {
     );
     setSortConfig({ key, direction });
   };
-
+useEffect(() => {
+    setPage(1);
+  }, [searchValue]);
   useEffect(() => {
     const fetchTestimonials = async () => {
       setIsLoading(true);
       setError(null); // Reset error state
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const response = await getAllTestimonials(
           page,
           itemsPerPage,
           searchValue,
-          sortConfig
+          effectiveSortConfig
         );
         console.log("Fetched Testimonials Response:", response); // Log the entire response
         console.log("Fetched Testimonials Data:", response.data); // Log the fetched data

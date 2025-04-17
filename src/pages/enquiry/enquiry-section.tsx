@@ -16,6 +16,7 @@ import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
 
 const EnquiryPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "updatedAt",
     direction: "descending",
@@ -29,6 +30,37 @@ const EnquiryPage: React.FC = () => {
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Add debounce for search input
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set a new timeout
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchValue(value);
+      setPage(1); // Reset to page 1 when search changes
+    }, 500); // 500ms debounce
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Reset to page 1 when search value changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchValue]);
 
   useEffect(() => {
     const fetchEnquiries = async () => {
@@ -37,36 +69,43 @@ const EnquiryPage: React.FC = () => {
       }
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
-
+  
       setIsLoading(true);
-
+  
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const payload = {
           search: [
             {
-              term: searchValue,
+              term: debouncedSearchValue,
               fields: ["name", "email", "message"],
-              startsWith: false,
+              startsWith: true,
               endsWith: false,
             },
           ],
           options: {
-            sortBy: [sortConfig.key],
-            sortDesc: [sortConfig.direction === "descending"],
+            sortBy: [effectiveSortConfig.key],
+            sortDesc: [effectiveSortConfig.direction === "descending"],
             page: page,
             itemsPerPage: itemsPerPage,
           },
         };
-
+  
         console.log("[DEBUG] Payload:", payload); // Debugging
-
+  
         const response = await getAllEnquiry(payload); // Fetch data from API
-
+  
         if (response && response.data) {
           console.log("[DEBUG] API Response:", response.data);
           setEnquiries(response.data.totalData || []);
           setTotalEnquiries(response.data.totalCount || 0);
-          setPageCount(Math.ceil((response.data.totalCount || 0) / itemsPerPage));
+          setPageCount(
+            Math.ceil((response.data.totalCount || 0) / itemsPerPage)
+          );
         } else {
           console.warn("[DEBUG] No data received from API");
           setEnquiries([]);
@@ -82,9 +121,9 @@ const EnquiryPage: React.FC = () => {
         setIsLoading(false); // End loading
       }
     };
-
+  
     fetchEnquiries();
-  }, [searchValue, sortConfig, page, itemsPerPage]);
+  }, [debouncedSearchValue, sortConfig, page, itemsPerPage]);
 
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
@@ -93,7 +132,14 @@ const EnquiryPage: React.FC = () => {
       sortConfig.direction
     );
     setSortConfig({ key, direction });
+    setPage(1); // Reset to page 1 when sort changes
   };
+
+  // Custom search handler to manage search value changes
+  // const handleSearchChange = (value: string) => {
+  //   setSearchValue(value);
+  //   // Page reset is handled by the useEffect hook above
+  // };
 
   const handleClosePopup = () => {
     setIsPopupOpen(false);
@@ -173,7 +219,7 @@ const EnquiryPage: React.FC = () => {
           <div className="flex justify-center w-full md:w-auto flex-grow">
             <SearchBar
               searchValue={searchValue}
-              onSearchChange={setSearchValue}
+              onSearchChange={handleSearchChange}
             />
           </div>
         </div>
@@ -189,8 +235,7 @@ const EnquiryPage: React.FC = () => {
             columns={columns}
             idKey="_id"
             itemsPerPage={itemsPerPage}
-            actionRenderer= {actionRenderer}
-            
+            actionRenderer={actionRenderer}
             loading={isLoading}
             currentPage={page}
             onPageChange={(newPage) => {

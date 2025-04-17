@@ -3,8 +3,9 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Edit, Delete } from "@mui/icons-material";
 import TextField from "@mui/material/TextField";
+import AddressForm from "./AddressForm"; // Import the AddressForm component
+
 import {
   InputAdornment,
   MenuItem,
@@ -15,14 +16,16 @@ import {
 } from "@mui/material";
 import AddressPopup from "./AddressPopup";
 import { User } from "../../types/users.types";
+import { deleteUserAddresses } from "../../api/user";
 
 interface AddressData {
+  _id: string; // Add this line to include the _id field
   addressLine1: string;
   addressLine2: string;
   city: string;
   state: string;
   pinCode: string;
-  useAsShipping?: boolean; // Add this field
+  useAsShipping?: boolean;
 }
 
 interface UserDetailsFormProps {
@@ -52,7 +55,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
   // UI state variables
   const [showAddress, setShowAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressData | null>(
-    null
+
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
@@ -65,18 +68,38 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
     gender: "",
   });
 
-  // Helper function to populate form with user data
+  
+  // Then update the populateFormWithUserData function
   const populateFormWithUserData = (user: User) => {
     console.log("Populating form with user data:", user);
+    
+    // Safely handle address details with proper type checking
+    const addressDetails = user.addressDetails;
+    const mappedAddresses = Array.isArray(addressDetails)
+      ? addressDetails.map((address: any) => ({
+        _id:address._id,
+          addressLine1: address?.addressLine1 || address?.line1 || "",
+          addressLine2: address?.addressLine2 || address?.line2 || "",
+          city: address?.city || "",
+          state: address?.state || "",
+          pinCode: address?.pinCode || "",
+          useAsShipping: address?.useAsShipping || address?.isShipping || false,
+        }))
+      : [];
+  
     setFormData({
       name: user.name || "",
       email: user.email || "",
-      password: "", // Don't populate password for security reasons
+      password: "",
       gender: user.gender || "",
-      phoneNumber: user.phone ? user.phone : "+91",
+      phoneNumber: user.phone || "",
       countryCode: "91",
-      addresses: user.addresses || [],
+      addresses: mappedAddresses,
     });
+  
+    if (isEditMode && mappedAddresses.length > 0) {
+      setShowAddress(false);
+    }
   };
 
   // Populate form with user data when it's available
@@ -244,11 +267,19 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
     }
   };
 
-  const handleDeleteAddress = (index: number) => {
+  const handleDeleteAddress = async (id: string) => {
+    // Immediately remove the address from the UI
     setFormData((prev) => ({
       ...prev,
-      addresses: prev.addresses.filter((_, i) => i !== index),
+      addresses: prev.addresses.filter((address) => address._id !== id),
     }));
+
+    try {
+      await deleteUserAddresses([id]); // Pass the ID as an array
+      console.log(`Address with ID ${id} deleted successfully.`);
+    } catch (error) {
+      console.error("Failed to delete address:", id, error);
+    }
   };
 
   // Validation and submission
@@ -469,6 +500,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
             />
           </div>
 
+          {/* Add address button */}
           <button
             onClick={() => setShowAddress(true)}
             className="w-full sm:w-2/3 md:w-1/3 bg-green-700 text-white py-2 rounded-md mt-4 mb-4 flex items-center justify-center"
@@ -476,134 +508,21 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
             + ADD A NEW ADDRESS
           </button>
 
-          {formData.addresses.map((address, index) => (
-            <div
-              key={index}
-              className="w-full p-4 text-left bg-white mb-4 border rounded"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-bold">Address {index + 1}</h3>
-                <div className="flex space-x-2">
-                  <Edit
-                    className="text-blue-500 cursor-pointer"
-                    style={{ color: "#0d7f3f" }}
-                    onClick={() => handleEditAddress(index)}
-                  />
-                  <Delete
-                    className="text-red-500 cursor-pointer"
-                    style={{ color: "#0d7f3f" }}
-                    onClick={() => handleDeleteAddress(index)}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-2">
-                <div className="w-full md:w-1/2">
-                  <label className="block text-sm mb-1">Address Line 1</label>
-                  <TextField
-                    variant="outlined"
-                    name="addressLine1"
-                    value={address.addressLine1}
-                    className="w-full"
-                    size="small"
-                    InputProps={{
-                      readOnly: true,
-                      style: { backgroundColor: "white" },
-                    }}
-                    sx={textFieldStyle}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Street address or P.O. Box
-                  </p>
-                </div>
-                <div className="w-full md:w-1/2">
-                  <label className="block text-sm mb-1">Address Line 2</label>
-                  <TextField
-                    variant="outlined"
-                    name="addressLine2"
-                    value={address.addressLine2}
-                    className="w-full"
-                    size="small"
-                    InputProps={{
-                      readOnly: true,
-                      style: { backgroundColor: "white" },
-                    }}
-                    sx={textFieldStyle}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Optional</p>
-                </div>
-              </div>
-
-              <div className="mb-2">
-                <label className="block text-sm mb-1">City</label>
-                <TextField
-                  variant="outlined"
-                  name="city"
-                  value={address.city}
-                  className="w-half"
-                  size="small"
-                  InputProps={{
-                    readOnly: true,
-                    style: { backgroundColor: "white" },
-                  }}
-                  sx={textFieldStyle}
-                />
-              </div>
-
-              <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-2">
-                <div className="w-full md:w-1/2">
-                  <label className="block text-sm mb-1">State</label>
-                  <TextField
-                    variant="outlined"
-                    name="state"
-                    value={address.state}
-                    className="w-full"
-                    size="small"
-                    InputProps={{
-                      readOnly: true,
-                      style: { backgroundColor: "white" },
-                    }}
-                    sx={textFieldStyle}
-                  />
-                </div>
-
-                <div className="w-full md:w-1/2">
-                  <label className="block text-sm mb-1">PIN Code</label>
-                  <TextField
-                    variant="outlined"
-                    name="pinCode"
-                    value={address.pinCode}
-                    className="w-full"
-                    size="small"
-                    InputProps={{
-                      readOnly: true,
-                      style: { backgroundColor: "white" },
-                    }}
-                    sx={textFieldStyle}
-                  />
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <input
-                  type="checkbox"
-                  id={`useAsShipping-${index}`}
-                  className="mr-2"
-                  readOnly={true}
-                  disabled={true}
-                  checked={address.useAsShipping || false}
-                  onChange={(e) =>
-                    handleShippingCheckboxChange(index, e.target.checked)
-                  }
-                />
-                <label htmlFor={`useAsShipping-${index}`} className="text-sm">
-                  Use as shipping address
-                </label>
-              </div>
-            </div>
-          ))}
+          {/* Use the AddressForm component instead of inline address rendering */}
+          {formData.addresses && formData.addresses.length > 0 && (
+            <AddressForm
+              addresses={formData.addresses}
+              onEdit={handleEditAddress}
+              onDelete={handleDeleteAddress}
+              textFieldStyle={textFieldStyle}
+              onShippingChange={handleShippingCheckboxChange}
+              isEditMode={isEditMode}
+            />
+          )}
         </div>
       )}
 
+      {/* Your existing dialog for address popup */}
       <Dialog
         open={showAddress}
         onClose={() => setShowAddress(false)}
@@ -627,7 +546,13 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
                 setEditingAddress(null);
                 setEditingIndex(null);
               }}
-              onSave={editingAddress ? handleUpdateAddress : handleAddAddress}
+              onSave={(addressData) => {
+                if (editingAddress) {
+                  handleUpdateAddress({ ...addressData, _id: editingAddress._id });
+                } else {
+                  handleAddAddress({ ...addressData, _id: '' });
+                }
+              }}
               initialData={editingAddress || undefined}
             />
           </DialogContentText>

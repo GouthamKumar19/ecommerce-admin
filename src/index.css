@@ -66,7 +66,7 @@ button {
 }
 
 button:hover {
-  border-color: var(--primary-color);
+  border-color: var(--secondary-color);
 }
 
 /* button:focus,
@@ -105,6 +105,7 @@ accent-color: var(--secondary-color, #0d7f3f);
 
   button {
     background-color: var(--secondary-color);
+    color: #ffffff;
   }
 
   html{
@@ -186,4 +187,58 @@ accent-color: var(--secondary-color, #0d7f3f);
   
   
 
+}
+
+/* Add these specific styles for calendar buttons */
+/* Calendar button styles */
+.rdp-button {
+  background-color: transparent !important;
+  color: #374151 !important;
+  border-radius: 4px !important;
+}
+
+.rdp-button:hover:not([disabled]) {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.rdp-day_selected, 
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+  background-color: var(--secondary-color) !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+/* Range selection styles */
+/* Calendar styles */
+.rdp-day_selected {
+  background-color: #0d7f3f !important;
+  color: white !important;
+}
+
+.rdp-day_range_start,
+.rdp-day_range_end {
+  background-color: #0d7f3f !important;
+  color: white !important;
+}
+
+.rdp-day_range_middle {
+  background-color: rgba(13, 127, 63, 0.2) !important;
+}
+
+.rdp-button:not([disabled]):hover {
+  background-color: rgba(13, 127, 63, 0.1) !important;
+}
+.rdp-day_today {
+  border: 1px solid var(--secondary-color) !important;
+  font-weight: bold !important;
+}
+
+.rdp {
+  margin: 0 !important;
+}
+
+.rdp-months {
+  background-color: white !important;
 }

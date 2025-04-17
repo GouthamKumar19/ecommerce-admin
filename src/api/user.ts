@@ -186,3 +186,55 @@ export const createAddress = async (
     throw error;
   }
 };
+
+// Function to delete a user address
+
+
+// Function to delete user addresses
+export const deleteUserAddresses = async (ids: string[]): Promise<void> => {
+  try {
+    const response = await axiosInstance.post("/admin/userAddresses/delete", {
+      ids: ids, // Send an array of IDs
+    });
+
+    if (response?.status === 200) {
+      throw new Error("Failed to delete addresses");
+    }
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to delete addresses");
+    }
+    throw error;
+  }
+};
+
+export const updateUserAddresses = async (addresses: {
+  _id: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pinCode: string;
+  isShipping: boolean;
+}[]): Promise<ApiResponse<string>> => {
+  try {
+    const response = await axiosInstance.put(
+      "/admin/userAddresses/update",
+      addresses
+    );
+    
+    if (response?.status === 200) {
+      return {
+        status: response.status,
+        message: response.data.message || "Success",
+        data: response.data.data || "Addresses updated successfully"
+      };
+    }
+    throw new Error("Failed to update addresses");
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to update addresses");
+    }
+    throw error;
+  }
+};

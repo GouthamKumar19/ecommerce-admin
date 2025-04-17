@@ -11,9 +11,9 @@ const BackArrow = () => {
     const path = location.pathname;
     const state = location.state;
 
-    // Check if we're on a user page
+    
     if (path.includes("/users/")) {
-      // Check if we have user data in state (editing)
+     
       if (state && state.user) {
         return "Edit User";
       } else {
@@ -27,21 +27,24 @@ const BackArrow = () => {
         return "View Order";
       }
     }
-    if (path.includes("/testimonials/")) {
+    if (path.includes("/testimonials/new")) {
+      return "Add Testimonials";
+    }
+     if(path.includes("/testimonials/")){
+      return "Edit Testimonials";
+    }
+
+    if (path.includes("/category/new")) {
       // Check if we have order data in state (viewing or editing)
-      if (state && state.testimonial) {
-        return "Edit Testimonials";
-      } else {
-        return "Add Testimonials";
-      }
+
+      return "Add Category";
     }
     if (path.includes("/category/")) {
-      // Check if we have order data in state (viewing or editing)
-      if (state && state.Category) {
-        return "Edit Category";
-      } else {
-        return "Add Category";
-      }
+      return "Edit Category";
+    }
+
+    if (path.includes("/category/:id")) {
+      return "Edit Category";
     }
 
     if (path.includes("/collection/")) {

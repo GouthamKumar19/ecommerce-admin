@@ -77,8 +77,9 @@ const Pagination = <T,>({
   };
   
   return (
-    <div className="px-6 py-4 flex items-center justify-center border-t border-gray-200 bg-gray-50">
+    <div className="px-6 py-2 flex items-center justify-center border-t border-gray-200 bg-gray-50">
       <div className="flex items-center justify-between w-full">
+        
         <div className="text-center w-full">
           <p className="text-sm text-gray-700 text-center">
             Showing{" "}

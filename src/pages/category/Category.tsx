@@ -84,21 +84,28 @@ const CategoryPage: React.FC = () => {
     );
     setSortConfig({ key, direction });
   };
-
+useEffect(() => {
+    setPage(1);
+  }, [searchValue]);
   useEffect(() => {
     const fetchCategories = async () => {
       setIsLoading(true);
       setError(null); // Reset error state
       try {
+        // Handle null direction case properly
+        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
+          ? { key: "updatedAt", direction: "descending" }  // Default sort
+          : sortConfig;
+          
         const response = await getAllCategory(
           page,
           itemsPerPage,
           searchValue,
-          sortConfig
+          effectiveSortConfig
         );
         console.log("Fetched Categories Response:", response); // Log the entire response
         console.log("Fetched Categories Data:", response.data); // Log the fetched data
-
+    
         if (response.data && Array.isArray(response.data.tableData)) {
           setCategories(response.data.tableData as CategoryRecord[]); // Set the categories from fetched data
           setTotalCount(response.data.totalCount); // Update total category count
@@ -113,7 +120,7 @@ const CategoryPage: React.FC = () => {
          setTimeout(() => setIsLoading(false), 1000);
       }
     };
-
+  
     fetchCategories();
   }, [page, itemsPerPage, searchValue, sortConfig]); // Add page, itemsPerPage, searchValue, and sortConfig as dependencies
 
@@ -150,7 +157,8 @@ const CategoryPage: React.FC = () => {
   };
 
   const handleEditCategory = (categoryId: string) => {
-    navigate(`/category/${categoryId}`);
+    
+    navigate(`/category/${categoryId}`,);
   };
 
   const actionRenderer = (item: CategoryRecord) => (

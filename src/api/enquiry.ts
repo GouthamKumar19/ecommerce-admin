@@ -1,15 +1,12 @@
 import axiosInstance from "./axios";
 import axios from "axios";
 import { EnquiryData } from "../types/enquiry.types";
-
 interface ApiResponse<T> {
   status: number;
   message: string;
   data: T;
 }
-
 let currentController: AbortController | null = null;
-
 export const getAllEnquiry = async (
   payload: any
 ): Promise<ApiResponse<EnquiryData>> => {

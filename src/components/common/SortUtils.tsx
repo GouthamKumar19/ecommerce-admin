@@ -60,17 +60,19 @@ export function getNextSortDirection(
   newKey: string,
   currentDirection: "ascending" | "descending" | null
 ): "ascending" | "descending" | null {
+  // If clicking on a different column, always start with ascending
   if (currentKey !== newKey) {
     return "ascending";
   }
-
+  
+  // Cycle through the three states for the same column
   if (currentDirection === "ascending") {
     return "descending";
   } else if (currentDirection === "descending") {
-    return null;
+    return null; // Reset to original order
+  } else {
+    return "ascending";
   }
-
-  return "ascending";
 }
 
 export type { SortConfig };

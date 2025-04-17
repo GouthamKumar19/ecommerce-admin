@@ -17,7 +17,6 @@ const MainLayout = () => {
   }, [isLargeScreen]);
 
   // Use useCallback to ensure the function reference remains stable
-  // This prevents issues with event handlers being recreated on each render
   const toggleSidebar = useCallback(() => {
     console.log("Toggle sidebar called, current state:", sidebarOpen);
     setSidebarOpen((prevState) => !prevState);
@@ -29,7 +28,6 @@ const MainLayout = () => {
     }
   }, [isLargeScreen]);
 
-  // For debugging - log when the component renders and the current state
   console.log(
     "MainLayout rendering, sidebarOpen:",
     sidebarOpen,
@@ -38,7 +36,7 @@ const MainLayout = () => {
   );
 
   return (
-    <div className=" flex h-screen w-screen bg-gray-100">
+    <div className="flex h-screen w-screen bg-gray-100">
       {/* Main Content Area */}
       <div
         className="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out"
@@ -50,11 +48,27 @@ const MainLayout = () => {
         {/* Make sure to pass the handler properly */}
         <Header onToggleSidebar={toggleSidebar} />
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-hidden p-4">
-          <div className="container mx-auto">
+        {/* Page Content - Added custom scrollbar styling */}
+        <main 
+          className="flex-1 overflow-auto p-4 hide-scrollbar"
+          style={{
+            scrollbarWidth: 'none', /* Firefox */
+            msOverflowStyle: 'none', /* IE and Edge */
+          }}
+        >
+          <div 
+            className="container mx-auto"
+            style={{
+              height: '100%',
+            }}
+          >
             <Outlet />
           </div>
+          <style>{`
+            .hide-scrollbar::-webkit-scrollbar {
+              display: none; /* Chrome, Safari and Opera */
+            }
+          `}</style>
         </main>
       </div>
 

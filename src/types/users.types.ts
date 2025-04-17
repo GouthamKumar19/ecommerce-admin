@@ -7,6 +7,7 @@ export interface AddressData {
   state: string;
   pinCode: string;
   useAsShipping?: boolean;
+
 }
 
 // Define the possible value types that can be stored in a record
@@ -38,6 +39,7 @@ export interface User extends BaseRecord {
   countryCode?: string;
   isEnabled?: boolean; // Indicates if the user is enabled
   addresses?: AddressData[];
+   
 }
 
 // Interface for the API response
