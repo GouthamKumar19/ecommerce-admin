@@ -121,23 +121,12 @@ const DashboardPage = () => {
                 onSelect={setDateRange}
                 numberOfMonths={2}
                 className="flex"
-                modifiersStyles={{
-                  selected: {
-                    backgroundColor: '#0d7f3f',
-                    color: 'white'
-                  },
-                  range_start: {
-                    backgroundColor: '#0d7f3f',
-                    color: 'white'
-                  },
-                  range_end: {
-                    backgroundColor: '#0d7f3f',
-                    color: 'white'
-                  },
-                  range_middle: {
-                    backgroundColor: 'rgba(13, 127, 63, 0.2)',
-                    color: '#374151'
-                  }
+                classNames={{
+                  day_selected: "bg-[#0d7f3f] text-white hover:bg-[#0d7f3f] hover:text-white",
+                  day_today: "bg-[#0d7f3f] text-white",
+                  day_range_middle: "bg-[#0d7f3f]/20 text-gray-700",
+                  day_range_start: "bg-[#0d7f3f] text-white",
+                  day_range_end: "bg-[#0d7f3f] text-white"
                 }}
               />
             </PopoverContent>
@@ -163,8 +152,8 @@ const DashboardPage = () => {
               >
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#0d7f3f" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#0d7f3f" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid 
@@ -199,7 +188,7 @@ const DashboardPage = () => {
                 <Area 
                   type="monotone" 
                   dataKey="sales" 
-                  stroke="#10B981" 
+                  stroke="#0d7f3f" 
                   strokeWidth={2}
                   fill="url(#colorSales)"
                   fillOpacity={1}
@@ -224,7 +213,7 @@ const DashboardPage = () => {
                 borderRadius: 5,
                 backgroundColor: '#E5E7EB',
                 '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#10B981',
+                  backgroundColor: '#0d7f3f',
                 }
               }} 
             />
@@ -243,7 +232,7 @@ const DashboardPage = () => {
                 borderRadius: 5,
                 backgroundColor: '#E5E7EB',
                 '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#10B981',
+                  backgroundColor: '#0d7f3f',
                 }
               }} 
             />
