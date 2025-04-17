@@ -94,7 +94,7 @@ export const getProductsByCollectionId = async (
   try {
     console.log("[API] Fetching products by collection ID:", collectionId);
 
-    const response = await axiosInstance.get(
+    const response = await axiosInstance.post(
       `/admin/collectionProducts/getByCollection/${collectionId}`
     );
     return response.data.tableData;
