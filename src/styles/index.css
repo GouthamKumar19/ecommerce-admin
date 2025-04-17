@@ -1,0 +1,9 @@
+/* Find and remove or modify the global button styles */
+
+
+/* Or add a utility class to exclude certain buttons from global styles */
+.btn-custom {
+  background-color: initial;
+  border-color: initial;
+  color: initial;
+}

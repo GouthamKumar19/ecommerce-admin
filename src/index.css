@@ -59,10 +59,10 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: var(--secondary-color);
+ 
   cursor: pointer;
   transition: border-color 0.25s;
-  color: #ffffff;
+ 
 }
 
 button:hover {
@@ -103,10 +103,10 @@ accent-color: var(--secondary-color, #0d7f3f);
     color: #ffffff;
   }
 
-  button {
+  /* button {
     background-color: var(--secondary-color);
     color: #ffffff;
-  }
+  } */
 
   html{
     overflow: hidden;

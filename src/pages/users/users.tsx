@@ -274,7 +274,7 @@ const UsersPage: React.FC = () => {
           <button
             onClick={handleAddNewUser}
             disabled={isLoading}
-            className="ml-4 px-2 py-2 bg-blue-600 text-white rounded-md"
+            className="ml-4 px-2 py-2 bg-[#0d7f3f] text-white rounded-md hover:bg-[#0d7f3f]/90"
           >
             Add New User
           </button>

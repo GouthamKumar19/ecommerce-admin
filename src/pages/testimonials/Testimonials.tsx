@@ -181,7 +181,7 @@ useEffect(() => {
           </div>
           <div className="flex ml-auto">
             <button
-              className="px-2 py-2 bg-blue-600 text-white rounded-md"
+              className="px-2 py-2 bg-[#0d7f3f] text-white rounded-md hover:bg-[#0d7f3f]/90"
               onClick={handleAddNewTestimonials}
               disabled={isLoading}
             >

@@ -227,7 +227,7 @@ useEffect(() => {
           </div>
           <div className="flex ml-auto">
             <button
-              className="ml-2 px-2.5 py-1 bg-blue-600 text-white rounded-md flex items-center gap-1 text-sm"
+              className="ml-2 px-2.5 py-1 bg-[#0d7f3f] text-white rounded-md hover:bg-[#0d7f3f]/90 flex items-center gap-1 text-sm"
               onClick={handleAddNewCategory}
               disabled={isLoading}
             >

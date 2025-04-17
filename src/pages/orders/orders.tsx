@@ -255,7 +255,10 @@ useEffect(() => {
               onClick={handleFilterClick}
               disabled={isLoading}
               sx={{
-                backgroundColor: "var(--secondary-color)",
+                backgroundColor: "#0d7f3f",
+                '&:hover': {
+                  backgroundColor: "#0d7f3f/90"
+                },
                 color: "#ffffff",
               }}
             >
