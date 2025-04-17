@@ -20,9 +20,7 @@ import {
 import BackArrow from "../../components/common/BackArrow";
 import {
   CollectionProduct,
-  ApiResponse,
   BaseRecord,
-  Collections,
 } from "../../types/collectionResponse.types";
 import { getImage } from "../../utils/imagePreview";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader";
@@ -46,23 +44,21 @@ const ProductAddPage: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const isInitialMount = useRef(true);
 
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
     const fetchProductData = async () => {
+      console.log("Starting fetch with ID:", id);
+
       if (!id) {
         setError("Collection ID is missing");
+        setIsLoading(false);
         return;
       }
 
+      // Create new AbortController for this request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -73,69 +69,46 @@ const ProductAddPage: React.FC = () => {
       setError(null);
 
       try {
-        // Handle null direction case properly
-        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
-          ? { key: "updatedAt", direction: "descending" }  // Default sort
-          : sortConfig;
-          
-        // Update the search payload to allow partial matches anywhere in the string
-        const payload = {
-          search: [
-            {
-              term: searchValue,
-              fields: ["productDetails.name"],
-              startsWith: false, // Allow matches anywhere in the string
-              endsWith: false,   // Allow matches anywhere in the string
-            },
-          ],
-          options: {
-            sortBy: [effectiveSortConfig.key],
-            sortDesc: [effectiveSortConfig.direction === "descending"],
-            page: page,
-            itemsPerPage: itemsPerPage,
-          },
-        };
-        console.log("Payload:", payload);
+        console.log("Making API call to getCollectionById...");
+        const response = await getCollectionById(id);
+        console.log("API Response:", response);
 
-        const response: ApiResponse<Collections> = await getCollectionById(id);
-        console.log("Fetched Collection Response:", response);
+        if (!response || !response.data) {
+          throw new Error("Invalid response from server");
+        }
 
-        if (response?.data?.collectionProducts) {
-          // Filter the products based on the searchValue
-          const filteredProducts = response.data.collectionProducts.filter((product) =>
-            product.productDetails?.name
-              ?.toLowerCase()
-              .includes(searchValue.toLowerCase())
-          );
-
-          setTableData(filteredProducts);
-          console.log("Filtered Collection Products:", filteredProducts);
-
-          // Extract product IDs for later use when adding new products
-          const productIds = filteredProducts
-            .filter((product) => product.isEnabled) // Filter out disabled products
-            .map((product) => product.productId);
-          console.log("Product IDs in this collection:", productIds);
-
-          // Store these IDs in sessionStorage for use in the CollectionAddPage
-          sessionStorage.setItem(
-            "existingProductIds",
-            JSON.stringify(productIds)
-          );
-        } else {
-          throw new Error("Invalid response format");
+        if (!signal.aborted) {
+          if (response?.data?.collectionProducts) {
+            const filteredProducts = response.data.collectionProducts.filter((product) =>
+              product.productDetails?.name
+                ?.toLowerCase()
+                .includes(searchValue.toLowerCase())
+            );
+            setTableData(filteredProducts);
+          } else {
+            throw new Error("No collection products found");
+          }
         }
       } catch (err: any) {
         if (!signal.aborted) {
-          setError(err.message || "Failed to fetch products");
-          console.error("Error fetching products:", err);
+          const errorMessage = err.message || "Failed to fetch products";
+          console.error("Error fetching products:", errorMessage);
+          setError(errorMessage);
         }
       } finally {
-        setIsLoading(false);
+        if (!signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchProductData();
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [id, searchValue, sortConfig, page, itemsPerPage]);
 
   const handleAddNewProduct = () => {

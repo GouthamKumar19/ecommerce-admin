@@ -101,15 +101,25 @@ export const getCollectionById = async (
 ): Promise<ApiResponse<Collections>> => {
   try {
     console.log("[API] Fetching collection with ID:", id);
-
-    const response = await axiosInstance.post(`/admin/collections/getOne/${id}`);
     
-    
-    return {
-      status: response.status,
-      message: response.data.message || "Collection retrieved successfully",
-      data: response.data.data,
-    };
+    try {
+      const response = await axiosInstance.post(`/admin/collections/getOne/${id}`);
+      console.log("[API] Collection response:", response.data);
+      return {
+        status: response.status,
+        message: response.data.message || "Collection retrieved successfully",
+        data: response.data.data,
+      };
+    } catch (firstError) {
+      console.error("[API] First attempt failed:", firstError);
+      const response = await axiosInstance.post(`/admin/collections/getOne`, { id });
+      console.log("[API] Collection response (alternative):", response.data);
+      return {
+        status: response.status,
+        message: response.data.message || "Collection retrieved successfully",
+        data: response.data.data,
+      };
+    }
   } catch (error: any) {
     console.error("[API] Error fetching collection:", error.response?.data || error.message);
     throw error;
