@@ -1,13 +1,14 @@
 "use client";
 import DashboardOrdersTable from "../../components/DashboardOrdersTable";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { CalendarToday, KeyboardArrowDown } from '@mui/icons-material';
-import { LinearProgress } from '@mui/material'; // Import LinearProgress from MUI
+import { CalendarToday, KeyboardArrowDown, TrendingUp, ShoppingCart, Group, CurrencyExchange } from '@mui/icons-material';
+import { LinearProgress} from '@mui/material';
 import { useState } from "react";
-import { Menu, MenuItem } from "@mui/material"; // Import Menu and MenuItem from MUI
+import { Menu, MenuItem } from "@mui/material";
 import { addDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
+import { motion } from 'framer-motion';
 import {
   Popover,
   PopoverContent,
@@ -200,10 +201,15 @@ const DashboardPage = () => {
 
         {/* Order Status Cards - Takes up 1/3 of the width */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <motion.div 
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-all duration-300"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-medium text-gray-600">NEW ORDER</h3>
-              <span className="text-xl font-bold">500</span>
+              <span className="text-xl font-bold text-[#0d7f3f]">500</span>
             </div>
             <LinearProgress 
               variant="determinate" 
@@ -214,15 +220,21 @@ const DashboardPage = () => {
                 backgroundColor: '#E5E7EB',
                 '& .MuiLinearProgress-bar': {
                   backgroundColor: '#0d7f3f',
+                  transition: 'transform 0.8s ease-in-out',
                 }
               }} 
             />
-          </div>
+          </motion.div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <motion.div 
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-all duration-300"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-medium text-gray-600">CONFIRMED ORDER</h3>
-              <span className="text-xl font-bold">200</span>
+              <span className="text-xl font-bold text-[#0d7f3f]">200</span>
             </div>
             <LinearProgress 
               variant="determinate" 
@@ -233,34 +245,87 @@ const DashboardPage = () => {
                 backgroundColor: '#E5E7EB',
                 '& .MuiLinearProgress-bar': {
                   backgroundColor: '#0d7f3f',
+                  transition: 'transform 0.8s ease-in-out',
                 }
               }} 
             />
-          </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">ORDERS</h3>
-          <p className="text-2xl font-bold">1000</p>
-        </div>
+        <motion.div 
+          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">ORDERS</h3>
+              <p className="text-2xl font-bold text-[#0d7f3f]">1000</p>
+            </div>
+            <div className="p-3 bg-[#0d7f3f]/10 rounded-full">
+              <ShoppingCart sx={{ color: '#0d7f3f', fontSize: 24 }} />
+            </div>
+          </div>
+        </motion.div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">ENQUIRIES</h3>
-          <p className="text-2xl font-bold">1000</p>
-        </div>
+        <motion.div 
+          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">ENQUIRIES</h3>
+              <p className="text-2xl font-bold text-[#0d7f3f]">1000</p>
+            </div>
+            <div className="p-3 bg-[#0d7f3f]/10 rounded-full">
+              <TrendingUp sx={{ color: '#0d7f3f', fontSize: 24 }} />
+            </div>
+          </div>
+        </motion.div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">TOTAL REVENUE</h3>
-          <p className="text-2xl font-bold">1000</p>
-        </div>
+        <motion.div 
+          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">TOTAL REVENUE</h3>
+              <p className="text-2xl font-bold text-[#0d7f3f]">1000</p>
+            </div>
+            <div className="p-3 bg-[#0d7f3f]/10 rounded-full">
+              <CurrencyExchange sx={{ color: '#0d7f3f', fontSize: 24 }} />
+            </div>
+          </div>
+        </motion.div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">TOTAL USERS</h3>
-          <p className="text-2xl font-bold">1000</p>
-        </div>
+        <motion.div 
+          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">TOTAL USERS</h3>
+              <p className="text-2xl font-bold text-[#0d7f3f]">1000</p>
+            </div>
+            <div className="p-3 bg-[#0d7f3f]/10 rounded-full">
+              <Group sx={{ color: '#0d7f3f', fontSize: 24 }} />
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* Recent Orders Table */}
