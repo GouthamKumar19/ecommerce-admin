@@ -13,7 +13,7 @@ import { CalendarToday, KeyboardArrowDown } from "@mui/icons-material";
 import { LinearProgress } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Menu, MenuItem } from "@mui/material";
-import { addDays, format } from "date-fns";
+import { addDays, format, startOfDay, endOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 import {
@@ -21,7 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getStats} from "@/api/dashboard";
+import { getStats } from "@/api/dashboard";
 import { DataResponse } from "@/types/dashboard.types";
 
 // Date preset options
@@ -112,9 +112,14 @@ const DashboardPage = () => {
       const fetchCustomDateRangeStats = async () => {
         setLoading(true);
         try {
+          // Convert dates to milliseconds and set appropriate time
+          // Using non-null assertion since we've already checked that the dates exist
+          const startDateWithTime = startOfDay(range.from!).getTime(); // 00:00:00
+          const endDateWithTime = endOfDay(range.to!).getTime(); // 23:59:59
+
           const response = await getStats({
-            // startDate: range.from.toISOString(),
-            // endDate: range.to.toISOString(),
+            startDate: startDateWithTime.toString(),
+            endDate: endDateWithTime.toString(),
           });
           setStatsData(response);
         } catch (error) {
