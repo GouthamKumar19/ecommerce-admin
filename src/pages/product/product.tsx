@@ -75,7 +75,7 @@ const ProductPage: React.FC = () => {
         setError("Failed to fetch products");
         console.error("[DEBUG] Error fetching products:", error);
       } finally {
-        setIsLoading(false);
+        setTimeout(() => setIsLoading(false), 1000);
       }
     };
 
