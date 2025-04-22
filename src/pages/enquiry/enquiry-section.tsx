@@ -118,7 +118,7 @@ const EnquiryPage: React.FC = () => {
         setEnquiries([]);
         setTotalEnquiries(0);
       } finally {
-        setIsLoading(false); // End loading
+        setTimeout(() => setIsLoading(false), 1000); // End loading
       }
     };
   

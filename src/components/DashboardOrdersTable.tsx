@@ -197,7 +197,7 @@ const DashboardOrdersTable: React.FC = () => {
  ];
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="pl-4 pr-4 bg-white rounded-lg shadow overflow-hidden">
       <div className="p-4 flex justify-center items-center">  {/* Updated flex classes */}
         <div className="w-full max-w-md">
           <SearchBar

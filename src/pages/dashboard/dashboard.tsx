@@ -134,20 +134,65 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="mb-4">Loading dashboard data...</div>
-          <LinearProgress
-            sx={{
-              width: "200px",
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: "#E5E7EB",
-              "& .MuiLinearProgress-bar": {
-                backgroundColor: "#0d7f3f",
-              },
-            }}
-          />
+      <div className="w-full">
+        {/* Top Controls Skeleton */}
+        <div className="flex justify-between mb-6">
+          <div></div>
+          <div className="flex gap-4">
+            <div className="h-10 w-32 bg-gray-200 rounded-md animate-pulse"></div>
+            <div className="h-10 w-40 bg-gray-200 rounded-md animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Main Dashboard Content Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Chart Skeleton */}
+          <div className="bg-white rounded-lg shadow p-6 lg:col-span-2">
+            <div className="h-7 w-40 bg-gray-200 rounded mb-4 animate-pulse"></div>
+            <div className="h-[300px] w-full bg-gray-100 rounded animate-pulse"></div>
+          </div>
+
+          {/* Order Status Cards Skeleton */}
+          <div className="flex flex-col gap-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="h-5 w-24 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-7 w-10 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="h-10 w-full bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="h-5 w-36 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-7 w-10 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="h-10 w-full bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className="bg-white rounded-lg shadow p-6">
+              <div className="h-6 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
+              <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Recent Orders Table Skeleton */}
+        <div className="mt-8">
+          <div className="h-7 w-40 bg-gray-200 rounded mb-6 animate-pulse"></div>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-4">
+              <div className="h-10 w-full bg-gray-100 rounded mb-4 animate-pulse"></div>
+              {[...Array(5)].map((_, index) => (
+                <div key={index} className="h-16 w-full bg-gray-100 rounded-md mb-3 animate-pulse"></div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
