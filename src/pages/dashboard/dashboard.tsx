@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/popover";
 import { getStats } from "@/api/dashboard";
 import { DataResponse } from "@/types/dashboard.types";
+import { ShoppingBagOutlined, MailOutline, AttachMoney, GroupOutlined } from "@mui/icons-material";
 
 // Date preset options
 const DATE_PRESETS = {
@@ -402,28 +403,44 @@ const DashboardPage = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">ORDERS</h3>
-          <p className="text-2xl font-bold">{statsData?.totalOrders || 0}</p>
+        <div className="bg-white rounded-lg shadow p-6 flex items-center gap-4 transition-transform duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+          <div className="bg-[#e6f4ea] p-3 rounded-full">
+            <ShoppingBagOutlined sx={{ color: "#0d7f3f", fontSize: 28 }} />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">ORDERS</h3>
+            <p className="text-2xl font-bold">{statsData?.totalOrders || 0}</p>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">ENQUIRIES</h3>
-          <p className="text-2xl font-bold">{statsData?.totalEnquiries || 0}</p>
+        <div className="bg-white rounded-lg shadow p-6 flex items-center gap-4 transition-transform duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+          <div className="bg-[#e6f4ea] p-3 rounded-full">
+            <MailOutline sx={{ color: "#0d7f3f", fontSize: 28 }} />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">ENQUIRIES</h3>
+            <p className="text-2xl font-bold">{statsData?.totalEnquiries || 0}</p>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">
-            TOTAL REVENUE
-          </h3>
-          <p className="text-2xl font-bold">{statsData?.totalRevenue || 0}</p>
+        <div className="bg-white rounded-lg shadow p-6 flex items-center gap-4 transition-transform duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+          <div className="bg-[#e6f4ea] p-3 rounded-full">
+            <AttachMoney sx={{ color: "#0d7f3f", fontSize: 28 }} />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">TOTAL REVENUE</h3>
+            <p className="text-2xl font-bold">{statsData?.totalRevenue || 0}</p>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">
-            TOTAL USERS
-          </h3>
-          <p className="text-2xl font-bold">{statsData?.totalUsers || 0}</p>
+        <div className="bg-white rounded-lg shadow p-6 flex items-center gap-4 transition-transform duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+          <div className="bg-[#e6f4ea] p-3 rounded-full">
+            <GroupOutlined sx={{ color: "#0d7f3f", fontSize: 28 }} />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">TOTAL USERS</h3>
+            <p className="text-2xl font-bold">{statsData?.totalUsers || 0}</p>
+          </div>
         </div>
       </div>
 
