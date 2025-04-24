@@ -35,6 +35,7 @@ const UsersPage: React.FC = () => {
   const [dialogSubtitle, setDialogSubtitle] = useState("");
   const [currentRow, setCurrentRow] = useState<User | null>(null);
   const navigate = useNavigate();
+  
 
   const fetchUserData = async () => {
     setIsLoading(true);
@@ -59,7 +60,7 @@ const UsersPage: React.FC = () => {
         console.error("Error fetching users:", err);
         setError(err.message || "Failed to fetch users");
       } finally {
-        setIsLoading(false);
+       setTimeout(() => setIsLoading(false), 1000);
       }
     });
   };
