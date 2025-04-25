@@ -16,7 +16,8 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
-import { toast } from "react-toastify"; // Import toast
+// Remove the toast import
+// import { toast } from "react-toastify"; 
 
 const UsersPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -115,10 +116,10 @@ const UsersPage: React.FC = () => {
 
       fetchUserData(); // Refresh the user list
 
-      // Display toast message
-      toast.success(
-        `User ${updatedStatus ? "enabled" : "disabled"} successfully`
-      );
+      // Remove the toast notification logic
+      // toast.success(
+      //   `User ${updatedStatus ? "enabled" : "disabled"} successfully`
+      // );
     } catch (error) {
       console.error("Failed to toggle user status:", error);
     } finally {

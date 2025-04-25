@@ -84,7 +84,7 @@ axiosInstance.interceptors.response.use(
 
     // Show error message from server if available
     const errorMessage =
-      (error.response?.data as any)?.message ||
+      (error.response?.data as any)?.toastMessage ||
       (error.response?.data as any)?.error ||
       error.message;
 

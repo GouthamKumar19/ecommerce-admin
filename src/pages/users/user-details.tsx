@@ -5,7 +5,6 @@ import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
 import { ActionContext } from "../../context/ActionContext";
 import { useParams, useNavigate } from "react-router-dom";
-import { Snackbar, Alert } from "@mui/material";
 import { User, AddressData } from "../../types/users.types";
 
 import {
@@ -26,9 +25,9 @@ export const UserDetailsPage = () => {
   const { id } = useParams();
 
   // Snackbar state
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+  const [, setOpenSnackbar] = useState(false);
+  const [, setSnackbarMessage] = useState("");
+  const [, setSnackbarSeverity] = useState<"success" | "error">(
     "success"
   );
 
@@ -312,17 +311,7 @@ useEffect(() => {
         />
       </Box>
 
-      {/* Snackbar for messages */}
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={3000}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        onClose={() => setOpenSnackbar(false)}
-      >
-        <Alert severity={snackbarSeverity} sx={{ width: "100%" }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      {/* Removed Snackbar component */}
     </Box>
   );
 };
