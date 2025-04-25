@@ -201,11 +201,10 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
       }
 
       if (name === "email") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regular expression for email validation
         setErrors((prev) => ({
           ...prev,
-          email: value.endsWith("@gmail.com")
-            ? ""
-            : "Email must end with @gmail.com.",
+          email: emailRegex.test(value) ? "" : "Email must be valid",
         }));
       }
     }
