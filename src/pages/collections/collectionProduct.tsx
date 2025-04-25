@@ -371,7 +371,7 @@ const ProductAddPage: React.FC = () => {
                   : "text-gray-900"
               }`}
             >
-              ${typedItem?.productDetails?.price}
+              ₹{typedItem?.productDetails?.price}
             </span>
           </div>
         );
