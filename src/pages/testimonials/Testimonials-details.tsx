@@ -29,8 +29,10 @@ const TestimonialsDetails = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [ratingError, setRatingError] = useState<string | null>(null); // <-- Add this line
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({
     name: false,
+    ratings: false, // <-- Add this line
   });
   const { setActionHandlers } = useContext(ActionContext);
 
@@ -141,20 +143,31 @@ const TestimonialsDetails = () => {
     newValue: number | null
   ) => {
     setFormData((prev) => ({ ...prev, ratings: newValue || 0 }));
+    if (!touched.ratings) {
+      setTouched((prev) => ({ ...prev, ratings: true }));
+    }
+    if (newValue && newValue > 0) {
+      setRatingError(null); // Clear error when a valid rating is selected
+    }
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    // Mark name as touched to show validation errors if any
-    setTouched({ ...touched, name: true });
+    setTouched({ ...touched, name: true, ratings: true }); // <-- Mark ratings as touched
 
-    // Validate name before submission
     const currentNameError = validateName(formData.name);
     setNameError(currentNameError);
 
-    // Check if name is valid before proceeding
-    if (currentNameError) {
+    // Rating validation
+    if (formData.ratings === 0) {
+      setRatingError("Please select a rating.");
+    } else {
+      setRatingError(null);
+    }
+
+    // If any validation error, do not proceed
+    if (currentNameError || formData.ratings === 0) {
       return;
     }
 
@@ -273,8 +286,16 @@ const TestimonialsDetails = () => {
                   onChange={handleRatingChange}
                   precision={1}
                   size="medium"
+                  onBlur={() => {
+                    if (!touched.ratings) {
+                      setTouched((prev) => ({ ...prev, ratings: true }));
+                    }
+                  }}
                 />
               </Box>
+              {touched.ratings && ratingError && (
+                <div className="text-red-600 text-xs mt-1 font-medium text-left">{ratingError}</div>
+              )}
             </div>
           </div>
 
