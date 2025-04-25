@@ -23,7 +23,7 @@ interface TestimonialFormData {
 const TestimonialsDetails = () => {
   const [formData, setFormData] = useState<TestimonialFormData>({
     name: "",
-    ratings: 5,
+    ratings: 0,
     description: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
