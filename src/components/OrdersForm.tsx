@@ -210,7 +210,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             <button
               className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 ${
                 showPaymentDropdown
-                  ? "focus:outline-none focus:ring-2 focus:ring-green-500"
+                  ? "focus:outline-none "
                   : ""
               }`}
               style={{
@@ -254,7 +254,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             <button
               className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 ${
                 showOrderDropdown
-                  ? "focus:outline-none focus:ring-2 focus:ring-green-500"
+                  ? "focus:outline-none"
                   : ""
               }`}
               style={{
