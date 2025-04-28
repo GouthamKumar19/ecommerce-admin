@@ -1,4 +1,5 @@
 import { Table } from "@tanstack/react-table";
+import Button from "@mui/material/Button"; // <-- Add this line
 
 interface PaginationProps<T> {
   table: Table<T>;
@@ -103,55 +104,98 @@ const Pagination = <T,>({
           <nav className="relative z-0 inline-flex items-center space-x-1" aria-label="Pagination">
             {/* Previous Button - only show if more than 3 pages */}
             {totalPages > 3 && (
-              <button
+              <Button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`relative inline-flex items-center justify-center w-9 h-9 rounded-md text-sm font-medium transition-all duration-200 ${
-                  currentPage === 1
-                    ? "text-gray-300 cursor-not-allowed bg-[#0d7f3f] border-none"
-                    : "text-white bg-[#0d7f3f] hover:bg-[#0d7f3f]/90 border-none hover:shadow-sm"
-                }`}
+                variant="contained"
+                size="small"
+                sx={{
+                  minWidth: 0,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "6px",
+                  bgcolor: "#0d7f3f",
+                  color: currentPage === 1 ? "#d1d5db" : "#fff",
+                  boxShadow: "none",
+                  mr: 1,
+                  fontSize: "1rem",
+                  fontWeight: 500,
+                  "&:hover": {
+                    bgcolor: "#0d7f3f",
+                    opacity: 0.9,
+                  },
+                }}
                 aria-label="Previous page"
               >
                 {"<"}
-              </button>
+              </Button>
             )}
 
             {/* Page Numbers */}
-            {getPageNumbers().map((page, index) => (
-              typeof page === 'number' ? (
-                <button
+            {getPageNumbers().map((page, index) =>
+              typeof page === "number" ? (
+                <Button
                   key={index}
                   onClick={() => goToPage(page)}
-                  className={`inline-flex items-center justify-center transition-all duration-200 rounded-md ${
-                    currentPage === page
-                      ? "w-10 h-10 text-sm font-medium bg-[#0d7f3f] border-2 border-[#0d7f3f] text-white font-semibold shadow-sm transform scale-105"
-                      : "w-9 h-9 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:shadow-sm"
-                  }`}
+                  variant={currentPage === page ? "contained" : "outlined"}
+                  size="small"
+                  sx={{
+                    minWidth: 0,
+                    width: currentPage === page ? 32 : 28,
+                    height: currentPage === page ? 32 : 28,
+                    borderRadius: "6px",
+                    bgcolor: currentPage === page ? "#0d7f3f" : "#fff",
+                    color: currentPage === page ? "#fff" : "#374151",
+                    borderColor: currentPage === page ? "#0d7f3f" : "#d1d5db",
+                    fontWeight: currentPage === page ? 600 : 500,
+                    fontSize: "0.95rem",
+                    boxShadow: currentPage === page ? 2 : "none",
+                    mx: 0.5, // <-- Add horizontal margin for spacing
+                    "&:hover": {
+                      bgcolor: "#0d7f3f",
+                      color: "#fff",
+                    },
+                  }}
                 >
                   {page}
-                </button>
+                </Button>
               ) : (
-                <span key={index} className="inline-flex items-center justify-center px-2 h-9 text-gray-400">
+                <span
+                  key={index}
+                  className="inline-flex items-center justify-center px-2 h-7 text-gray-400"
+                >
                   ...
                 </span>
               )
-            ))}
+            )}
 
             {/* Next Button - only show if more than 3 pages */}
             {totalPages > 3 && (
-              <button
+              <Button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage >= totalPages}
-                className={`relative inline-flex items-center justify-center w-9 h-9 rounded-md text-sm font-medium transition-all duration-200 ${
-                  currentPage >= totalPages
-                    ? "text-gray-300 cursor-not-allowed bg-[#0d7f3f] border-none"
-                    : "text-white bg-[#0d7f3f] hover:bg-[#0d7f3f]/90 border-none hover:shadow-sm"
-                }`}
+                variant="contained"
+                size="small"
+                sx={{
+                  minWidth: 0,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "6px",
+                  bgcolor: "#0d7f3f",
+                  color: currentPage >= totalPages ? "#d1d5db" : "#fff",
+                  boxShadow: "none",
+                  ml: 1,
+                  fontSize: "1rem",
+                  fontWeight: 500,
+                  "&:hover": {
+                    bgcolor: "#0d7f3f",
+                    opacity: 0.9,
+                  },
+                }}
                 aria-label="Next page"
               >
                 {">"}
-              </button>
+              </Button>
             )}
           </nav>
         </div>

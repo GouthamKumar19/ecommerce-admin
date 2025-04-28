@@ -5,7 +5,6 @@ import BackArrow from "../../components/common/BackArrow";
 import ActionBox from "../../components/common/ActionModel";
 import { ActionContext } from "../../context/ActionContext";
 import { useParams, useNavigate } from "react-router-dom";
-import { Snackbar, Alert } from "@mui/material";
 import { User, AddressData } from "../../types/users.types";
 
 import {
@@ -26,9 +25,9 @@ export const UserDetailsPage = () => {
   const { id } = useParams();
 
   // Snackbar state
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+  const [, setOpenSnackbar] = useState(false);
+  const [, setSnackbarMessage] = useState("");
+  const [, setSnackbarSeverity] = useState<"success" | "error">(
     "success"
   );
 
@@ -104,13 +103,21 @@ useEffect(() => {
 
     try {
       // Extract addresses from formData to handle separately
-      const { addresses, ...userData } = formData;
+      const { addresses, ...newUserData } = formData;
       let response;
       let userId;
 
-      if (isEdit && id) {
-        // Update existing user
-        response = await updateUser(id, userData);
+      if (isEdit && id && userData) { // Add null check for userData
+        // Determine which fields have changed
+        const updatedFields = Object.keys(newUserData).reduce((acc, key) => {
+          if (newUserData[key] !== userData[key]) {
+            acc[key] = newUserData[key];
+          }
+          return acc;
+        }, {} as Partial<User>);
+
+        // Update existing user with only changed fields
+        response = await updateUser(id, updatedFields);
         userId = id;
         
         // Update addresses if they exist
@@ -152,7 +159,7 @@ useEffect(() => {
         }
       } else {
         // Create new user
-        response = await createUser(userData);
+        response = await createUser(newUserData);
 
         // Extract user ID from response - ensure we're getting the correct property
         // Fix: Type the response data correctly
@@ -312,17 +319,7 @@ useEffect(() => {
         />
       </Box>
 
-      {/* Snackbar for messages */}
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={3000}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        onClose={() => setOpenSnackbar(false)}
-      >
-        <Alert severity={snackbarSeverity} sx={{ width: "100%" }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      {/* Removed Snackbar component */}
     </Box>
   );
 };

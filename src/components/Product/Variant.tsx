@@ -177,7 +177,7 @@ export const VariantComponent: React.FC<{
                 `Option name changed to: ${e.target.value} for variant ${variant.id}`
               );
             }}
-            placeholder="Size"
+            placeholder="Size/Color"
             sx={{ mb: 2 }}
             disabled={isComplete}
             error={showAlert && optionName.trim() === ""}

@@ -154,14 +154,7 @@ const ProductPage: React.FC = () => {
      ),
    },
    {
-     header: (
-       <SortableHeader
-         label="Image"
-         columnKey="imageUrl"
-         sortConfig={sortConfig}
-         onSort={handleSort}
-       />
-     ),
+     header: <span></span>, // Removed SortableHeader for Image
      key: "imageUrl",
      render: (item: Product) => (
        <div className="text-center flex-shrink-0 h-10 w-10">

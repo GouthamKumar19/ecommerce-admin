@@ -5,9 +5,8 @@ import {
   Box,
   CircularProgress,
   TextField,
-  Tooltip,
 } from "@mui/material";
-import InfoOutlined from "@mui/icons-material/InfoOutlined";
+
 import ImageSelection, {
   ProductImage,
 } from "../components/common/ImageSelection";
@@ -344,20 +343,7 @@ const CollectionForm: React.FC = () => {
             <Typography variant="subtitle1" gutterBottom align="left">
               Collection Images
             </Typography>
-            <Tooltip
-              title="Press on image to add products to collection"
-              arrow
-              placement="right"
-            >
-              <InfoOutlined
-                sx={{
-                  ml: 1,
-                  fontSize: 18,
-                  color: "primary.main",
-                  cursor: "help",
-                }}
-              />
-            </Tooltip>
+            
           </Box>
           <Box
             sx={{

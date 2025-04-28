@@ -42,13 +42,18 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       "/profile": "PROFILE",
       "/orders": "ORDERS",
       "/dashboard": "DASHBOARD",
-      "/collection/:id": "COLLECTIONS",
       "/collections/collection-product": "COLLECTIONS",
       "/collection/collection-add-product": "COLLECTIONS",
       "/collection/collection-product": "COLLECTIONS",
       "/collection/new": "COLLECTIONS",
       "/": "DASHBOARD",
     };
+
+    // --- Add this block for dynamic collection edit route ---
+    if (/^\/collection\/[^/]+$/.test(path)) {
+      return "COLLECTIONS";
+    }
+    // -------------------------------------------------------
 
     // Check each pattern against the current path
     for (const [pattern, title] of Object.entries(pathPatterns)) {

@@ -16,6 +16,8 @@ import {
   useSortableData,
   getNextSortDirection,
 } from "../../components/common/SortUtils";
+// Remove the toast import
+// import { toast } from "react-toastify"; 
 
 const UsersPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -35,24 +37,22 @@ const UsersPage: React.FC = () => {
   const [dialogSubtitle, setDialogSubtitle] = useState("");
   const [currentRow, setCurrentRow] = useState<User | null>(null);
   const navigate = useNavigate();
-  
 
   const fetchUserData = async () => {
     setIsLoading(true);
     setError(null);
     setTimeout(async () => {
       try {
-        // Always pass a valid SortConfig object
-        // If direction is null, use the default sort parameters
-        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
-          ? { key: "updatedAt", direction: "descending" }  // Default sort
-          : sortConfig;
-                
+        const effectiveSortConfig: SortConfig =
+          sortConfig.direction === null
+            ? { key: "updatedAt", direction: "descending" } // Default sort
+            : sortConfig;
+
         const response = await getAllUser(
           page,
           itemsPerPage,
           searchValue,
-          effectiveSortConfig  // This is always a valid SortConfig object
+          effectiveSortConfig // This is always a valid SortConfig object
         );
         setUsers(response.data.tableData);
         setPageCount(response.data.totalCount);
@@ -60,7 +60,7 @@ const UsersPage: React.FC = () => {
         console.error("Error fetching users:", err);
         setError(err.message || "Failed to fetch users");
       } finally {
-       setTimeout(() => setIsLoading(false), 1000);
+        setTimeout(() => setIsLoading(false), 1000);
       }
     });
   };
@@ -87,7 +87,6 @@ const UsersPage: React.FC = () => {
       } else if (sortConfig.direction === "descending") {
         return <ArrowDownwardIcon />;
       } else if (sortConfig.direction === null) {
-        // Handle null direction case
         return <SwapVertIcon />;
       }
     }
@@ -101,15 +100,12 @@ const UsersPage: React.FC = () => {
     }
 
     try {
-      // Determine the updated status
       const updatedStatus = !user.isEnabled;
 
-      // Send only the `isEnabled` property to the API
       await updateUser(user._id as string, {
         isEnabled: updatedStatus,
       });
 
-      // Update the UI state after toggling
       setDisabledRows((prev) => {
         if (prev.includes(String(user._id))) {
           return prev.filter((rowId) => rowId !== String(user._id));
@@ -119,6 +115,11 @@ const UsersPage: React.FC = () => {
       });
 
       fetchUserData(); // Refresh the user list
+
+      // Remove the toast notification logic
+      // toast.success(
+      //   `User ${updatedStatus ? "enabled" : "disabled"} successfully`
+      // );
     } catch (error) {
       console.error("Failed to toggle user status:", error);
     } finally {
@@ -188,7 +189,6 @@ const UsersPage: React.FC = () => {
       key: "phone",
       render: (item: User) => (
         <div className="text-sm text-gray-900">
-          
           {item.phone || "N/A"}
         </div>
       ),
@@ -317,5 +317,3 @@ const UsersPage: React.FC = () => {
 };
 
 export default UsersPage;
-
-// Define AddressData interface first so we can reference it

@@ -157,7 +157,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
                   />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900 text-base">
+                  <p className="font-semibold text-gray-900 uppercase text-base">
                     {product.productDetails.name}
                   </p>
                   <p className="text-sm text-gray-700 font-normal">
@@ -174,10 +174,10 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
                       <span className="font-medium text-gray-700 mr-2">
                         AMOUNT:
                       </span>
-                      <span className="text-gray-900">${product.amount}</span>
+                      <span className="text-gray-900">₹{product.amount}</span>
                       {product.productDetails.slashedPrice && (
                         <span className="ml-1 line-through text-gray-400">
-                          ${product.productDetails.slashedPrice}
+                          ₹{product.productDetails.slashedPrice}
                         </span>
                       )}
                     </div>
@@ -210,12 +210,12 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             <button
               className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 ${
                 showPaymentDropdown
-                  ? "focus:outline-none focus:ring-2 focus:ring-green-500"
+                  ? "focus:outline-none "
                   : ""
               }`}
               style={{
                 background: "var(--primary-color)",
-                color: "var(--secondary-color)",
+                color: "black",
               }}
               onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
             >
@@ -254,12 +254,12 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             <button
               className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 ${
                 showOrderDropdown
-                  ? "focus:outline-none focus:ring-2 focus:ring-green-500"
+                  ? "focus:outline-none"
                   : ""
               }`}
               style={{
                 background: "var(--primary-color)",
-                color: "var(--secondary-color)",
+                color: "black",
               }}
               onClick={() => setShowOrderDropdown(!showOrderDropdown)}
             >

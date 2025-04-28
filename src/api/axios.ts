@@ -63,6 +63,7 @@ axiosInstance.interceptors.response.use(
       response.data?.toastMessage &&
       response.data.toastMessage !== "User details fetched successfully" &&
       response.data.toastMessage !== "An unexpected error occurred" &&
+      response.data.toastMessage!== "All subcategories updated successfully" &&
       response.data.toastMessage !== lastToastMessage // Check if this is a new message
     ) {
       console.log("response in axios instance inside if", response);
@@ -84,7 +85,7 @@ axiosInstance.interceptors.response.use(
 
     // Show error message from server if available
     const errorMessage =
-      (error.response?.data as any)?.message ||
+      (error.response?.data as any)?.toastMessage ||
       (error.response?.data as any)?.error ||
       error.message;
 

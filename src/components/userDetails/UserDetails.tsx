@@ -3,11 +3,11 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import TextField from "@mui/material/TextField";
+import TextField from "@mui/material/TextField"; // Keep this import
 import AddressForm from "./AddressForm"; // Import the AddressForm component
 
 import {
-  InputAdornment,
+  InputAdornment, // Keep this import
   MenuItem,
   Select,
   FormControl,
@@ -17,6 +17,9 @@ import {
 import AddressPopup from "./AddressPopup";
 import { User } from "../../types/users.types";
 import { deleteUserAddresses } from "../../api/user";
+
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { IconButton } from "@mui/material"; // Keep only IconButton from this line
 
 interface AddressData {
   _id: string; // Add this line to include the _id field
@@ -198,11 +201,10 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
       }
 
       if (name === "email") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regular expression for email validation
         setErrors((prev) => ({
           ...prev,
-          email: value.endsWith("@gmail.com")
-            ? ""
-            : "Email must end with @gmail.com.",
+          email: emailRegex.test(value) ? "" : "Email must be valid",
         }));
       }
     }
@@ -338,6 +340,12 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
     "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
       borderColor: "rgba(0, 0, 0, 0.23)", // Keep standard border color when hovered
     },
+  };
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
   return (
@@ -478,7 +486,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
             </label>
             <TextField
               variant="outlined"
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
               value={formData.password}
@@ -489,6 +497,16 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({
               size="small"
               InputProps={{
                 style: { backgroundColor: "white" },
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleTogglePasswordVisibility}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
               }}
               sx={{
                 ...textFieldStyle,
