@@ -18,6 +18,7 @@ import { Product } from "../../types/product.types";
 import { Variant } from "../../components/Product/VariantManager";
 import { getImage } from "../../utils/imagePreview";
 import { Category } from "../../types/category.types";
+import { toast } from "react-toastify"; // Import toast from react-toastify
 
 interface ProductImage {
   id: number;
@@ -279,6 +280,7 @@ export const ProductDetails = () => {
   const processImages = async () => {
     const selectedImages = images.filter((img) => img.selected);
     if (selectedImages.length < 4) {
+      toast.error("Please select at least 4 images."); // Display toast message
       throw new Error("Please select at least 4 images.");
     }
 
@@ -520,6 +522,12 @@ export const ProductDetails = () => {
   };
 
   const handleSave = async () => {
+    const selectedImages = images.filter((img) => img.selected);
+    if (selectedImages.length < 4) {
+      toast.error("Please select at least 4 images."); // Display toast message
+      return; // Exit the function early if validation fails
+    }
+
     if (!validateForm()) {
       return;
     }
