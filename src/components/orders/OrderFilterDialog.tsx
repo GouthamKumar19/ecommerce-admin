@@ -350,12 +350,11 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
               className="flex"
               classNames={{
                 day_selected:
-                  "bg-[var(--secondary-color)] text-white hover:bg-[var(--secondary-color)] hover:text-white",
-                day_today: "bg-[var(--secondary-color)] text-white",
-                day_range_middle:
-                  "bg-[var(--secondary-color)]/20 text-gray-700",
-                day_range_start: "bg-[var(--secondary-color)] text-white",
-                day_range_end: "bg-[var(--secondary-color)] text-white",
+                  "bg-[#0d7f3f] text-white hover:bg-[#0d7f3f] hover:text-white",
+                day_today: "bg-[#0d7f3f] text-white",
+                day_range_middle: "bg-[#0d7f3f]/20 text-gray-700",
+                day_range_start: "bg-[#0d7f3f] text-white",
+                day_range_end: "bg-[#0d7f3f] text-white",
               }}
             />
           </PopoverContent>
