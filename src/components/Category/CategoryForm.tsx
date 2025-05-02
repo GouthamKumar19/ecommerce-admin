@@ -62,8 +62,13 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const regex = /^[A-Za-z\s]+$/;
-    const isValid = regex.test(value) || value === "";
-    onNameChange(value, isValid);
+    const isNameValid = regex.test(value) || value === "";
+    const isLengthValid = value.length <= 15;
+
+    // Only update the value if it's within limits or if we're deleting characters
+    if (isLengthValid || value.length < categoryName.length) {
+      onNameChange(value, isNameValid && isLengthValid);
+    }
   };
 
   const handleImagesChange = React.useCallback(
@@ -81,6 +86,9 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   const handleSaveSuccess = () => {
     console.log("Category and subcategories saved successfully.");
   };
+
+  // Determine if character limit is exceeded
+  const isCharLimitExceeded = categoryName.length > 15;
 
   return (
     <div className="ml-8 mr-8 mb-6">
@@ -102,12 +110,27 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               onChange={handleNameChange}
               placeholder="Category Name"
               variant="outlined"
-              error={errors.categoryName}
+              error={errors.categoryName || isCharLimitExceeded}
               helperText={
-                errors.categoryName ? "Only letters and spaces are allowed" : ""
+                errors.categoryName
+                  ? "Only letters and spaces are allowed"
+                  : isCharLimitExceeded
+                    ? "Category name cannot exceed 15 characters"
+                    : ""
               }
               size="small"
               style={{ width: "50%" }}
+              InputProps={{
+                endAdornment: (
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    style={{ marginRight: "8px" }}
+                  >
+                    {categoryName.length}/15
+                  </Typography>
+                ),
+              }}
             />
           </Box>
         </div>

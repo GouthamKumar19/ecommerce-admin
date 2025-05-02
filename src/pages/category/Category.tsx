@@ -92,7 +92,6 @@ useEffect(() => {
       setIsLoading(true);
       setError(null); // Reset error state
       try {
-        // Handle null direction case properly
         const effectiveSortConfig: SortConfig = sortConfig.direction === null 
           ? { key: "updatedAt", direction: "descending" }  // Default sort
           : sortConfig;

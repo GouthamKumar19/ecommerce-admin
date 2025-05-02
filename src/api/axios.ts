@@ -60,12 +60,15 @@ axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     console.log("response in axios instance", response);
     if (
-      response.data?.toastMessage &&
-      response.data.toastMessage !== "User details fetched successfully" &&
-      response.data.toastMessage !== "An unexpected error occurred" &&
-      response.data.toastMessage!== "All subcategories updated successfully" &&
-      response.data.toastMessage !== lastToastMessage // Check if this is a new message
-    ) {
+  response.data?.toastMessage &&
+  response.data.toastMessage.toLowerCase() !== "success" &&
+  response.data.toastMessage !== "User details fetched successfully" &&
+  response.data.toastMessage !== "An unexpected error occurred" &&
+  response.data.toastMessage !== "All subcategories updated successfully" &&
+  response.data.toastMessage !== "Order updated successfully" &&
+  response.data.toastMessage !== lastToastMessage // Check if this is a new message
+)
+ {
       console.log("response in axios instance inside if", response);
       // Update the last toast message before showing it
       lastToastMessage = response.data.toastMessage;

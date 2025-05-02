@@ -1,7 +1,7 @@
 import axiosInstance from "./axios";
 import { OrderNew } from "../types/orders.types";
 import { Order, SortConfig } from "../types/order.types";
-import { orderMockData } from "../config/mock/orderNew";
+
 
 let currentController: AbortController | null = null;
 
@@ -137,25 +137,17 @@ export const updatePaymentStatus = async (
 
 // Get orders by date range
 export const getOrdersByDateRange = async (
-  startDate: string,
-  endDate: string
+  fromDate: number,
+  toDate: number
 ): Promise<ApiResponse<{ totalCount: number; tableData: Order[] }>> => {
   try {
-    console.log("[API] Fetching orders by date range:", { startDate, endDate });
+    
+    const response = await axiosInstance.post<ApiResponse<{ totalCount: number; tableData: Order[] }>>(
+      "/admin/orders/getAll",
+      { fromDate, toDate }
+    );
 
-    const filteredOrders = orderMockData.data.tableData.filter((order) => {
-      const orderDate = new Date(order.createdAt);
-      return orderDate >= new Date(startDate) && orderDate <= new Date(endDate);
-    });
-
-    return {
-      status: 200,
-      message: "Success",
-      data: {
-        totalCount: filteredOrders.length,
-        tableData: filteredOrders,
-      },
-    };
+    return response.data; 
   } catch (error) {
     console.error("[API] Error fetching orders by date range:", error);
     throw error;

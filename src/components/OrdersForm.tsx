@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { OrderNew, PaymentStatus, OrderStatus } from "../types/orders.types";
 import { paymentStatuses, orderStatuses } from "../config/mock/ordersData";
+import { getImage } from "@/utils/imagePreview";
 
 interface OrdersFormProps {
   order?: OrderNew;
@@ -112,7 +113,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             <label className="block font-semibold mb-2 text-sm tracking-wide text-gray-800 text-left">
               SHIPPING ADDRESS
             </label>
-            <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 h-20">
+            <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 flex items-center justify-center h-20">
               <div className="text-sm text-gray-700 leading-tight">
                 <p className="font-normal">
                   {formatAddress(order.shippingAddress)}
@@ -126,7 +127,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             <label className="block font-semibold mb-2 text-sm tracking-wide text-gray-800 text-left">
               BILLING ADDRESS
             </label>
-            <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 h-20">
+            <div className="w-full border border-gray-300 p-3 rounded-md bg-gray-50 flex items-center justify-center h-20">
               <div className="text-sm text-gray-700 leading-tight">
                 <p className="font-normal">
                   {formatAddress(order.billingAddress)}
@@ -151,7 +152,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
               >
                 <div className="mr-3">
                   <img
-                    src={product.productDetails.thumbnailImage}
+                    src={getImage(product.productDetails.thumbnailImage)}
                     alt={product.productDetails.name}
                     className="w-16 h-16 object-cover rounded-md shadow-sm"
                   />
@@ -209,9 +210,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             </label>
             <button
               className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 ${
-                showPaymentDropdown
-                  ? "focus:outline-none "
-                  : ""
+                showPaymentDropdown ? "focus:outline-none " : ""
               }`}
               style={{
                 background: "var(--primary-color)",
@@ -253,9 +252,7 @@ const OrdersForm = ({ order: initialOrder, setOrderStatus, setPaymentStatus }: O
             </label>
             <button
               className={`w-full border border-gray-300 p-3 rounded-md flex justify-between items-center text-gray-700 ${
-                showOrderDropdown
-                  ? "focus:outline-none"
-                  : ""
+                showOrderDropdown ? "focus:outline-none" : ""
               }`}
               style={{
                 background: "var(--primary-color)",

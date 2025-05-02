@@ -4,7 +4,7 @@ import DataTable from "../../components/common/DataTable";
 import { getAllProducts } from "../../api/product";
 import {
   addProductsToCollection,
-  getProductsByCollectionId,
+
   deleteCollectionProducts,
 } from "../../api/collectionProduct";
 import { getCollectionById } from "../../api/collections";
@@ -74,25 +74,6 @@ const CollectionAddPage: React.FC = () => {
       if (!collectionId) return;
 
       setIsLoadingCollection(true);
-      try {
-        const response = await getProductsByCollectionId(collectionId);
-        const productMappings = response.data.products.map((product: any) => ({
-          _id: product._id || "",
-          productId: product.productId || "",
-        }));
-        setExistingCollectionProducts(productMappings);
-
-        const initialCheckedProducts: Record<string, boolean> = {};
-        productMappings.forEach((mapping) => {
-          initialCheckedProducts[mapping.productId] = true;
-        });
-        setCheckedProducts(initialCheckedProducts);
-      } catch (error) {
-        console.error("Failed to fetch collection products", error);
-        //setSnackbarMessage("Failed to fetch existing collection products");
-      } finally {
-        setIsLoadingCollection(false);
-      }
     };
 
     loadSavedProductIds();

@@ -82,6 +82,12 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
   });
 
   const [errors, setErrors] = useState<{ [key: number]: boolean }>({});
+  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>(
+    {}
+  );
+  const [lengthErrors, setLengthErrors] = useState<{ [key: number]: boolean }>(
+    {}
+  );
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [touched, setTouched] = useState<{ [key: number]: boolean }>({});
   const [skipImageEffect, setSkipImageEffect] = useState(true);
@@ -117,7 +123,6 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
   );
 
   // Update current images when active subcategory changes
-  // This effect should only run when the current subcategory ID changes
   useEffect(() => {
     const currentSubcategory = subcategories.find(
       (sc) => sc.id === currentSubcategoryId
@@ -158,6 +163,13 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
             // Find the selected image or use the first one
             const selectedImage =
               currentImages.find((img) => img.selected) || currentImages[0];
+
+            // Update image errors
+            setImageErrors((prev) => ({
+              ...prev,
+              [currentSubcategoryId]: !selectedImage,
+            }));
+
             return {
               ...sc,
               images: currentImages,
@@ -168,6 +180,12 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
           return sc;
         })
       );
+    } else {
+      // If there are no images, set error for this subcategory
+      setImageErrors((prev) => ({
+        ...prev,
+        [currentSubcategoryId]: true,
+      }));
     }
   }, [currentImages, currentSubcategoryId]);
 
@@ -205,6 +223,18 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
     setCurrentSubcategoryId(newId);
     setCurrentImages([]);
     setIsSubmitted(true);
+
+    // Set image error for the new subcategory
+    setImageErrors((prev) => ({
+      ...prev,
+      [newId]: true,
+    }));
+
+    // Set error for empty name
+    setErrors((prev) => ({
+      ...prev,
+      [newId]: true,
+    }));
   };
 
   const handleOpenDeleteDialog = (id: number, _id: string) => {
@@ -236,6 +266,25 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
           const firstRemainingId = newSubcategories[0].id;
           setCurrentSubcategoryId(firstRemainingId);
         }
+
+        // Remove error for deleted subcategory
+        setImageErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[subcategoryToDelete.id];
+          return newErrors;
+        });
+
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[subcategoryToDelete.id];
+          return newErrors;
+        });
+
+        setLengthErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[subcategoryToDelete.id];
+          return newErrors;
+        });
       }
     }
 
@@ -245,16 +294,24 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
   const handleNameChange = (id: number, name: string) => {
     setTouched((prev) => ({ ...prev, [id]: true }));
 
-    const regex = /^[A-Za-z\s]*$/;
-    if (!regex.test(name)) {
-      setErrors((prev) => ({ ...prev, [id]: true }));
-    } else {
-      setErrors((prev) => ({ ...prev, [id]: false }));
-    }
+    // Check if name is empty
+    const isEmpty = !name.trim();
+    // Check if name exceeds 20 characters
+    const isTooLong = name.length > 20;
 
-    setSubcategories((prevSubcategories) =>
-      prevSubcategories.map((sc) => (sc.id === id ? { ...sc, name } : sc))
-    );
+    // Update error states
+    setErrors((prev) => ({ ...prev, [id]: isEmpty }));
+    setLengthErrors((prev) => ({ ...prev, [id]: isTooLong }));
+
+    // Only update the name if it's within limits or if we're deleting characters
+    const currentSubcategory = subcategories.find((sc) => sc.id === id);
+    const currentName = currentSubcategory?.name || "";
+
+    if (!isTooLong || name.length < currentName.length) {
+      setSubcategories((prevSubcategories) =>
+        prevSubcategories.map((sc) => (sc.id === id ? { ...sc, name } : sc))
+      );
+    }
   };
 
   const handleSelectSubcategory = (id: number) => {
@@ -316,7 +373,7 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
 
           <div className="mb-4">
             <Typography variant="subtitle1" gutterBottom align="left">
-              Name
+              Name 
             </Typography>
             <Box
               sx={{
@@ -337,13 +394,29 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
                   setTouched((prev) => ({ ...prev, [subcategory.id]: true }))
                 }
                 placeholder="Subcategory Name"
-                error={touched[subcategory.id] && errors[subcategory.id]}
+                error={
+                  (touched[subcategory.id] && errors[subcategory.id]) ||
+                  (touched[subcategory.id] && lengthErrors[subcategory.id])
+                }
                 helperText={
                   touched[subcategory.id] && errors[subcategory.id]
-                    ? "Only letters and spaces are allowed"
-                    : ""
+                    ? "Subcategory name is required"
+                    : touched[subcategory.id] && lengthErrors[subcategory.id]
+                      ? "Maximum 20 characters allowed"
+                      : ""
                 }
                 style={{ height: "40px", width: "50%" }}
+                InputProps={{
+                  endAdornment: (
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      style={{ marginRight: "8px" }}
+                    >
+                      {subcategory.name.length}/20
+                    </Typography>
+                  ),
+                }}
               />
             </Box>
           </div>
@@ -367,17 +440,20 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
                     p: 4,
                     width: "100%",
                     borderColor:
-                      isSubmitted &&
-                      touched[subcategory.id] &&
-                      !subcategory.images.length
+                      (isSubmitted || touched[subcategory.id]) &&
+                      (imageErrors[subcategory.id] ||
+                        !subcategory.images?.length ||
+                        !subcategory.images?.some((img) => img.selected))
                         ? "red"
                         : "inherit",
                     borderWidth:
-                      isSubmitted &&
-                      touched[subcategory.id] &&
-                      !subcategory.images.length
+                      (isSubmitted || touched[subcategory.id]) &&
+                      (imageErrors[subcategory.id] ||
+                        !subcategory.images?.length ||
+                        !subcategory.images?.some((img) => img.selected))
                         ? "2px"
                         : "1px",
+                    borderStyle: "solid",
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -394,12 +470,21 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
                         ...prev,
                         [subcategory.id]: true,
                       }));
+
+                      // Update image error state
+                      setImageErrors((prev) => ({
+                        ...prev,
+                        [subcategory.id]:
+                          imagesList.length === 0 ||
+                          !imagesList.some((img) => img.selected),
+                      }));
                     }}
                     type="subcategory"
                   />
-                  {isSubmitted &&
-                    touched[subcategory.id] &&
-                    !subcategory.images.length && (
+                  {(isSubmitted || touched[subcategory.id]) &&
+                    (imageErrors[subcategory.id] ||
+                      !subcategory.images?.length ||
+                      !subcategory.images?.some((img) => img.selected)) && (
                       <Typography variant="body2" color="error">
                         At least one image must be selected
                       </Typography>

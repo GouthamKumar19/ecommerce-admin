@@ -290,11 +290,11 @@ export const CategoryDetails = () => {
   };
 
   const handleSave = async () => {
-    // Prevent multiple clicks by checking if already loading
     if (isLoading || uploadInProgress) {
       console.log("Save operation already in progress, ignoring click");
       return;
     }
+    
 
     const errorsCopy = { ...errors };
 
@@ -309,6 +309,22 @@ export const CategoryDetails = () => {
       )
     ) {
       errorsCopy.images = true;
+    }
+
+    // Validate that all subcategories have at least one image
+    const invalidSubcategories = subcategories.filter(
+      (subcategory) =>
+        subcategory.name.trim() !== "" && // Only check non-empty subcategories
+        (!subcategory.images ||
+          subcategory.images.length === 0 ||
+          !subcategory.images.some((img) => img.selected))
+    );
+
+    if (invalidSubcategories.length > 0) {
+      // Set error for subcategory images
+      console.error("One or more subcategories are missing images");
+      
+      return;
     }
 
     setErrors(errorsCopy);
