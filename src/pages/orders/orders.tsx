@@ -14,7 +14,7 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import Skeleton Loader
-import { getAllOrders } from "../../api/orders";
+import { getAllOrders, getOrdersByDateRange } from "../../api/orders";
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -52,9 +52,11 @@ const OrderPage: React.FC = () => {
       />
     </div>
   );
-useEffect(() => {
+
+  useEffect(() => {
     setPage(1);
   }, [searchValue]);
+
   useEffect(() => {
     const fetchOrderData = async () => {
       setIsLoading(true);
@@ -62,17 +64,27 @@ useEffect(() => {
 
       try {
         // Handle null direction case properly
-        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
-          ? { key: "updatedAt", direction: "descending" }  // Default sort
-          : sortConfig;
-          
-        const response = await getAllOrders(
-          page,
-          itemsPerPage,
-          searchValue,
-          effectiveSortConfig,
-          activeFilters
-        );
+        const effectiveSortConfig: SortConfig =
+          sortConfig.direction === null
+            ? { key: "updatedAt", direction: "descending" } // Default sort
+            : sortConfig;
+
+        let response;
+
+        // Check if there's a date filter active
+        if (activeFilters.date) {
+          const [fromDate, toDate] = activeFilters.date.split("|").map(Number);
+          response = await getOrdersByDateRange(fromDate, toDate);
+        } else {
+          response = await getAllOrders(
+            page,
+            itemsPerPage,
+            searchValue,
+            effectiveSortConfig,
+            activeFilters
+          );
+        }
+
         console.log("API Response:", response);
 
         if (response.data && Array.isArray(response.data.tableData)) {
@@ -256,8 +268,8 @@ useEffect(() => {
               disabled={isLoading}
               sx={{
                 backgroundColor: "#0d7f3f",
-                '&:hover': {
-                  backgroundColor: "#0d7f3f/90"
+                "&:hover": {
+                  backgroundColor: "#0d7f3f/90",
                 },
                 color: "#ffffff",
               }}
@@ -290,8 +302,8 @@ useEffect(() => {
               console.log("Changing page to:", newPage);
               setPage(newPage);
             }}
-            pageCount={pageCount} // Pass the calculated page count
-            totalCount={totalCount} // Pass the total count to DataTable
+            pageCount={pageCount} 
+            totalCount={totalCount} 
           />
         )}
       </div>

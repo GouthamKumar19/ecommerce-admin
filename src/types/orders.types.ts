@@ -52,12 +52,12 @@ export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED";
 
 export type OrderStatus =
   | "SHIPPED"
-  | "ORDER_PLACED"
+  | "ORDER PLACED"
   | "PROCESSING"
-  | "ORDER_CONFIRMED"
+  | "ORDER CONFIRMED"
   | "DELIVERED"
   | "CANCELLED"
-  | "READY_TO_SHIP";
+  | "READY TO SHIP";
 
 export interface OrderNew {
   // Changed from Order to OrderNew

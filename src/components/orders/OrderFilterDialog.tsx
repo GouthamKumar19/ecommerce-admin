@@ -7,12 +7,20 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
   FormGroup,
   FormControlLabel,
   Checkbox,
   Paper,
 } from "@mui/material";
+import { DateRange } from "react-day-picker";
+import { Calendar } from "@/components/ui/calendar";
+import { format, startOfDay, endOfDay } from "date-fns";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarToday } from "@mui/icons-material";
 
 interface OrderFilterDialogProps {
   open: boolean;
@@ -20,7 +28,7 @@ interface OrderFilterDialogProps {
   onApply: (filters: {
     paymentStatus: string[];
     orderStatus: string[];
-    date: string ;
+    date: string;
   }) => void;
 }
 
@@ -31,7 +39,12 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
 }) => {
   const [paymentStatus, setPaymentStatus] = useState<string[]>([]);
   const [orderStatus, setOrderStatus] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
+  // State to control the popover
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handlePaymentStatusChange = (status: string) => {
     setPaymentStatus((prev) =>
@@ -49,11 +62,24 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
     );
   };
 
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    // No API call here - only update the UI state
+  };
+
   const handleApply = () => {
+    let dateString = "";
+    if (dateRange?.from && dateRange?.to) {
+      // Convert dates to timestamps in milliseconds format for API as numbers
+      const fromDate = startOfDay(dateRange.from).getTime();
+      const toDate = endOfDay(dateRange.to).getTime();
+      dateString = `${fromDate}|${toDate}`;
+    }
+
     onApply({
       paymentStatus,
       orderStatus,
-      date: selectedDate,
+      date: dateString,
     });
     onClose();
   };
@@ -61,13 +87,19 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
   const handleClear = () => {
     setPaymentStatus([]);
     setOrderStatus([]);
-    setSelectedDate("");
+    setDateRange(undefined);
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Typography
             variant="h5"
             fontWeight="bold"
@@ -278,20 +310,55 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
       <DialogActions
         sx={{ px: 3, pb: 2, display: "flex", justifyContent: "space-between" }}
       >
-        <TextField
-          type="date"
-          variant="outlined"
-          size="small"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          sx={{
-            borderRadius: 2,
-            "& .MuiOutlinedInput-root": {
-              color: "var(--secondary-color)",
-              borderColor: "var(--secondary-color)",
-            },
-          }}
-        />
+        {/* Fixed Popover implementation */}
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outlined"
+              sx={{
+                color: "var(--secondary-color)",
+                borderColor: "var(--secondary-color)",
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              {dateRange?.from ? (
+                <>
+                  {format(dateRange.from, "MMM dd, y")} -{" "}
+                  {dateRange.to ? format(dateRange.to, "MMM dd, y") : ""}
+                </>
+              ) : (
+                "SELECT DATE RANGE"
+              )}{" "}
+              <CalendarToday fontSize="small" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-auto p-0"
+            align="start"
+            style={{ zIndex: 1400 }} // Ensure this z-index is higher than the dialog
+          >
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={dateRange?.from}
+              selected={dateRange}
+              onSelect={handleDateRangeChange}
+              numberOfMonths={2}
+              className="flex"
+              classNames={{
+                day_selected:
+                  "bg-[#0d7f3f] text-white hover:bg-[#0d7f3f] hover:text-white",
+                day_today: "bg-[#0d7f3f] text-white",
+                day_range_middle: "bg-[#0d7f3f]/20 text-gray-700",
+                day_range_start: "bg-[#0d7f3f] text-white",
+                day_range_end: "bg-[#0d7f3f] text-white",
+              }}
+            />
+          </PopoverContent>
+        </Popover>
         <Box>
           <Button
             onClick={onClose}

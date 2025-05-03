@@ -152,12 +152,12 @@ export const paymentStatuses: PaymentStatus[] = [
 
 export const orderStatuses: OrderStatus[] = [
   "SHIPPED",
-  "ORDER_PLACED",
+  "ORDER PLACED",
   "PROCESSING",
-  "ORDER_CONFIRMED",
+  "ORDER CONFIRMED",
   "DELIVERED",
   "CANCELLED",
-  "READY_TO_SHIP",
+  "READY TO SHIP",
 ];
 
 export const getOrderById = (orderId: string): OrderNew | undefined => {
