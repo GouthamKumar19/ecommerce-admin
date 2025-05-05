@@ -332,10 +332,11 @@ const DashboardPage = () => {
                   }}
                   labelStyle={{ color: "#666", marginBottom: "5px" }}
                   itemStyle={{ color: "#10B981" }}
+                  formatter={(value) => [`${value}`, ""]} // This removes the "yaxis" label
                 />
                 <Area
                   type="monotone"
-                  dataKey="yaxis"
+                  dataKey="yaxis" // Keeps the data associated with "yaxis"
                   stroke="#0d7f3f"
                   strokeWidth={2}
                   fill="url(#colorSales)"
@@ -418,8 +419,12 @@ const DashboardPage = () => {
             <MailOutline sx={{ color: "#0d7f3f", fontSize: 28 }} />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-1">ENQUIRIES</h3>
-            <p className="text-2xl font-bold">{statsData?.totalEnquiries || 0}</p>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">
+              ENQUIRIES
+            </h3>
+            <p className="text-2xl font-bold">
+              {statsData?.totalEnquiries || 0}
+            </p>
           </div>
         </div>
 
@@ -428,7 +433,9 @@ const DashboardPage = () => {
             <AttachMoney sx={{ color: "#0d7f3f", fontSize: 28 }} />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-1">TOTAL REVENUE</h3>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">
+              TOTAL REVENUE
+            </h3>
             <p className="text-2xl font-bold">{statsData?.totalRevenue || 0}</p>
           </div>
         </div>
@@ -438,7 +445,9 @@ const DashboardPage = () => {
             <GroupOutlined sx={{ color: "#0d7f3f", fontSize: 28 }} />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-1">TOTAL USERS</h3>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">
+              TOTAL USERS
+            </h3>
             <p className="text-2xl font-bold">{statsData?.totalUsers || 0}</p>
           </div>
         </div>
