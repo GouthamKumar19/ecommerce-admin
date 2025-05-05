@@ -4,7 +4,6 @@ import DataTable from "../../components/common/DataTable";
 import { getAllProducts } from "../../api/product";
 import {
   addProductsToCollection,
-
   deleteCollectionProducts,
 } from "../../api/collectionProduct";
 import { getCollectionById } from "../../api/collections";
@@ -31,7 +30,6 @@ const CollectionAddPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
-  //const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [checkedProducts, setCheckedProducts] = useState<
     Record<string, boolean>
   >({});
@@ -44,120 +42,89 @@ const CollectionAddPage: React.FC = () => {
   const { id: collectionId } = useParams<{ id: string }>();
 
   useEffect(() => {
-    const loadSavedProductIds = () => {
-      const savedIds = sessionStorage.getItem("existingProductIds");
-      if (savedIds) {
-        try {
-          const parsedIds = JSON.parse(savedIds);
-          setExistingCollectionProducts(parsedIds);
-          console.log(
-            "Loaded existing product IDs from sessionStorage:",
-            parsedIds
-          );
-
-          const initialCheckedProducts: Record<string, boolean> = {};
-          parsedIds.forEach((item: { productId: string }) => {
-            initialCheckedProducts[item.productId] = true;
-          });
-          setCheckedProducts(initialCheckedProducts);
-          setIsLoadingCollection(false);
-        } catch (error) {
-          console.error("Error parsing saved product IDs:", error);
-          fetchCollectionProducts();
-        }
-      } else {
-        fetchCollectionProducts();
-      }
-    };
-
     const fetchCollectionProducts = async () => {
       if (!collectionId) return;
 
       setIsLoadingCollection(true);
+      try {
+        const collectionResponse = await getCollectionById(collectionId);
+        const productMappings =
+          collectionResponse?.data?.collectionProducts?.map((product: any) => ({
+            _id: product._id || "",
+            productId: product.productId || "",
+          })) || [];
+
+        setExistingCollectionProducts(productMappings);
+
+        const initialCheckedProducts: Record<string, boolean> = {};
+        productMappings.forEach((mapping) => {
+          initialCheckedProducts[mapping.productId] = true;
+        });
+        setCheckedProducts(initialCheckedProducts);
+      } catch (error) {
+        console.error("Failed to fetch collection products", error);
+      } finally {
+        setIsLoadingCollection(false);
+      }
     };
 
-    loadSavedProductIds();
+    fetchCollectionProducts();
   }, [collectionId]);
 
-  // Add these state variables for pagination
   const [totalCount, setTotalCount] = useState<number>(0);
   const [pageCount, setPageCount] = useState<number>(0);
-  
-  // Add this useEffect to reset page when search changes
+
   useEffect(() => {
     setPage(1);
   }, [searchValue]);
-  
-  // Update the fetchProducts function to handle pagination properly
+
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
-  
+
       try {
-        // Handle null direction case properly
-        const effectiveSortConfig: SortConfig = sortConfig.direction === null 
-          ? { key: "updatedAt", direction: "descending" }  // Default sort
-          : sortConfig;
-          
+        const effectiveSortConfig: SortConfig =
+          sortConfig.direction === null
+            ? { key: "updatedAt", direction: "descending" }
+            : sortConfig;
+
         const response = await getAllProducts(
           page,
           itemsPerPage,
           searchValue,
           effectiveSortConfig
         );
-        console.log(response, "Fetched products");
-        
-        // Set products from the response
+
         setProducts(response.data.tableData);
-        
-        // Set pagination data
         setTotalCount(response.data.totalCount);
         setPageCount(Math.ceil(response.data.totalCount / itemsPerPage));
-  
-        // Call getCollectionById immediately after getAllProducts
+
         if (collectionId) {
-          console.log("Fetching collection details after products");
           const collectionResponse = await getCollectionById(collectionId);
-          console.log("Collection data:", collectionResponse);
-  
-          // Extract product mappings from collection response
-          if (
-            collectionResponse?.data?.collectionProducts &&
-            Array.isArray(collectionResponse.data.collectionProducts)
-          ) {
-            const productMappings =
-              collectionResponse.data.collectionProducts.map(
-                (product: any) => ({
-                  _id: product._id,
-                  productId: product.productId,
-                })
-              );
-  
-            console.log(
-              "Collection Products Mapping (_id -> productId):",
-              productMappings
-            );
-            console.table(productMappings);
-  
-            // Update the existingCollectionProducts with actual IDs
-            setExistingCollectionProducts(productMappings);
-  
-            // Update the checked state based on these product IDs
-            const updatedCheckedProducts: Record<string, boolean> = {
-              ...checkedProducts,
-            };
-            response.data.tableData.forEach((product: Product) => {
-              if (
-                product._id &&
-                productMappings.some(
-                  (mapping) => mapping.productId === product._id
-                )
-              ) {
-                updatedCheckedProducts[product._id] = true;
-              }
-            });
-            setCheckedProducts(updatedCheckedProducts);
-          }
+          const productMappings =
+            collectionResponse?.data?.collectionProducts?.map(
+              (product: any) => ({
+                _id: product._id,
+                productId: product.productId,
+              })
+            ) || [];
+
+          setExistingCollectionProducts(productMappings);
+
+          const updatedCheckedProducts: Record<string, boolean> = {
+            ...checkedProducts,
+          };
+          response.data.tableData.forEach((product: Product) => {
+            if (
+              product._id &&
+              productMappings.some(
+                (mapping) => mapping.productId === product._id
+              )
+            ) {
+              updatedCheckedProducts[product._id] = true;
+            }
+          });
+          setCheckedProducts(updatedCheckedProducts);
         }
       } catch (error) {
         console.error("Failed to fetch products", error);
@@ -165,7 +132,7 @@ const CollectionAddPage: React.FC = () => {
         setTimeout(() => setIsLoading(false), 1000);
       }
     };
-  
+
     fetchProducts();
   }, [page, itemsPerPage, searchValue, sortConfig, collectionId]);
 
@@ -183,10 +150,7 @@ const CollectionAddPage: React.FC = () => {
 
   const handleAdd = async () => {
     try {
-      if (!collectionId) {
-        //setSnackbarMessage("Collection ID is missing");
-        return;
-      }
+      if (!collectionId) return;
 
       const selectedProductIds = Object.entries(checkedProducts)
         .filter(([, isChecked]) => isChecked)
@@ -203,47 +167,25 @@ const CollectionAddPage: React.FC = () => {
         (mapping) => !selectedProductIds.includes(mapping.productId)
       );
 
-      console.log("Selected Product IDs:", selectedProductIds);
-      console.log("New Product IDs to add:", newProductIds);
-      console.log(
-        "Removed Product Mappings to remove:",
-        removedProductMappings
-      );
-
-      // Updating product statuses for the newly selected products
       if (newProductIds.length > 0) {
         const addPayload = newProductIds.map((productId) => ({
           collectionId: collectionId,
           productId: productId,
         }));
 
-        console.log("Payload for adding products:", addPayload);
-
-        const addResponse = await addProductsToCollection(addPayload);
-        console.log("Add Response:", addResponse);
-
-        
+        await addProductsToCollection(addPayload);
       }
 
-      // Delete removed products - now using deleteCollectionProducts API
       if (removedProductMappings.length > 0) {
         const deletePayload = removedProductMappings.map(
           (mapping) => mapping._id
         );
 
-        console.log("Payload for deleting products:", deletePayload);
-
-        const deleteResponse = await deleteCollectionProducts(deletePayload);
-        if (deleteResponse.status === 200 && deleteResponse.data.success) {
-          console.log("Removed products deleted successfully");
-        } else {
-          console.log("Failed to delete removed products");
-        }
+        await deleteCollectionProducts(deletePayload);
       }
 
       navigate(`/collections/collection-product/${collectionId}`);
     } catch (error) {
-      //setSnackbarMessage("Error updating collection products");
       console.error("Error updating collection products:", error);
       navigate(`/collections/collection-product/${collectionId}`);
     }
@@ -259,7 +201,6 @@ const CollectionAddPage: React.FC = () => {
   };
 
   const sortedProducts = useSortableData(products, sortConfig);
-
   const columns = [
     {
       header: (
@@ -377,7 +318,6 @@ const CollectionAddPage: React.FC = () => {
         );
       },
     },
-    
   ];
 
   return (
@@ -431,8 +371,6 @@ const CollectionAddPage: React.FC = () => {
           />
         )}
       </div>
-
-      
     </div>
   );
 };

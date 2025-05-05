@@ -46,7 +46,7 @@ export const ProductDetails = () => {
   const [, setCategoriesError] = useState<string | null>(null);
 
   // UI state variables
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [, setUploadInProgress] = useState<boolean>(false);
 
@@ -57,6 +57,7 @@ export const ProductDetails = () => {
   const [isDescriptionValid, setIsDescriptionValid] = useState<boolean>(true);
   const [isCategoryValid, setIsCategoryValid] = useState<boolean>(true);
   const [isSubCategoryValid, setIsSubCategoryValid] = useState<boolean>(true);
+    const [, setIsVariantValid] = useState<boolean>(true);
   const [productNameErrorMessage, setProductNameErrorMessage] =
     useState<string>("");
   const [priceErrorMessage, setPriceErrorMessage] = useState<string>("");
@@ -98,6 +99,7 @@ export const ProductDetails = () => {
           );
 
           console.log("Category Array:", categoryArray);
+          
 
           // Extract _id, name, and categoryId from subcategories
           const subcategoriesArray = response.data.tableData.flatMap(
@@ -354,6 +356,14 @@ export const ProductDetails = () => {
       firstImageIsNew,
     };
   };
+   const validateVariants = () => {
+     const hasAtLeastOneVariant = variants.some(
+       (variant) => variant.isComplete && variant.optionValues.length > 0
+     );
+     setIsVariantValid(hasAtLeastOneVariant); // Update state
+     return hasAtLeastOneVariant;
+   };
+
 
   const validateForm = () => {
     let isValid = true;
@@ -420,6 +430,12 @@ export const ProductDetails = () => {
       setIsSubCategoryValid(true);
       setSubCategoryErrorMessage("");
     }
+     // Validate variants
+    if (!validateVariants()) {
+      toast.error("Please select at least one variant.");
+      isValid = false;
+    }
+
 
     // Validate images
     const selectedImages = images.filter((img) => img.selected);
@@ -766,7 +782,7 @@ export const ProductDetails = () => {
         <ActionBox
           cancelText="Cancel"
           confirmText={isEdit ? "Update" : "Add"}
-          isLoading={isLoading}
+       
         />
       </Box>
     </Box>
@@ -774,3 +790,4 @@ export const ProductDetails = () => {
 };
 
 export default ProductDetails;
+

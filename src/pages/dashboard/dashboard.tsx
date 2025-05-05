@@ -13,7 +13,7 @@ import { CalendarToday, KeyboardArrowDown } from "@mui/icons-material";
 import { LinearProgress } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Menu, MenuItem } from "@mui/material";
-import { addDays, format, startOfDay, endOfDay } from "date-fns";
+import { addDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 import {
@@ -104,34 +104,51 @@ const DashboardPage = () => {
   };
 
   // Handle manual date range selection
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
+ const handleDateRangeChange = (range: DateRange | undefined) => {
+   setDateRange(range);
 
-    // When using manual date selection, we'll send the specific dates to the API
-    // Only proceed if both from and to dates are defined
-    if (range && range.from && range.to) {
-      const fetchCustomDateRangeStats = async () => {
-        setLoading(true);
-        try {
-          // Convert dates to milliseconds and set appropriate time
-          // Using non-null assertion since we've already checked that the dates exist
-          const startDateWithTime = startOfDay(range.from!).getTime(); // 00:00:00
-          const endDateWithTime = endOfDay(range.to!).getTime(); // 23:59:59
+   if (range?.from && range.to) {
+     const fetchCustomDateRangeStats = async () => {
+       setLoading(true);
+       try {
+         // Get UTC midnight (00:00:00.000) and 23:59:59.999 in milliseconds
+         const startDateUTC = Date.UTC(
+           (range.from ?? new Date()).getUTCFullYear(),
+           (range.from ?? new Date()).getUTCMonth(),
+           (range.from ?? new Date()).getUTCDate(),
+           0,
+           0,
+           0,
+           0
+         );
 
-          const response = await getStats({
-            startDate: startDateWithTime.toString(),
-            endDate: endDateWithTime.toString(),
-          });
-          setStatsData(response);
-        } catch (error) {
-          console.error("Error fetching custom date range stats:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchCustomDateRangeStats();
-    }
-  };
+         const endDateUTC = Date.UTC(
+           (range.to ?? new Date()).getUTCFullYear(),
+           (range.to ?? new Date()).getUTCMonth(),
+           (range.to ?? new Date()).getUTCDate(),
+           23,
+           59,
+           59,
+           999
+         );
+
+         const response = await getStats({
+           startDate: startDateUTC.toString(),
+           endDate: endDateUTC.toString(),
+         });
+
+         setStatsData(response);
+       } catch (error) {
+         console.error("Error fetching custom date range stats:", error);
+       } finally {
+         setLoading(false);
+       }
+     };
+
+     fetchCustomDateRangeStats();
+   }
+ };
+
 
   if (loading) {
     return (
@@ -332,10 +349,11 @@ const DashboardPage = () => {
                   }}
                   labelStyle={{ color: "#666", marginBottom: "5px" }}
                   itemStyle={{ color: "#10B981" }}
+                  formatter={(value) => [`${value}`, null]}
                 />
                 <Area
                   type="monotone"
-                  dataKey="yaxis"
+                  dataKey="yaxis" 
                   stroke="#0d7f3f"
                   strokeWidth={2}
                   fill="url(#colorSales)"
@@ -418,8 +436,12 @@ const DashboardPage = () => {
             <MailOutline sx={{ color: "#0d7f3f", fontSize: 28 }} />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-1">ENQUIRIES</h3>
-            <p className="text-2xl font-bold">{statsData?.totalEnquiries || 0}</p>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">
+              ENQUIRIES
+            </h3>
+            <p className="text-2xl font-bold">
+              {statsData?.totalEnquiries || 0}
+            </p>
           </div>
         </div>
 
@@ -428,7 +450,9 @@ const DashboardPage = () => {
             <AttachMoney sx={{ color: "#0d7f3f", fontSize: 28 }} />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-1">TOTAL REVENUE</h3>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">
+              TOTAL REVENUE
+            </h3>
             <p className="text-2xl font-bold">{statsData?.totalRevenue || 0}</p>
           </div>
         </div>
@@ -438,7 +462,9 @@ const DashboardPage = () => {
             <GroupOutlined sx={{ color: "#0d7f3f", fontSize: 28 }} />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-1">TOTAL USERS</h3>
+            <h3 className="text-lg font-medium text-gray-700 mb-1">
+              TOTAL USERS
+            </h3>
             <p className="text-2xl font-bold">{statsData?.totalUsers || 0}</p>
           </div>
         </div>
