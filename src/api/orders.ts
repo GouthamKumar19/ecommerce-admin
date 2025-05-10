@@ -1,8 +1,7 @@
 import axiosInstance from "./axios";
-import { OrderNew } from "../types/orders.types";
-import { Order, SortConfig } from "../types/order.types";
-
-
+import { Order } from "../types/order.types";
+import { SortConfig } from "../types/order.types";
+import { OrderNew } from "@/types/orders.types";
 let currentController: AbortController | null = null;
 
 interface ApiResponse<T> {
@@ -12,7 +11,6 @@ interface ApiResponse<T> {
   toastMessage?: string;
 }
 
-// Get all orders
 export const getAllOrders = async (
   page: number,
   itemsPerPage: number,
@@ -20,10 +18,13 @@ export const getAllOrders = async (
   sortConfig: SortConfig,
   filters?: {
     filter?: {
-      status?: string;
-      paymentStatus?: string;
+      status?: string[];
+      paymentStatus?: string[];
     };
-    date?: string;
+    dateRange?: {
+      fromDate: number;
+      toDate: number;
+    };
   }
 ): Promise<ApiResponse<{ totalCount: number; tableData: Order[] }>> => {
   try {
@@ -50,12 +51,16 @@ export const getAllOrders = async (
           page,
           itemsPerPage,
         },
-        ...filters, // Add filters to the request payload
+        filter: {
+          ...filters?.filter, // Spread other filters
+        },
+        ...(filters?.dateRange && { ...filters.dateRange }), // Spread dateRange if it exists
       },
       {
         signal: currentController.signal,
       }
     );
+
     return response.data;
   } catch (error) {
     console.error("[API] Error fetching all orders:", error);
