@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { commaPrice } from "@/utils/formate";
 import { CalendarToday, KeyboardArrowDown } from "@mui/icons-material";
 import { LinearProgress } from "@mui/material";
 import { useState, useEffect } from "react";
@@ -23,7 +24,12 @@ import {
 } from "@/components/ui/popover";
 import { getStats } from "@/api/dashboard";
 import { DataResponse } from "@/types/dashboard.types";
-import { ShoppingBagOutlined, MailOutline, AttachMoney, GroupOutlined } from "@mui/icons-material";
+import {
+  ShoppingBagOutlined,
+  MailOutline,
+  AttachMoney,
+  GroupOutlined,
+} from "@mui/icons-material";
 
 // Date preset options
 const DATE_PRESETS = {
@@ -33,6 +39,17 @@ const DATE_PRESETS = {
   LAST_30_DAYS: "LAST_30_DAYS",
   LAST_6_MONTHS: "LAST_6_MONTHS",
   LAST_YEAR: "LAST_YEAR",
+  LIFETIME: "LIFETIME",
+};
+
+// Display versions without underscores
+const DISPLAY_PRESETS = {
+  TODAY: "TODAY",
+  YESTERDAY: "YESTERDAY",
+  LAST_7_DAYS: "LAST 7 DAYS",
+  LAST_30_DAYS: "LAST 30 DAYS",
+  LAST_6_MONTHS: "LAST 6 MONTHS",
+  LAST_YEAR: "LAST YEAR",
   LIFETIME: "LIFETIME",
 };
 
@@ -104,51 +121,50 @@ const DashboardPage = () => {
   };
 
   // Handle manual date range selection
- const handleDateRangeChange = (range: DateRange | undefined) => {
-   setDateRange(range);
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
 
-   if (range?.from && range.to) {
-     const fetchCustomDateRangeStats = async () => {
-       setLoading(true);
-       try {
-         // Get UTC midnight (00:00:00.000) and 23:59:59.999 in milliseconds
-         const startDateUTC = Date.UTC(
-           (range.from ?? new Date()).getUTCFullYear(),
-           (range.from ?? new Date()).getUTCMonth(),
-           (range.from ?? new Date()).getUTCDate(),
-           0,
-           0,
-           0,
-           0
-         );
+    if (range?.from && range.to) {
+      const fetchCustomDateRangeStats = async () => {
+        setLoading(true);
+        try {
+          // Get UTC midnight (00:00:00.000) and 23:59:59.999 in milliseconds
+          const startDateUTC = Date.UTC(
+            (range.from ?? new Date()).getUTCFullYear(),
+            (range.from ?? new Date()).getUTCMonth(),
+            (range.from ?? new Date()).getUTCDate(),
+            0,
+            0,
+            0,
+            0
+          );
 
-         const endDateUTC = Date.UTC(
-           (range.to ?? new Date()).getUTCFullYear(),
-           (range.to ?? new Date()).getUTCMonth(),
-           (range.to ?? new Date()).getUTCDate(),
-           23,
-           59,
-           59,
-           999
-         );
+          const endDateUTC = Date.UTC(
+            (range.to ?? new Date()).getUTCFullYear(),
+            (range.to ?? new Date()).getUTCMonth(),
+            (range.to ?? new Date()).getUTCDate(),
+            23,
+            59,
+            59,
+            999
+          );
 
-         const response = await getStats({
-           startDate: startDateUTC.toString(),
-           endDate: endDateUTC.toString(),
-         });
+          const response = await getStats({
+            startDate: startDateUTC.toString(),
+            endDate: endDateUTC.toString(),
+          });
 
-         setStatsData(response);
-       } catch (error) {
-         console.error("Error fetching custom date range stats:", error);
-       } finally {
-         setLoading(false);
-       }
-     };
+          setStatsData(response);
+        } catch (error) {
+          console.error("Error fetching custom date range stats:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-     fetchCustomDateRangeStats();
-   }
- };
-
+      fetchCustomDateRangeStats();
+    }
+  };
 
   if (loading) {
     return (
@@ -207,7 +223,10 @@ const DashboardPage = () => {
             <div className="p-4">
               <div className="h-10 w-full bg-gray-100 rounded mb-4 animate-pulse"></div>
               {[...Array(5)].map((_, index) => (
-                <div key={index} className="h-16 w-full bg-gray-100 rounded-md mb-3 animate-pulse"></div>
+                <div
+                  key={index}
+                  className="h-16 w-full bg-gray-100 rounded-md mb-3 animate-pulse"
+                ></div>
               ))}
             </div>
           </div>
@@ -229,7 +248,8 @@ const DashboardPage = () => {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
           >
-            {selectedFilter} <KeyboardArrowDown />
+            {DISPLAY_PRESETS[selectedFilter as keyof typeof DISPLAY_PRESETS]}{" "}
+            <KeyboardArrowDown />
           </button>
           <Menu
             id="basic-menu"
@@ -353,7 +373,7 @@ const DashboardPage = () => {
                 />
                 <Area
                   type="monotone"
-                  dataKey="yaxis" 
+                  dataKey="yaxis"
                   stroke="#0d7f3f"
                   strokeWidth={2}
                   fill="url(#colorSales)"
@@ -453,7 +473,10 @@ const DashboardPage = () => {
             <h3 className="text-lg font-medium text-gray-700 mb-1">
               TOTAL REVENUE
             </h3>
-            <p className="text-2xl font-bold">{statsData?.totalRevenue || 0}</p>
+            <p className="text-2xl font-bold">
+              {" "}
+              ₹{commaPrice(statsData?.totalRevenue || 0)}
+            </p>
           </div>
         </div>
 

@@ -12,9 +12,8 @@ import {
   updateUser,
   getUserById,
   createAddress,
-  updateUserAddresses
+  updateUserAddresses,
 } from "../../api/user";
-
 
 export const UserDetailsPage = () => {
   const { setActionHandlers } = useContext(ActionContext);
@@ -27,75 +26,73 @@ export const UserDetailsPage = () => {
   // Snackbar state
   const [, setOpenSnackbar] = useState(false);
   const [, setSnackbarMessage] = useState("");
-  const [, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
-  );
+  const [, setSnackbarSeverity] = useState<"success" | "error">("success");
 
   // Check if we're in edit mode and fetch user data if needed
-useEffect(() => {
-  const fetchUser = async () => {
-    if (id && id !== "new") {
-      setIsEdit(true);
-      setIsLoading(true);
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (id && id !== "new") {
+        setIsEdit(true);
+        setIsLoading(true);
 
-      try {
-        const response = await getUserById(id);
-        if (response.status === 200 && response.data) {
-          // Store the response in an array and log it
-          const userArray = [response.data];
-          console.log("Fetched user data array:", userArray);
+        try {
+          const response = await getUserById(id);
+          if (response.status === 200 && response.data) {
+            // Store the response in an array and log it
+            const userArray = [response.data];
+            console.log("Fetched user data array:", userArray);
 
-          setUserData(response.data);
-        } else {
-          setSnackbarMessage("Failed to load user data. Please try again.");
+            setUserData(response.data);
+          } else {
+            setSnackbarMessage("Failed to load user data. Please try again.");
+            setSnackbarSeverity("error");
+            setOpenSnackbar(true);
+          }
+        } catch (error) {
+          console.error("Error fetching user:", error);
+          setSnackbarMessage("An error occurred while fetching user data.");
           setSnackbarSeverity("error");
           setOpenSnackbar(true);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        setSnackbarMessage("An error occurred while fetching user data.");
-        setSnackbarSeverity("error");
-        setOpenSnackbar(true);
-      } finally {
-        setIsLoading(false);
       }
-    }
-  };
+    };
 
-  fetchUser();
-}, [id]);
+    fetchUser();
+  }, [id]);
 
   // Helper function to create addresses after user creation/update
   // Modified function to send addresses in an array
- const createAddressesForUser = async (
-  userId: string,
-  addresses: AddressData[]
-) => {
-  try {
-    // Transform addresses to the format expected by the API
-    const addressPayloads = addresses.map(address => ({
-      userId: userId,
-      line1: address.addressLine1,
-      line2: address.addressLine2,
-      city: address.city,
-      state: address.state,
-      pinCode: address.pinCode,
-      isShipping: address.useAsShipping || false,
-    }));
+  const createAddressesForUser = async (
+    userId: string,
+    addresses: AddressData[]
+  ) => {
+    try {
+      // Transform addresses to the format expected by the API
+      const addressPayloads = addresses.map((address) => ({
+        userId: userId,
+        line1: address.addressLine1,
+        line2: address.addressLine2,
+        city: address.city,
+        state: address.state,
+        pinCode: address.pinCode,
+        isShipping: address.useAsShipping || false,
+      }));
 
-    // Send all addresses in a single request - pass the array directly
-    const response = await createAddress(addressPayloads);
+      // Send all addresses in a single request - pass the array directly
+      const response = await createAddress(addressPayloads);
 
-    if (response.status !== 200 && response.status !== 201) {
-      throw new Error("Failed to create addresses");
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error("Failed to create addresses");
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error creating addresses:", error);
+      return false;
     }
-    
-    return true;
-  } catch (error) {
-    console.error("Error creating addresses:", error);
-    return false;
-  }
-};
+  };
 
   // Handle form submission from the child component
   const handleSaveUser = async (formData: any) => {
@@ -107,7 +104,8 @@ useEffect(() => {
       let response;
       let userId;
 
-      if (isEdit && id && userData) { // Add null check for userData
+      if (isEdit && id && userData) {
+        // Add null check for userData
         // Determine which fields have changed
         const updatedFields = Object.keys(newUserData).reduce((acc, key) => {
           if (newUserData[key] !== userData[key]) {
@@ -116,10 +114,20 @@ useEffect(() => {
           return acc;
         }, {} as Partial<User>);
 
-        // Update existing user with only changed fields
-        response = await updateUser(id, updatedFields);
-        userId = id;
+        // Check if there are addresses to update
         
+        response = { status: 200 };
+        userId = id;
+
+        // Only call updateUser if there are user fields that need updating
+        if (Object.keys(updatedFields).length > 0) {
+          response = await updateUser(id, updatedFields);
+
+          if (response.status !== 200 && response.status !== 201) {
+            throw new Error("Failed to update user information");
+          }
+        }
+
         // Update addresses if they exist
         if (addresses && addresses.length > 0) {
           // Filter addresses that have an _id (existing addresses)
@@ -132,24 +140,29 @@ useEffect(() => {
               city: address.city,
               state: address.state,
               pinCode: address.pinCode,
-              isShipping: address.useAsShipping || false
+              isShipping: address.useAsShipping || false,
             }));
-            
+
           if (addressesToUpdate.length > 0) {
             console.log("Updating addresses:", addressesToUpdate);
             const updateResponse = await updateUserAddresses(addressesToUpdate);
-            
+
             if (updateResponse.status === 200) {
               console.log("Addresses updated successfully:", updateResponse);
             } else {
               throw new Error("Failed to update addresses");
             }
           }
-          
+
           // Handle new addresses (without _id) by creating them
-          const newAddresses = addresses.filter((address: AddressData) => !address._id);
+          const newAddresses = addresses.filter(
+            (address: AddressData) => !address._id
+          );
           if (newAddresses.length > 0) {
-            const addressSuccess = await createAddressesForUser(userId, newAddresses);
+            const addressSuccess = await createAddressesForUser(
+              userId,
+              newAddresses
+            );
             if (!addressSuccess) {
               setSnackbarMessage("Some new addresses could not be created.");
               setSnackbarSeverity("error");

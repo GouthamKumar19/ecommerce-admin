@@ -216,8 +216,8 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={orderStatus.includes("Order Confirmed")}
-                    onChange={() => handleOrderStatusChange("Order Confirmed")}
+                    checked={orderStatus.includes("Confirmed")}
+                    onChange={() => handleOrderStatusChange("Confirmed")}
                     sx={{
                       color: "var(--secondary-color)",
                       "&.Mui-checked": {
@@ -226,7 +226,7 @@ const OrderFilterDialog: React.FC<OrderFilterDialogProps> = ({
                     }}
                   />
                 }
-                label="Order Confirmed"
+                label="Confirmed"
               />
               <FormControlLabel
                 control={

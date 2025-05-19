@@ -14,7 +14,7 @@ import {
   getNextSortDirection,
 } from "../../components/common/SortUtils";
 import TableSkeletonLoader from "../../components/common/TableSkeletonLoader"; // Import Skeleton Loader
-import { getAllOrders, getOrdersByDateRange } from "../../api/orders";
+import { getAllOrders } from "../../api/orders";
 
 const OrderPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>("");
@@ -32,10 +32,13 @@ const OrderPage: React.FC = () => {
   const [pageCount, setPageCount] = useState<number>(0); // Total page count
   const [activeFilters, setActiveFilters] = useState<{
     filter?: {
-      status?: string;
-      paymentStatus?: string;
+      status?: string[];
+      paymentStatus?: string[];
     };
-    date?: string;
+    dateRange?: {
+      fromDate: number;
+      toDate: number;
+    };
   }>({});
 
   const navigate = useNavigate();
@@ -69,23 +72,13 @@ const OrderPage: React.FC = () => {
             ? { key: "updatedAt", direction: "descending" } // Default sort
             : sortConfig;
 
-        let response;
-
-        // Check if there's a date filter active
-        if (activeFilters.date) {
-          const [fromDate, toDate] = activeFilters.date.split("|").map(Number);
-          response = await getOrdersByDateRange(fromDate, toDate);
-        } else {
-          response = await getAllOrders(
-            page,
-            itemsPerPage,
-            searchValue,
-            effectiveSortConfig,
-            activeFilters
-          );
-        }
-
-        console.log("API Response:", response);
+        const response = await getAllOrders(
+          page,
+          itemsPerPage,
+          searchValue,
+          effectiveSortConfig,
+          activeFilters // Includes dateRange if provided
+        );
 
         if (response.data && Array.isArray(response.data.tableData)) {
           setOrders(response.data.tableData); // Populate orders
@@ -105,6 +98,7 @@ const OrderPage: React.FC = () => {
     fetchOrderData();
   }, [page, itemsPerPage, searchValue, sortConfig, activeFilters]);
 
+
   const handleSort = (key: string) => {
     const direction = getNextSortDirection(
       sortConfig.key,
@@ -123,22 +117,31 @@ const OrderPage: React.FC = () => {
       filter: {},
     };
 
+    // Handle paymentStatus filter
     if (filters.paymentStatus.length > 0) {
-      newFilters.filter["paymentDetails.status"] =
-        filters.paymentStatus[0].toUpperCase();
+      newFilters.filter["paymentDetails.status"] = filters.paymentStatus.map(
+        (status) => status.toUpperCase()
+      ); // Use the entire array
     }
 
+    // Handle orderStatus filter
     if (filters.orderStatus.length > 0) {
-      newFilters.filter["status"] = filters.orderStatus[0].toUpperCase();
+      newFilters.filter["status"] = filters.orderStatus.map((status) =>
+        status.toUpperCase()
+      ); // Use the entire array
     }
 
+    // Handle date filter
     if (filters.date) {
-      newFilters.date = filters.date;
+      const [fromDate, toDate] = filters.date
+        .split("|")
+        .map((date) => Number(date.trim()));
+      newFilters.dateRange = { fromDate, toDate };
     }
 
-    console.log("Applied Filters:", newFilters);
-    setActiveFilters(newFilters);
-    setPage(1);
+    console.log("Applied Filters:", newFilters); // Debugging: Log the filters
+    setActiveFilters(newFilters); // Update the activeFilters state
+    setPage(1); // Reset to the first page
   };
 
   const sortedOrders = useSortableData(orders, sortConfig);

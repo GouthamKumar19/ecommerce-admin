@@ -59,34 +59,38 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     console.log("response in axios instance", response);
+
+    const message = response.data?.toastMessage;
+
     if (
-  response.data?.toastMessage &&
-  response.data.toastMessage.toLowerCase() !== "success" &&
-  response.data.toastMessage !== "User details fetched successfully" &&
-  response.data.toastMessage !== "An unexpected error occurred" &&
-  response.data.toastMessage !== "All subcategories updated successfully" &&
-  response.data.toastMessage !== "Order updated successfully" &&
-  response.data.toastMessage !== lastToastMessage // Check if this is a new message
-)
- {
-      console.log("response in axios instance inside if", response);
-      // Update the last toast message before showing it
-      lastToastMessage = response.data.toastMessage;
-      toast.success(response.data.toastMessage);
+      message &&
+      message.toLowerCase() !== "success" &&
+      message !== "User details fetched successfully" &&
+      message !== "An unexpected error occurred" &&
+      message !== "All subcategories updated successfully" &&
+      message !== "Order updated successfully" &&
+      message !== lastToastMessage
+    ) {
+      lastToastMessage = message;
+      toast.success(message);
+
+      // Reset lastToastMessage after 2 seconds to allow future duplicates
+      setTimeout(() => {
+        lastToastMessage = "";
+      }, 2000);
     }
+
     return response;
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as ExtendedAxiosRequestConfig;
     console.log("error in axios instance", error);
 
-    // Handle network errors
     if (error.message === "Network Error") {
       toast.error("Network error. Please check your connection.");
       return Promise.reject(error);
     }
 
-    // Show error message from server if available
     const errorMessage =
       (error.response?.data as any)?.toastMessage ||
       (error.response?.data as any)?.error ||
@@ -94,13 +98,19 @@ axiosInstance.interceptors.response.use(
 
     if (errorMessage && errorMessage !== lastToastMessage) {
       lastToastMessage = errorMessage;
-      if (errorMessage=='canceled') {
+
+      if (errorMessage === "canceled") {
         return;
       }
+
       toast.error(errorMessage);
+
+      // Reset lastToastMessage after 2 seconds to allow future duplicates
+      setTimeout(() => {
+        lastToastMessage = "";
+      }, 2000);
     }
 
-    // Check if the error is 401 and the request is not a refresh token request
     if (
       error.response?.status === 401 &&
       originalRequest &&
@@ -129,15 +139,17 @@ axiosInstance.interceptors.response.use(
           throw new Error("No refresh token available");
         }
 
-        const response = await axios.post(`${baseURL}/admin/auth/refresh`, {
-          refresh_token: refreshToken,
-        }, {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "application/json"
-          },
-          withCredentials: true
-        });
+        const response = await axios.post(
+          `${baseURL}/admin/auth/refresh`,
+          { refresh_token: refreshToken },
+          {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
 
         const { accessToken, tokenExpiresAt } = response.data.data;
 
@@ -163,6 +175,5 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 
 export default axiosInstance;
